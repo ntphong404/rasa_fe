@@ -1,0 +1,1 @@
+export { ResponseManagement } from "./pages/ResponseManagement";
