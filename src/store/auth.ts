@@ -20,16 +20,34 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       user: null,
       clientId: null,
-      
+
       setAuth: (isAuthenticated: boolean, clientId: string | null) => {
-        set({ isAuthenticated, clientId});
+        set({ isAuthenticated, clientId });
       },
-      
+
       logout: () => {
         set({ isAuthenticated: false, user: null, clientId: null });
+
+        // Xóa localStorage
         localStorage.removeItem('authToken');
+        localStorage.removeItem('auth-storage');
+
+        // Xóa tất cả cookies
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i];
+          const eqPos = cookie.indexOf("=");
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          // Xóa cookie với tất cả các path và domain có thể
+          document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+          document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
+          document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=." + window.location.hostname;
+        }
+
+        // Xóa sessionStorage
+        sessionStorage.clear();
       },
-      
+
       updateUser: (userData) => {
         const currentUser = get().user;
         if (currentUser) {
