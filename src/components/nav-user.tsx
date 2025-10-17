@@ -30,7 +30,7 @@ export function NavUser() {
   const callLogoutAPI = async () => {
     try {
       const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
-      await axiosInstance.post(`${VITE_BASE_URL}/auth/logout`, {
+      await axiosInstance.post(`${VITE_BASE_URL}/api/v1/auth/logout`, {
         clientId: clientId
       }, { withCredentials: true });
     } catch (error) {
