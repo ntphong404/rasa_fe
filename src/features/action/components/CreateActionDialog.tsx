@@ -59,7 +59,7 @@ export default function CreateActionDialog({
   const toPascalCase = (str: string): string =>
     (" " + str)
       .toLowerCase()
-      .replace(/[^a-zA-Z0-9]+(.)/g, (match, chr) => chr.toUpperCase());
+      .replace(/[^a-zA-Z0-9]+(.)/g, (_, chr) => chr.toUpperCase());
 
   // --- Generate template Python ---
   const generateTemplate = () => {

@@ -170,17 +170,25 @@ ${exampleLines || "    - example1"}`;
     
     // If no input is focused, use the last non-empty input, or the last input
     if (targetIndex === null) {
-      const lastNonEmptyIndex = examples.findLastIndex(ex => ex.trim());
+      let lastNonEmptyIndex = -1;
+      for (let i = examples.length - 1; i >= 0; i--) {
+        if (examples[i].trim()) {
+          lastNonEmptyIndex = i;
+          break;
+        }
+      }
       targetIndex = lastNonEmptyIndex >= 0 ? lastNonEmptyIndex : examples.length - 1;
     }
 
+    if (targetIndex === null) return;
+    
     const input = exampleInputRefs.current[targetIndex];
     if (!input) return;
 
     const pattern = `[enter_value]([${entity._id}])`;
     const cursorPos = input.selectionStart || 0;
-    const textBefore = examples[targetIndex].substring(0, cursorPos);
-    const textAfter = examples[targetIndex].substring(cursorPos);
+    const textBefore = examples[targetIndex]?.substring(0, cursorPos) || '';
+    const textAfter = examples[targetIndex]?.substring(cursorPos) || '';
     
     const newValue = textBefore + pattern + textAfter;
     handleUpdateExample(targetIndex, newValue);
@@ -676,7 +684,11 @@ ${exampleLines || "    - example1"}`;
               {examples.map((example, index) => (
                 <div key={index} className="flex gap-2">
                   <Input
-                    ref={(el) => (exampleInputRefs.current[index] = el)}
+                    ref={(el) => {
+                      if (el) {
+                        exampleInputRefs.current[index] = el;
+                      }
+                    }}
                     value={example}
                     onChange={(e) => handleUpdateExample(index, e.target.value)}
                     onFocus={() => setFocusedExampleIndex(index)}
