@@ -18,13 +18,25 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useAuthStore } from "@/store/auth";
 import { useMe } from "@/hooks/useMe";
+import axiosInstance from "@/api/axios";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   // const { user } = useAuthStore();
   const { user } = useMe();
   const navigate = useNavigate();
-  const { logout } = useAuthStore();
+  const { logout, clientId } = useAuthStore();
+
+  const callLogoutAPI = async () => {
+    try {
+      const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
+      await axiosInstance.post(`${VITE_BASE_URL}/auth/logout`, {
+        clientId: clientId
+      }, { withCredentials: true });
+    } catch (error) {
+      console.error("Error during logout API call:", error);
+    }
+  };
 
   if (!user) {
     console.log("user null");
@@ -121,6 +133,7 @@ export function NavUser() {
             <DropdownMenuItem
               onClick={async () => {
                 await logout();
+                await callLogoutAPI();
                 // setTimeout(() => {
                 //   window.location.reload();
                 // }, 500);
