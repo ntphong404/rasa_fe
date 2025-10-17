@@ -1,10 +1,10 @@
-// Chat service for Flask API
+// Chat service for Rasa
 import axios from 'axios';
 
-const FLASK_URL = import.meta.env.VITE_FLASK_URL || 'https://103.101.163.198:3050';
+const RASA_URL = import.meta.env.VITE_RASA_URL || 'https://103.101.163.198:3100';
 
 export interface ChatMessage {
-  sender_id: string;
+  sender: string;
   message: string;
 }
 
@@ -13,35 +13,27 @@ export interface ChatResponse {
   text: string;
 }
 
-export interface FlaskChatResponse {
-  code: number;
-  message: string;
-  result: {
-    responses: ChatResponse[];
-  };
-}
-
 export const chatService = {
   sendMessage: async (senderId: string, message: string): Promise<ChatResponse[]> => {
     try {
       const payload: ChatMessage = {
-        sender_id: senderId,
+        sender: senderId,
         message: message,
       };
 
-      const response = await axios.post(`${FLASK_URL}/chat`, payload, {
+      const response = await axios.post(`${RASA_URL}/webhooks/rest/webhook`, payload, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      const data: FlaskChatResponse = response.data;
+      const data: ChatResponse[] = response.data;
 
-      // Check if the response is successful
-      if (data.code === 200 && data.result && data.result.responses) {
-        return data.result.responses;
+      // Rasa trả về mảng responses trực tiếp
+      if (Array.isArray(data)) {
+        return data;
       } else {
-        throw new Error(data.message || 'Failed to get chat response');
+        throw new Error('Invalid response format from Rasa');
       }
     } catch (error) {
       console.error('Error sending chat message:', error);
