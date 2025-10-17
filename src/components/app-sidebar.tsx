@@ -15,10 +15,11 @@ import {
 import { Bot, MessageCircleCode, ShieldCheck, UserCog } from "lucide-react";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
+import { useAuthStore } from "@/store/auth";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation();
-  //   const user = useUserStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const navigate = useNavigate();
 
   //   const infoUser = {
@@ -180,7 +181,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
-        <NavMain items={data.navMain} />
+        {isAuthenticated && <NavMain items={data.navMain} />}
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
