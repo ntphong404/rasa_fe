@@ -1,246 +1,706 @@
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { MessageSquare, Mic, Plus, Search, SendHorizonal, Loader2 } from "lucide-react";
-import { useState, KeyboardEvent, useEffect, useRef } from "react";
-import { chatService, ChatResponse } from "../api/service";
-import { toast } from "sonner";
-
-interface Message {
-  id: string;
-  text: string;
-  isUser: boolean;
-  timestamp: Date;
-}
+  MessageSquare,
+  Mic,
+  Plus,
+  SendHorizonal,
+  Sparkles,
+  Lightbulb,
+  Code,
+  Palette,
+  Bot,
+  User,
+} from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { useChat } from "@/hooks/useChat";
+import { MessageActions } from "@/features/chat/components/MessageActions";
+import { ConversationExport } from "@/features/chat/components/ConversationExport";
+import { useCurrentUserId } from "@/hooks/useCurrentUserId";
+import { useAuthStore } from "@/store/auth";
+import toast from "react-hot-toast";
+import { useChatContext } from "@/features/chat/context/ChatContext";
 
 export function HomeChatDemo() {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedChatbot, setSelectedChatbot] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const userId = useCurrentUserId();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const chatbotId = "68e22e6345898f7f46405ecc";
+
+  // Get chatHook from context or create default one
+  const contextChat = useChatContext();
+  const fallbackChatHook = useChat(chatbotId);
+
+  const chatHook = contextChat.chatHook || fallbackChatHook;
+  const {
+    messages,
+    loading,
+    error,
+    sendMessage,
+    clearError,
+    currentConversationId,
+    startNewConversation,
+  } = chatHook;
+
+  // Auto scroll to bottom khi có tin nhắn mới
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Show error toast
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      clearError();
+    }
+  }, [error, clearError]);
+
+  // Khởi tạo conversation mới khi component mount và chưa có conversationId
+  useEffect(() => {
+    if (contextChat.isNewChat && !contextChat.conversationId && !currentConversationId) {
+      startNewConversation();
+    }
+  }, [contextChat.isNewChat, contextChat.conversationId, currentConversationId, startNewConversation]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || loading) return;
 
-  const sendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputMessage.trim(),
-      isUser: true,
-      timestamp: new Date(),
+    // Bỏ conversationId vì sẽ được handle trong useChat hook
+    const messageData = {
+      message: inputMessage.trim(),
+      userId: userId,
+      // Gán trạng thái đăng nhập thực tế (true nếu đã đăng nhập, false nếu chưa)
+      isLogined: !!isAuthenticated,
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage("");
-    setIsLoading(true);
-
     try {
-      const responses: ChatResponse[] = await chatService.sendMessage("user123", inputMessage.trim());
-
-      if (responses.length === 1) {
-        // Single response - add immediately
-        const botMessage: Message = {
-          id: `${Date.now()}`,
-          text: responses[0].text,
-          isUser: false,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, botMessage]);
-      } else {
-        // Multiple responses - add with slight delay for natural feel
-        responses.forEach((response, index) => {
-          setTimeout(() => {
-            const botMessage: Message = {
-              id: `${Date.now()}_${index}`,
-              text: response.text,
-              isUser: false,
-              timestamp: new Date(),
-            };
-            setMessages(prev => [...prev, botMessage]);
-          }, index * 800); // 800ms delay between messages
-        });
-      }
-
-    } catch (error) {
-      console.error("Error sending message:", error);
-      toast.error("Không thể gửi tin nhắn. Vui lòng thử lại.");
-
-      // Add error message
-      const errorMessage: Message = {
-        id: `error_${Date.now()}`,
-        text: "Xin lỗi, tôi không thể phản hồi lúc này. Vui lòng thử lại sau.",
-        isUser: false,
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
+      await sendMessage(messageData);
+      setInputMessage("");
+    } catch (err) {
+      console.error("Error sending message:", err);
     }
   };
 
-  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleSendMessage();
     }
   };
+
+  const handleQuickSuggestion = (text: string) => {
+    setInputMessage(text);
+  };
+
+  const quickSuggestions = [
+    {
+      icon: Lightbulb,
+      text: "Kiến thức về PCCC",
+      color: "from-yellow-200 to-yellow-300",
+    },
+    {
+      icon: Code,
+      text: "Hướng dẫn an toàn về PCCC",
+      color: "from-red-200 to-red-300",
+    },
+    {
+      icon: Palette,
+      text: "Phương pháp PCCC",
+      color: "from-orange-200 to-orange-300",
+    },
+    {
+      icon: MessageSquare,
+      text: "Yêu cầu PCCC trong quy hoạch xây dựng",
+      color: "from-blue-200 to-blue-300",
+    },
+  ];
+
   return (
-    <div className="relative flex flex-col bg-gradient-to-b from-blue-50 to-white text-foreground">
-      {/* Header */}
-      {/* <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-sm py-3 px-4 shadow-sm">
-        <div className="max-w-3xl mx-auto flex items-center justify-center">
-          <MessageSquare className="h-6 w-6 text-blue-500 mr-2" />
-          <h1 className="text-xl font-semibold text-blue-700">AI Assistant</h1>
-        </div>
-      </header> */}
+    <div
+      className="relative flex flex-col min-h-screen text-foreground"
+      style={{
+        background: "linear-gradient(180deg, #f0f9ff 0%, #fefefe 100%)",
+      }}
+    >
+      {/* Animated Background Circles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute -top-40 -right-40 w-80 h-80 rounded-full opacity-10"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0) 70%)",
+            animation: "float 6s ease-in-out infinite",
+          }}
+        />
+        <div
+          className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full opacity-10"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(99, 102, 241, 0) 70%)",
+            animation: "float 8s ease-in-out infinite reverse",
+          }}
+        />
+      </div>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-between p-4 md:p-6 overflow-auto">
-        <div className="max-w-3xl w-full flex flex-col">
-          <h2 className="text-2xl md:text-3xl font-semibold mb-6 text-center text-blue-800">
-            Tôi có thể giúp gì cho bạn?
-          </h2>
-
-          {/* Chat container */}
-          <div className="flex-1 border rounded-2xl p-5 mb-6 bg-white shadow-lg h-[450px] overflow-y-auto">
-            {messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-400">
-                <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-                  <MessageSquare className="h-8 w-8 text-blue-400" />
-                </div>
-                <p className="text-lg font-medium mb-2">
-                  Bắt đầu cuộc trò chuyện
-                </p>
-                <p className="text-sm max-w-xs">
-                  Hãy đặt câu hỏi hoặc yêu cầu trợ giúp để bắt đầu cuộc trò chuyện
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.isUser
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-800'
-                        }`}
-                    >
-                      <p className="text-sm">{message.text}</p>
-                      <p className="text-xs mt-1 opacity-70">
-                        {message.timestamp.toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-gray-100 text-gray-800 max-w-xs lg:max-w-md px-4 py-2 rounded-lg">
-                      <div className="flex items-center space-x-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-sm">Đang trả lời...</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-            )}
+      <main className="relative flex-1 flex flex-col items-center justify-center p-3 md:p-4 max-h-screen overflow-hidden">
+        <div className="max-w-4xl w-full flex flex-col gap-3 h-full justify-center py-2">
+          {/* Header Section with Icon */}
+          <div
+            className="text-center space-y-0.5"
+            style={{
+              animation: "fadeInUp 0.6s ease-out",
+            }}
+          >
+            <div
+              className="inline-flex items-center justify-center w-8 h-8 rounded-full mb-0 relative"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1))",
+                backdropFilter: "blur(10px)",
+                boxShadow: "0 2px 12px rgba(59, 130, 246, 0.1)",
+              }}
+            >
+              <Sparkles className="h-4 w-4 text-blue-500" />
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                  background: "rgba(59, 130, 246, 0.1)",
+                }}
+              />
+            </div>
+            <h2
+              className="text-sm font-bold text-gray-700"
+              style={{
+                textShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+              }}
+            >
+              Tôi có thể giúp gì cho bạn?
+            </h2>
+            <p className="text-xs text-gray-600 max-w-xs mx-auto">
+              Trợ lý AI phòng cháy chữa cháy
+            </p>
           </div>
 
-          <Select value={selectedChatbot} onValueChange={setSelectedChatbot}>
-            <SelectTrigger className="h-8 text-sm mb-4">
-              <SelectValue placeholder="Select a chatbot" />
-            </SelectTrigger>
-            <SelectContent className="text-sm">
-              <SelectItem value="bot1">Chatbot 1</SelectItem>
-              <SelectItem value="bot2">Chatbot 2</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Input Area */}
-          <div className="w-full relative">
-            <div className="relative rounded-xl border border-blue-200 bg-white shadow-md transition-all focus-within:shadow-lg focus-within:border-blue-300">
-              <Input
-                placeholder="Hỏi bất kỳ điều gì"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                disabled={isLoading}
-                className="min-h-[60px] pl-12 pr-12 py-4 rounded-xl border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700"
-              />
-              <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
-                >
-                  <Plus className="h-5 w-5" />
-                </Button>
+          {/* Chat Area */}
+          <div
+            className="rounded-3xl flex flex-col h-[350px] md:h-[450px] relative flex-shrink-0 overflow-hidden"
+            style={{
+              background: "rgba(255, 255, 255, 0.8)",
+              backdropFilter: "blur(15px)",
+              border: "1px solid rgba(59, 130, 246, 0.15)",
+              boxShadow: "0 8px 32px rgba(59, 130, 246, 0.1)",
+              animation: "fadeIn 0.8s ease-out 0.2s backwards",
+            }}
+          >
+            {/* Chat Header */}
+            {messages.length > 0 && (
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-white/60 backdrop-blur-sm rounded-t-3xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                    <MessageSquare className="h-4 w-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800 text-sm">
+                      Cuộc trò chuyện
+                    </h3>
+                    <span className="text-xs text-gray-500">
+                      {messages.length} tin nhắn
+                    </span>
+                  </div>
+                </div>
+                <ConversationExport
+                  messages={messages}
+                  conversationTitle="Cuộc trò chuyện với Bot AI"
+                />
               </div>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={sendMessage}
-                  disabled={isLoading || !inputMessage.trim()}
-                  className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-50"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <SendHorizonal className="h-5 w-5" />
+            )}
+
+            {/* Chat Messages */}
+            <div
+              className="flex-1 p-4 overflow-y-auto chat-container"
+              style={{
+                scrollBehavior: "smooth",
+              }}
+            >
+              {messages.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                  <div
+                    className="w-20 h-20 rounded-full flex items-center justify-center mb-4 relative"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1))",
+                      backdropFilter: "blur(10px)",
+                      border: "2px solid rgba(59, 130, 246, 0.1)",
+                    }}
+                  >
+                    <MessageSquare className="h-8 w-8 text-blue-500" />
+                    <div
+                      className="absolute inset-0 rounded-full border-2 border-blue-200"
+                      style={{
+                        animation:
+                          "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                      }}
+                    />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2 text-gray-800">
+                    Bắt đầu cuộc trò chuyện
+                  </h3>
+                  <p className="text-sm max-w-sm text-gray-600 leading-relaxed">
+                    Chọn gợi ý bên dưới hoặc nhập câu hỏi của bạn để bắt đầu trò
+                    chuyện với AI
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {messages.map((message, index) => {
+                    // Debug: log để xem cấu trúc message
+                    console.log("Message:", message, "chatbotId:", chatbotId);
+
+                    // Logic chính xác:
+                    // - User message có recipient_id = userId
+                    // - Bot message có recipient_id = "bot"
+                    const isUser = message.recipient_id === userId;
+
+                    console.log(
+                      "isUser:",
+                      isUser,
+                      "index:",
+                      index,
+                      "recipient_id:",
+                      message.recipient_id,
+                      "current userId:",
+                      userId
+                    );
+
+                    return (
+                      <div
+                        key={index}
+                        className={`group flex gap-3 ${isUser ? "justify-end" : "justify-start"
+                          } animate-fadeInUp`}
+                        style={{
+                          animation: `fadeInUp 0.4s ease-out ${index * 0.1
+                            }s backwards`,
+                        }}
+                      >
+                        {!isUser && (
+                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0 shadow-lg border-2 border-white">
+                            <Bot className="h-5 w-5 text-white" />
+                          </div>
+                        )}
+                        <div className="flex flex-col max-w-[80%] min-w-[120px]">
+                          <div
+                            className={`p-4 rounded-2xl shadow-sm relative transition-all duration-200 hover:shadow-md ${isUser
+                              ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-md ml-auto"
+                              : "bg-white text-gray-800 border border-gray-100 rounded-bl-md"
+                              }`}
+                            style={{
+                              boxShadow: isUser
+                                ? "0 4px 15px rgba(59, 130, 246, 0.25)"
+                                : "0 4px 15px rgba(0, 0, 0, 0.08)",
+                            }}
+                          >
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                              {message.text}
+                            </p>
+                            <div
+                              className={`text-xs opacity-75 mt-3 flex items-center justify-between ${isUser ? "text-blue-100" : "text-gray-500"
+                                }`}
+                            >
+                              <span className="font-medium">
+                                {isUser ? "Bạn" : "Bot AI"}
+                              </span>
+                              <span className="text-xs opacity-60">
+                                {new Date().toLocaleTimeString("vi-VN", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            </div>
+                            {!isUser && (
+                              <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <MessageActions
+                                  message={message.text}
+                                  isBot={true}
+                                  className="ml-2"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {isUser && (
+                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg border-2 border-white">
+                            <User className="h-5 w-5 text-white" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {loading && (
+                    <div className="flex gap-3 justify-start animate-fadeInUp">
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0 shadow-lg border-2 border-white">
+                        <Bot className="h-5 w-5 text-white" />
+                      </div>
+                      <div
+                        className="max-w-[80%] p-4 rounded-2xl bg-white border border-gray-100 rounded-bl-md shadow-sm"
+                        style={{
+                          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.08)",
+                        }}
+                      >
+                        <div className="flex space-x-2 items-center">
+                          <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></div>
+                            <div
+                              className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.1s" }}
+                            ></div>
+                            <div
+                              className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.2s" }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-gray-600 font-medium">
+                            Bot đang soạn tin...
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
-                >
-                  <Mic className="h-5 w-5" />
-                </Button>
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Suggestions Grid */}
+          {messages.length === 0 && contextChat.isNewChat && (
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 flex-shrink-0"
+              style={{
+                animation: "fadeIn 1s ease-out 0.4s backwards",
+              }}
+            >
+              {quickSuggestions.map((suggestion, index) => {
+                const Icon = suggestion.icon;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleQuickSuggestion(suggestion.text)}
+                    className="group relative p-4 rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    style={{
+                      background: "rgba(255, 255, 255, 0.85)",
+                      backdropFilter: "blur(12px)",
+                      border: "1px solid rgba(59, 130, 246, 0.2)",
+                      boxShadow: "0 4px 15px rgba(59, 130, 246, 0.1)",
+                      animation: `fadeInUp 0.6s ease-out ${0.15 * index
+                        }s backwards`,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background =
+                        "rgba(255, 255, 255, 0.95)";
+                      e.currentTarget.style.boxShadow =
+                        "0 8px 25px rgba(59, 130, 246, 0.2)";
+                      e.currentTarget.style.borderColor =
+                        "rgba(59, 130, 246, 0.3)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background =
+                        "rgba(255, 255, 255, 0.85)";
+                      e.currentTarget.style.boxShadow =
+                        "0 4px 15px rgba(59, 130, 246, 0.1)";
+                      e.currentTarget.style.borderColor =
+                        "rgba(59, 130, 246, 0.2)";
+                    }}
+                  >
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <div
+                        className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${suggestion.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
+                        style={{
+                          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.15)",
+                        }}
+                      >
+                        <Icon className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-semibold text-gray-800 leading-tight block">
+                          {suggestion.text}
+                        </span>
+                        <span className="text-xs text-gray-500 mt-1 block">
+                          Nhấn để bắt đầu
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Hover gradient effect */}
+                    <div
+                      className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-5 transition-opacity duration-300"
+                      style={{
+                        background: `linear-gradient(135deg, ${suggestion.color.split(" ")[1]
+                          } 0%, ${suggestion.color.split(" ")[3]} 100%)`,
+                      }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Input Area with Glass Effect */}
+          <div
+            className="w-full space-y-3 flex-shrink-0"
+            style={{
+              animation: "fadeInUp 0.8s ease-out 0.6s backwards",
+            }}
+          >
+            <div className="relative group">
+              {/* Glow Effect on Focus */}
+              <div
+                className="absolute -inset-1 rounded-3xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(99, 102, 241, 0.2))",
+                  filter: "blur(15px)",
+                }}
+              />
+
+              <div
+                className="relative rounded-3xl transition-all duration-300 group-focus-within:scale-[1.01]"
+                style={{
+                  background: "rgba(255, 255, 255, 0.95)",
+                  backdropFilter: "blur(20px)",
+                  border: "1.5px solid rgba(59, 130, 246, 0.25)",
+                  boxShadow: "0 8px 32px rgba(59, 130, 246, 0.12)",
+                }}
+              >
+                <Input
+                  placeholder="Hỏi bất kỳ điều gì bạn muốn biết..."
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={loading}
+                  className="min-h-[64px] pl-16 pr-32 py-4 rounded-3xl border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base bg-transparent text-gray-800 placeholder:text-gray-500 resize-none"
+                  style={{
+                    fontFamily:
+                      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                  }}
+                />
+
+                {/* Left Button */}
+                <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                  <button
+                    className="h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"
+                    style={{
+                      background: "rgba(59, 130, 246, 0.1)",
+                      backdropFilter: "blur(10px)",
+                      border: "1px solid rgba(59, 130, 246, 0.2)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background =
+                        "rgba(59, 130, 246, 0.15)";
+                      e.currentTarget.style.boxShadow =
+                        "0 4px 15px rgba(59, 130, 246, 0.2)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background =
+                        "rgba(59, 130, 246, 0.1)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    <Plus className="h-5 w-5 text-blue-600" />
+                  </button>
+                </div>
+
+                {/* Right Buttons */}
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2">
+                  <button
+                    className="h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"
+                    style={{
+                      background: "rgba(59, 130, 246, 0.1)",
+                      backdropFilter: "blur(10px)",
+                      border: "1px solid rgba(59, 130, 246, 0.2)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background =
+                        "rgba(59, 130, 246, 0.15)";
+                      e.currentTarget.style.boxShadow =
+                        "0 4px 15px rgba(59, 130, 246, 0.2)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background =
+                        "rgba(59, 130, 246, 0.1)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    <Mic className="h-5 w-5 text-blue-600" />
+                  </button>
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={loading || !inputMessage.trim()}
+                    className="h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    style={{
+                      background:
+                        inputMessage.trim() && !loading
+                          ? "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)"
+                          : "rgba(59, 130, 246, 0.3)",
+                      boxShadow:
+                        inputMessage.trim() && !loading
+                          ? "0 4px 15px rgba(59, 130, 246, 0.4)"
+                          : "none",
+                      border: "1px solid rgba(59, 130, 246, 0.3)",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!loading && inputMessage.trim()) {
+                        e.currentTarget.style.boxShadow =
+                          "0 6px 20px rgba(59, 130, 246, 0.5)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!loading && inputMessage.trim()) {
+                        e.currentTarget.style.boxShadow =
+                          "0 4px 15px rgba(59, 130, 246, 0.4)";
+                      }
+                    }}
+                  >
+                    {loading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <SendHorizonal className="h-5 w-5 text-white" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-2 mt-3 justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-lg border-blue-200 bg-white text-blue-600 hover:bg-blue-50 transition-colors shadow-sm"
-              >
-                <Search className="h-4 w-4 mr-2" />
-                Tìm kiếm
-              </Button>
+            <div className="text-center">
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Chat Bot có thể mắc lỗi. Hãy kiểm tra các thông tin quan trọng.
+              </p>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="p-2 text-center text-sm text-gray-500 bg-white/80 backdrop-blur-sm border-t">
-        <div className="max-w-2xl mx-auto">
-          Chat Bot có thể mắc lỗi. Hãy kiểm tra các thông tin quan trọng.
-        </div>
-      </footer>
+      {/* CSS Animations */}
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-20px) rotate(1deg);
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 0.8;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.4;
+            transform: scale(1.05);
+          }
+        }
+
+        .animate-fadeInUp {
+          animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Custom scrollbar for chat container */
+        .chat-container {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+        }
+
+        .chat-container::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.05);
+          border-radius: 10px;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+          background: rgba(59, 130, 246, 0.4);
+          border-radius: 10px;
+          transition: background-color 0.2s ease;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb:hover {
+          background: rgba(59, 130, 246, 0.6);
+        }
+
+        /* Smooth transitions for all interactive elements */
+        * {
+          transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Input focus enhancement */
+        .group:focus-within input {
+          caret-color: #3b82f6;
+        }
+        
+        /* Message hover effects */
+        .group:hover .message-actions {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        
+        .message-actions {
+          opacity: 0;
+          transform: translateY(5px);
+          transition: all 0.2s ease;
+        }
+
+        /* Button click feedback */
+        button:active {
+          transform: scale(0.95);
+        }
+
+        /* Gradient animation for loading states */
+        @keyframes shimmer {
+          0% {
+            background-position: -200px 0;
+          }
+          100% {
+            background-position: calc(200px + 100%) 0;
+          }
+        }
+
+        .shimmer {
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 200px 100%;
+          animation: shimmer 1.5s infinite;
+        }
+      `}</style>
     </div>
   );
 }

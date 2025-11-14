@@ -4,7 +4,6 @@ import { AuthLayout, MainLayout } from "@/layouts";
 import { LoginPage, SignUpPage, VerifyPage } from "@/features/auth";
 import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
-import { HomeChat } from "@/features/chat/pages/HomeChatPage";
 import { RoleManagement } from "@/features/roles";
 import { EntityManagement } from "@/features/entity";
 import {
@@ -19,7 +18,9 @@ import {
   EditRulePageNew,
   RuleManagementPage,
 } from "@/features/rules";
+import { CreateDataPage, ImportIntentPage } from "@/features/data-entry";
 import { ChatBotManagement } from "@/features/chatbot";
+import { ChatPage } from "@/features/chat/pages/ChatPage";
 import { HomeChatDemo } from "@/features/chat/pages/HomeChatPageDemo";
 import { PermissionManagement } from "@/features/permissions/pages/PermissionManagement";
 import { UserManagement } from "@/features/users/pages/UserManagement";
@@ -36,8 +37,8 @@ const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <HomeDirectorPage /> },
-      { path: "home_chat", element: <HomeChatDemo /> },
-      // { path: "home_chat", element: <HomeChat /> },
+      { path: "home_chat", element: <ChatPage /> },
+      { path: "home_chat_demo", element: <HomeChatDemo /> },
       { path: "users", element: <UserManagement /> },
       { path: "profile", element: <UserProfilePage /> },
       { path: "roles", element: <RoleManagement /> },
@@ -60,6 +61,14 @@ const router = createBrowserRouter([
           { index: true, element: <RuleManagementPage /> },
           { path: "new", element: <CreateRulePageSimple /> },
           { path: "edit", element: <EditRulePageNew /> },
+        ],
+      },
+      // Data entry independent routes
+      {
+        path: "add-data",
+        children: [
+          { index: true, element: <CreateDataPage /> },
+          { path: "import", element: <ImportIntentPage /> },
         ],
       },
       { path: "responses", element: <ResponseManagement /> },

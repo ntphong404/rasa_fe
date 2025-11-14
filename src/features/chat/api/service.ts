@@ -1,43 +1,34 @@
-// Chat service for Rasa
-import axios from 'axios';
-
-const RASA_URL = import.meta.env.VITE_RASA_URL || 'https://103.101.163.198:3100';
-
-export interface ChatMessage {
-  sender: string;
-  message: string;
-}
-
-export interface ChatResponse {
-  recipient_id: string;
-  text: string;
-}
+import axiosInstance from "@/api/axios";
+import ENDPOINTS from "@/api/endpoints";
+import { ISendMessageRequest, ISendMessageResponse, IConversationsResponse } from "@/interfaces/chat.interface";
 
 export const chatService = {
-  sendMessage: async (senderId: string, message: string): Promise<ChatResponse[]> => {
-    try {
-      const payload: ChatMessage = {
-        sender: senderId,
-        message: message,
-      };
-
-      const response = await axios.post(`${RASA_URL}/webhooks/rest/webhook`, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const data: ChatResponse[] = response.data;
-
-      // Rasa trả về mảng responses trực tiếp
-      if (Array.isArray(data)) {
-        return data;
-      } else {
-        throw new Error('Invalid response format from Rasa');
-      }
-    } catch (error) {
-      console.error('Error sending chat message:', error);
-      throw error;
-    }
+  sendMessage: async (
+    chatbotId: string,
+    data: ISendMessageRequest
+  ): Promise<ISendMessageResponse> => {
+    const response = await axiosInstance.post(
+      ENDPOINTS.CHAT_ENDPOINTS.SEND_MESSAGE(chatbotId),
+      data
+    );
+    return response.data;
   },
-};
+
+  getConversations: async (
+    userId: string,
+    // params?: {
+    //   page?: number;
+    //   limit?: number;
+    //   sort?: string;
+    // }
+  ): Promise<IConversationsResponse> => {
+    // const queryParams = new URLSearchParams();
+    // if (params?.page) queryParams.append('page', params.page.toString());
+    // if (params?.limit) queryParams.append('limit', params.limit.toString());
+    // if (params?.sort) queryParams.append('sort', params.sort);
+
+    const url = `${ENDPOINTS.CHAT_ENDPOINTS.GET_CONVERSATIONS(userId)}`;
+    const response = await axiosInstance.get(url);
+    return response.data;
+  }
+}

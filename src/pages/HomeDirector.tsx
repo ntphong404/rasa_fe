@@ -18,7 +18,7 @@ export const HomeDirectorPage = () => {
       //     Login
       //   </Button>
       // </>
-      <HomeChatDemoWithoutLogin />
+      <HomeChatDemo />
     );
-  return <HomeChatDemo></HomeChatDemo>;
+  return <HomeChatDemo />;
 };

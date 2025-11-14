@@ -43,6 +43,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           icon: Bot,
           hidden: false,
           items: [
+            // Add Data tab inside Models
+            { title: "Add Data", url: "/add-data" },
             {
               title: "Training",
               url: "/training",
@@ -182,6 +184,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
         {isAuthenticated && <NavMain items={data.navMain} />}
+        {/* 'Thêm dữ liệu' is now inside Models (NavMain) */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
