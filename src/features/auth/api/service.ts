@@ -14,13 +14,22 @@ import { ResetPasswordResponse } from "./dto/ResetPasswordResponse";
 export const authService = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await axiosInstance.post(ENDPOINTS.AUTH_ENDPOINTS.LOGIN, data);
-    localStorage.setItem('authToken', response.data.data.accessToken);
-    return response.data?.data ?? response.data;
+    // Response may contain tokens under data.data or data
+    const payload = response.data?.data ?? response.data;
+    const access = payload?.accessToken ?? payload?.access_token ?? null;
+    const refresh = payload?.refreshToken ?? payload?.refresh_token ?? null;
+    if (access) localStorage.setItem('authToken', access);
+    if (refresh) localStorage.setItem('refreshToken', refresh);
+    return payload;
   },
   register: async (data: RegisterRequest): Promise<RegisterResponse> => {
     const response = await axiosInstance.post(ENDPOINTS.AUTH_ENDPOINTS.REGISTER, data);
-    localStorage.setItem('authToken', response.data.data.accessToken);
-    return response.data?.data ?? response.data;
+    const payload = response.data?.data ?? response.data;
+    const access = payload?.accessToken ?? payload?.access_token ?? null;
+    const refresh = payload?.refreshToken ?? payload?.refresh_token ?? null;
+    if (access) localStorage.setItem('authToken', access);
+    if (refresh) localStorage.setItem('refreshToken', refresh);
+    return payload;
   },
   verify: async (otp: string, token?: string): Promise<any> => {
     // Nếu có token thì truyền lên, không thì chỉ truyền otp

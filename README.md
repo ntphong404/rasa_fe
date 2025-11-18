@@ -7,6 +7,32 @@ Currently, two official plugins are available:
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
+## Running this project (development)
+
+These instructions assume you have Node.js (>=16) installed and will use the npm package manager.
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Start the development server:
+
+```bash
+npm run dev
+```
+
+Open your browser to the address printed by the dev server (usually http://localhost:5173).
+
+Notes and tips:
+- On Windows, if you see file-lock errors when installing native binaries (e.g. during `npm install`), stop any running dev server or processes that may be locking files (for example Vite/esbuild). Then rerun `npm install`.
+- To perform a TypeScript-only check (no build output):
+
+```bash
+npx tsc --noEmit
+```
+
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:

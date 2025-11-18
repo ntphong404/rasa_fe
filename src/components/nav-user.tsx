@@ -17,6 +17,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useAuthStore } from "@/store/auth";
+import ENDPOINTS from "@/api/endpoints";
 import { useMe } from "@/hooks/useMe";
 import axiosInstance from "@/api/axios";
 
@@ -29,10 +30,9 @@ export function NavUser() {
 
   const callLogoutAPI = async () => {
     try {
-      const VITE_BASE_URL = import.meta.env.VITE_BASE_URL;
-      await axiosInstance.post(`${VITE_BASE_URL}/api/v1/auth/logout`, {
+      await axiosInstance.post(ENDPOINTS.AUTH_ENDPOINTS.LOGOUT, {
         clientId: clientId
-      }, { withCredentials: true });
+      });
     } catch (error) {
       console.error("Error during logout API call:", error);
     }
@@ -132,11 +132,9 @@ export function NavUser() {
 
             <DropdownMenuItem
               onClick={async () => {
-                await logout();
+                // Call logout API first (needs clientId), then clear local auth state
                 await callLogoutAPI();
-                // setTimeout(() => {
-                //   window.location.reload();
-                // }, 500);
+                await logout();
                 setTimeout(() => {
                   navigate("/auth");
                 }, 500);

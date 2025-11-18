@@ -30,6 +30,7 @@ export const useAuthStore = create<AuthState>()(
 
         // Xóa localStorage
         localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('auth-storage');
 
 
