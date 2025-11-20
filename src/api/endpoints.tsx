@@ -57,6 +57,7 @@ export default {
     HARD_DELETE: (id: string) => `/api/v1/intent/${id}/hard`,
     SOFT_DELETE: (id: string) => `/api/v1/intent/${id}/soft`,
     RESTORE: (id: string) => `/api/v1/intent/${id}/restore`,
+    GEMINI_EXAMPLES: "/api/v1/intent/gemini/example",
   },
   RESPONSE_ENDPOINTS: {
     GET_ALL_PAGINATED: "/api/v1/my-response",
@@ -131,7 +132,7 @@ export default {
     GET_MODELS: "/api/v1/my-model",
     GET_MODEL_BY_ID: (id: string) => `/api/v1/my-model/${id}`,
   },
-  
+
   CHAT_ENDPOINTS: {
     SEND_MESSAGE: (id: string) => `/api/v1/chatbot/${id}/chat`,
     GET_CONVERSATIONS: (userId: string) =>

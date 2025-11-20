@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { intentService } from "@/features/intents/api/service";
+import { responseService } from "@/features/reponses/api/service";
+import { storyService } from "@/features/stories/api/service";
 
-type Row = { name: string; examples: string };
+type Row = { rawName?: string; name: string; examples: string; response?: string };
 
 function formatIntentName(input?: string) {
     if (!input) return "";
@@ -34,35 +36,71 @@ export function ImportIntentPage() {
     const handleCancel = () => navigate("/add-data");
 
     const parseCSV = async (text: string) => {
-        const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-        // if first row looks like a header (contains 'intent' and/or 'example'), skip it
+        const linesAll = text.split(/\r?\n/);
+        // remove fully empty lines
+        const lines = linesAll.map((l) => l.replace(/\u00A0/g, ' ').trimRight());
+
+        // Heuristic: if the first row contains header words (e.g., 'STT', 'Câu hỏi', 'Câu trả lời' or 'intent'), skip first 1-2 rows
+        let startRow = 0;
         if (lines.length > 0) {
-            const firstParts = lines[0].split(/\t|,/).map((p) => p.trim().toLowerCase());
-            const first0 = firstParts[0] || "";
-            const first1 = firstParts[1] || "";
-            if (/(intent|intentname|intent_name)/i.test(first0) || /example(s)?/i.test(first1)) {
-                lines.shift();
+            const firstLower = (lines[0] || '').toLowerCase();
+            if (/\b(stt|cau hoi|câu hỏi|intent|ví dụ|ví dụ mẫu|example)\b/.test(firstLower)) {
+                startRow = 1;
+                if (lines.length > 1) {
+                    const secondLower = (lines[1] || '').toLowerCase();
+                    if (/\b(cau hoi|câu hỏi|câu trả lời|question|answer|examples)\b/.test(secondLower)) {
+                        startRow = 2;
+                    }
+                }
             }
         }
-        const out = lines.map((line) => {
-            const parts = line.split(/\t|,/);
-            const rawName = parts[0]?.trim() || "";
-            const name = formatIntentName(rawName);
-            const examples = parts[1]?.trim() || "";
-            // ignore additional columns when importing; only use first two columns
-            return { name, examples } as Row;
-        });
+
+        const out: Row[] = [];
+        for (let i = startRow; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            const parts = line.split(/\t|,/).map((p) => p.trim());
+            // If file has an index column (STT) as first column, skip it and take columns 2 and 3
+            const rawName = parts[1] ?? parts[0] ?? '';
+            const responseText = parts[2] ?? parts[1] ?? '';
+            const name = formatIntentName(rawName || parts[1] || parts[0] || '');
+            out.push({ rawName, name, examples: responseText, response: responseText });
+        }
         return out;
     };
 
     const parseXLSX = async (file: File) => {
-        const XLSX = await import("xlsx");
+        // Use exceljs to read XLSX so we keep consistency with template generation
+        // @ts-ignore - optional runtime dependency, types may not be available in this environment
+        const ExcelJS = await import('exceljs');
         const arrayBuffer = await file.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: "array" });
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const csv = XLSX.utils.sheet_to_csv(firstSheet);
-        return parseCSV(csv);
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(arrayBuffer);
+        const worksheet = workbook.worksheets[0];
+        const out: Row[] = [];
+        // ExcelJS rows are 1-indexed. Skip first two rows per requirement.
+        worksheet.eachRow((row: any, rowNumber: number) => {
+            if (rowNumber <= 2) return;
+            // read columns B and C (2 and 3)
+            const rawColB = (row.getCell(2).value ?? '').toString().trim();
+            const rawColC = (row.getCell(3).value ?? '').toString().trim();
+            if (!rawColB && !rawColC) return;
+            const name = formatIntentName(rawColB || rawColC || '');
+            out.push({ rawName: rawColB, name, examples: rawColC, response: rawColC });
+        });
+        return out;
     };
+
+    function buildStoryDefine(storyName: string, steps: Array<{ intentId?: string; actionId?: string }>) {
+        const lines: string[] = [];
+        lines.push(`- story: ${storyName}`);
+        lines.push(`  steps:`);
+        steps.forEach((s) => {
+            if (s.intentId) lines.push(`  - intent: [${s.intentId}]`);
+            if (s.actionId) lines.push(`  - action: [${s.actionId}]`);
+        });
+        return lines.join("\n");
+    }
 
     const handleParseFile = async (f: File) => {
         setFile(f);
@@ -127,20 +165,72 @@ export function ImportIntentPage() {
         for (let i = 0; i < toImport.length; i++) {
             const row = toImport[i];
             try {
+                // Create intent
                 const intentPayload = {
                     name: row.name,
-                    description: "",
-                    define: row.examples.split(";").map((s) => `- ${s.trim()}`).join("\n"),
+                    description: row.rawName || "",
+                    define: (function buildIntentDefine(intentName: string, examplesText: string) {
+                        const examples = examplesText
+                            ? examplesText.split(";").map((s) => `- ${s.trim()}`).join("\n")
+                            : "";
+                        const lines: string[] = [];
+                        lines.push(`- intent: ${intentName}`);
+                        lines.push(`  examples: |`);
+                        if (examples) {
+                            examples.split('\n').forEach((ln) => lines.push(`    ${ln}`));
+                        }
+                        return lines.join("\n");
+                    })(row.name, row.examples),
                     entities: [],
                 };
-                await intentService.createIntent(intentPayload as any);
+                const createdIntent = await intentService.createIntent(intentPayload as any);
+
+                // Create response if we have response text
+                let createdResponse = null;
+                if (row.response && row.response.trim()) {
+                    const respName = `utter_${createdIntent.name || createdIntent._id}`;
+                    const responsePayload = {
+                        name: respName,
+                        description: "",
+                        define: (function buildResponseDefine(responseName: string, responseText: string) {
+                            const textBlock = responseText ? responseText.trim().split('\n').map((ln) => `      ${ln}`).join('\n') : "";
+                            const lines: string[] = [];
+                            lines.push(`${responseName}:`);
+                            lines.push(`  - text: |`);
+                            if (textBlock) {
+                                lines.push(textBlock);
+                            }
+                            return lines.join("\n");
+                        })(respName, row.response.trim()),
+                    };
+                    createdResponse = await responseService.createResponse(responsePayload as any);
+                }
+
+                // Create story linking the created intent and response
+                const storyName = `story_for_${createdIntent.name || createdIntent._id}`;
+                const steps: Array<{ intentId?: string; actionId?: string }> = [{ intentId: createdIntent._id }];
+                if (createdResponse) steps.push({ actionId: createdResponse._id });
+
+                const storyPayload = {
+                    name: storyName,
+                    description: "",
+                    define: buildStoryDefine(storyName, steps),
+                    intents: [createdIntent._id],
+                    responses: createdResponse ? [createdResponse._id] : [],
+                    action: [],
+                    entities: [],
+                    slots: [],
+                    roles: [],
+                };
+
+                await storyService.createStory(storyPayload as any);
             } catch (err) {
                 console.error("Row import error", row, err);
             }
             setProgress((p) => ({ ...p, done: p.done + 1 }));
         }
 
-        toast.success(`Imported ${toImport.length} intents`);
+        toast.success(`Imported ${toImport.length} rows as stories`);
         setIsImporting(false);
         navigate("/");
     };
@@ -148,43 +238,89 @@ export function ImportIntentPage() {
     const downloadTemplate = async () => {
         // Try to create an .xlsx if xlsx is available, otherwise fallback to CSV
         try {
-            const XLSX = await import("xlsx");
-            const wsData = [
-                ["intentName", "examples"],
-                [
-                    "hoi dap ve truong",
-                    "xin chao;toi muon hoi",
-                ],
+            // Use exceljs for reliable styling and merge support
+            // @ts-ignore - optional runtime import
+            const ExcelJS = await import('exceljs');
+            const workbook = new ExcelJS.Workbook();
+
+            const ws = workbook.addWorksheet('template');
+
+            // Row 1: STT | VÍ DỤ MẪU (merge B1:C1)
+            ws.getRow(1).values = ['STT', 'VÍ DỤ MẪU', ''];
+            // Row 2: header row
+            ws.getRow(2).values = ['', 'Câu hỏi', 'Câu trả lời'];
+            // Example data row
+            ws.getRow(3).values = [1, 'Cháy là gì', 'Theo Khoản 1 Điều 2, Luật Phòng cháy, chữa cháy và cứu nạn, cứu hộ 2024 quy định: Cháy là phản ứng...'];
+
+            // Merge B1:C1 and A1:A2
+            ws.mergeCells('B1:C1');
+            ws.mergeCells('A1:A2');
+
+            // Set column widths
+            ws.columns = [
+                { key: 'A', width: 6 },
+                { key: 'B', width: 40 },
+                { key: 'C', width: 100 },
             ];
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-            // set column widths: first two reasonably sized
-            ws["!cols"] = [{ wch: 20 }, { wch: 40 }];
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "template");
-            // Add a README sheet so Excel users see instructions immediately
-            const readme = [
-                ["Instructions"],
-                [""],
-                ["Import intents using the following format:"],
-                ["- Column 1: intentName (will be normalized to lowercase_with_underscores)."],
-                ["- Column 2: examples (examples separated by ';')."],
-                ["- Note: The importer will skip the first row if it looks like a header (intentName, examples)."],
-                ["- We recommend using XLSX to preserve formatting and instructions."],
+
+            // Style first 2 rows (fill + alignment)
+            for (let r = 1; r <= 2; r++) {
+                const row = ws.getRow(r);
+                for (let c = 1; c <= 3; c++) {
+                    const cell = row.getCell(c);
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFFF00' },
+                    };
+                    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                    cell.font = { bold: true };
+                }
+                row.height = 18;
+            }
+
+            // Add borders for first 3 rows
+            for (let r = 1; r <= 3; r++) {
+                const row = ws.getRow(r);
+                for (let c = 1; c <= 3; c++) {
+                    const cell = row.getCell(c);
+                    cell.border = {
+                        top: { style: 'thin' },
+                        left: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        right: { style: 'thin' },
+                    };
+                }
+            }
+
+            // README sheet
+            const readme = workbook.addWorksheet('README');
+            const instructions = [
+                ['Hướng dẫn / Instructions'],
+                [''],
+                ['File mẫu cho import dữ liệu (định dạng mẫu):'],
+                ['- Dòng 1: Tiêu đề (VÍ DỤ MẪU).'],
+                ['- Dòng 2: Header với các cột: STT | Câu hỏi | Câu trả lời'],
+                ['- Dòng dữ liệu bắt đầu từ dòng 3: cột A = STT (số), cột B = Câu hỏi, cột C = Câu trả lời.'],
+                ['- Import sẽ bỏ qua 2 dòng đầu tiên và bỏ cột A (STT).'],
+                ['- Câu trả lời sẽ được dùng làm nội dung response; nếu cần nhiều ví dụ trong câu hỏi, tách bằng ";"'],
             ];
-            const wsReadme = XLSX.utils.aoa_to_sheet(readme);
-            XLSX.utils.book_append_sheet(wb, wsReadme, "README");
-            const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-            const blob = new Blob([buf], { type: "application/octet-stream" });
+            instructions.forEach((r, i) => readme.getRow(i + 1).values = r);
+
+            // Write workbook to buffer
+            const buf = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buf], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
+            const a = document.createElement('a');
             a.href = url;
-            a.download = "intent_import_template.xlsx";
+            a.download = 'intent_import_template.xlsx';
             document.body.appendChild(a);
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
             return;
         } catch (err) {
+            console.error('exceljs template generation failed', err);
             // fallback to CSV
         }
 
@@ -192,12 +328,11 @@ export function ImportIntentPage() {
             const s = String(v ?? "");
             return `"${s.replace(/"/g, '""')}"`;
         };
+        // CSV fallback uses the same two-header-row format with STT as first column
         const csvRows = [
-            ["intentName", "examples"],
-            [
-                "hoi dap ve truong",
-                "xin chao;toi muon hoi",
-            ],
+            ["STT", "VÍ DỤ MẪU", ""],
+            ["", "Câu hỏi", "Câu trả lời"],
+            ["1", "Cháy là gì", "Theo Khoản 1 Điều 2, Luật Phòng cháy, chữa cháy và cứu nạn, cứu hộ 2024 ..."],
         ];
         const csv = csvRows.map(r => r.map(escapeCell).join(",")).join("\r\n");
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -212,11 +347,12 @@ export function ImportIntentPage() {
 
         // Also provide a small instructions .txt so users opening CSV can read guidance easily
         const instructions = [
-            "Import intents using the following format:",
-            "- Column 1: intentName (will be normalized to lowercase_with_underscores)",
-            "- Column 2: examples (examples separated by ';')",
-            "- The first row will be skipped if it looks like a header",
-            "- We recommend using XLSX to preserve formatting and instructions",
+            "Hướng dẫn import / Import instructions:",
+            "- Bỏ qua 2 dòng đầu tiên (title + header).",
+            "- Cột A: STT (bỏ qua khi import).",
+            "- Cột B: Câu hỏi (sẽ được dùng làm tên intent, sẽ được chuẩn hóa).",
+            "- Cột C: Câu trả lời (sẽ được dùng làm nội dung response).",
+            "- Nếu muốn nhiều ví dụ cho intent, tách các ví dụ bởi ';' trong cùng 1 ô.",
         ].join("\r\n");
         const txtBlob = new Blob([instructions], { type: "text/plain;charset=utf-8;" });
         const txtUrl = URL.createObjectURL(txtBlob);

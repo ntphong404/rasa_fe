@@ -28,6 +28,8 @@ import { UQuestionManagement } from "@/features/uquestion/pages/UQuestionManagem
 import { StoryManagementPage } from "@/features/stories/pages/StoryManagementPage";
 import { EditStoryPage } from "@/features/stories/pages/EditStoryPage";
 import { CreateStoryPage } from "@/features/stories/pages/CreateStoryPage";
+import DataInfoPage from "@/features/data-info/pages/DataInfoPage";
+import DataInfoDetailPage from "@/features/data-info/pages/DataInfoDetailPage";
 import { TrainingManagementPage } from "@/features/training";
 
 const router = createBrowserRouter([
@@ -84,6 +86,8 @@ const router = createBrowserRouter([
         ],
       },
       { path: "training", element: <TrainingManagementPage /> },
+      { path: "data-info", element: <DataInfoPage /> },
+      { path: "data-info/view", element: <DataInfoDetailPage /> },
     ],
   },
   {
