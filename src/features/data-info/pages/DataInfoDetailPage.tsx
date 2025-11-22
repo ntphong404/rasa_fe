@@ -8,11 +8,7 @@ import {
   Edit2,
   Save,
   X,
-  ChevronDown,
-  ChevronUp,
-  FileText,
   MessageSquare,
-  Zap,
   BookOpen,
 } from "lucide-react";
 import { storyService } from "@/features/stories/api/service";
@@ -49,21 +45,6 @@ export default function DataInfoDetailPage() {
     null
   );
   const [editingResponseText, setEditingResponseText] = useState<string>("");
-  const [expandedMap, setExpandedMap] = useState<Record<number, boolean>>({});
-
-  const toggleExpanded = (idx: number) => {
-    setExpandedMap((prev) => ({ ...prev, [idx]: !prev[idx] }));
-  };
-
-  const getSnippet = (text?: string, maxLines = 5) => {
-    if (!text) return "-";
-    const lines = text
-      .split(/\r?\n/)
-      .map((l) => l.trim())
-      .filter(Boolean);
-    if (lines.length <= maxLines) return lines.join("\n");
-    return lines.slice(0, maxLines).join("\n");
-  };
 
   useEffect(() => {
     const load = async () => {
@@ -140,14 +121,17 @@ export default function DataInfoDetailPage() {
 
   const handleSaveIntent = async (intentId: string) => {
     const intent = intents.find((i) => i._id === intentId);
-    if (!intent) return;
+    if (!intent) {
+      toast.error(t("Intent not found"));
+      return;
+    }
     setSavingIntentId(intentId);
     try {
       await intentService.updateIntent(intentId, intent as any);
-      toast.success(t("Intent updated"));
+      toast.success(t("Lưu câu hỏi thành công!"));
     } catch (error) {
       console.error("Failed to update intent", error);
-      toast.error(t("Failed to update intent"));
+      toast.error(t("Lưu câu hỏi thất bại. Vui lòng thử lại!"));
     } finally {
       setSavingIntentId(null);
     }
@@ -155,14 +139,17 @@ export default function DataInfoDetailPage() {
 
   const handleSaveResponse = async (responseId: string) => {
     const resp = responses.find((r) => r._id === responseId);
-    if (!resp) return;
+    if (!resp) {
+      toast.error(t("Response not found"));
+      return;
+    }
     setSavingResponseId(responseId);
     try {
       await responseService.updateResponse(responseId, resp as any);
-      toast.success(t("Response updated"));
+      toast.success(t("Lưu câu trả lời thành công!"));
     } catch (error) {
       console.error("Failed to update response", error);
-      toast.error(t("Failed to update response"));
+      toast.error(t("Lưu câu trả lời thất bại. Vui lòng thử lại!"));
     } finally {
       setSavingResponseId(null);
     }
@@ -260,12 +247,6 @@ export default function DataInfoDetailPage() {
                       <div className="text-xs text-gray-600">Responses</div>
                       <div className="text-lg font-bold text-green-600">
                         {responses.length}
-                      </div>
-                    </div>
-                    <div className="px-4 py-2 bg-amber-50 rounded-lg border border-amber-100">
-                      <div className="text-xs text-gray-600">Actions</div>
-                      <div className="text-lg font-bold text-amber-600">
-                        {actions.length}
                       </div>
                     </div>
                   </div>
@@ -404,7 +385,12 @@ export default function DataInfoDetailPage() {
                 }
               }
 
-              if (pairs.length === 0) {
+              // Lọc bỏ các cặp có action
+              const filteredPairs = pairs.filter(
+                (p) => p.nextKind !== "action"
+              );
+
+              if (filteredPairs.length === 0) {
                 return (
                   <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200">
                     <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-3" />
@@ -413,17 +399,14 @@ export default function DataInfoDetailPage() {
                 );
               }
 
-              return pairs.map((p, idx) => {
+              return filteredPairs.map((p, idx) => {
                 const intentExamples = extractIntentExamples(p.intent?.define);
                 const primary =
                   intentExamples.length > 0
                     ? intentExamples[0]
                     : p.intent?.define || "";
                 const similar = intentExamples.slice(1);
-                const isAction = p.nextKind === "action";
-                const answer = isAction
-                  ? p.nextData?.define || "-"
-                  : extractResponseText(p.nextData?.define) || "-";
+                const answer = extractResponseText(p.nextData?.define) || "-";
 
                 return (
                   <div
@@ -547,20 +530,10 @@ export default function DataInfoDetailPage() {
                     <div className="p-6">
                       <div className="flex items-start justify-between gap-4 mb-4">
                         <div className="flex items-center gap-2 text-green-700 font-semibold text-sm uppercase tracking-wide">
-                          {isAction ? (
-                            <>
-                              <Zap className="h-5 w-5" />
-                              <span>Action</span>
-                            </>
-                          ) : (
-                            <>
-                              <MessageSquare className="h-5 w-5" />
-                              <span>Câu trả lời</span>
-                            </>
-                          )}
+                          <MessageSquare className="h-5 w-5" />
+                          <span>Câu trả lời</span>
                         </div>
-                        {!isAction &&
-                          p.nextData &&
+                        {p.nextData &&
                           (editingResponseId === String(p.nextData._id) ? (
                             <div className="flex gap-2">
                               <Button
@@ -624,43 +597,7 @@ export default function DataInfoDetailPage() {
                           ))}
                       </div>
 
-                      {isAction ? (
-                        <div>
-                          <div
-                            className={`bg-gray-50 rounded-lg p-4 border border-gray-200 ${
-                              !expandedMap[idx] ? "relative" : ""
-                            }`}
-                          >
-                            <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono leading-relaxed">
-                              {expandedMap[idx]
-                                ? p.nextData?.define || "-"
-                                : getSnippet(p.nextData?.define, 5)}
-                            </pre>
-                            {!expandedMap[idx] && (
-                              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-gray-50 to-transparent" />
-                            )}
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => toggleExpanded(idx)}
-                            className="mt-3 gap-1 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                          >
-                            {expandedMap[idx] ? (
-                              <>
-                                <ChevronUp className="h-4 w-4" />
-                                Thu gọn
-                              </>
-                            ) : (
-                              <>
-                                <ChevronDown className="h-4 w-4" />
-                                Xem thêm
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      ) : !isAction &&
-                        editingResponseId === String(p.nextData?._id) ? (
+                      {editingResponseId === String(p.nextData?._id) ? (
                         <textarea
                           className="w-full border-2 border-green-200 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-base leading-relaxed"
                           rows={4}
