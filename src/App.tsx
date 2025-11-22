@@ -6,8 +6,8 @@ import AppRouter from "./routes";
 function App() {
   return (
     <ThemeProvider>
-      <AppRouter />
       <Toaster />
+      <AppRouter />
     </ThemeProvider>
   );
 }

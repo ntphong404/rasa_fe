@@ -18,7 +18,7 @@ import { actionService } from "@/features/action/api/service";
 import { IStory } from "@/interfaces/story.interface";
 import { IMyResponse } from "@/interfaces/response.interface";
 import { IntentDetailResponse } from "@/features/intents/api/dto/IntentResponse";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 
 export default function DataInfoDetailPage() {
   const { t } = useTranslation();
@@ -122,16 +122,44 @@ export default function DataInfoDetailPage() {
   const handleSaveIntent = async (intentId: string) => {
     const intent = intents.find((i) => i._id === intentId);
     if (!intent) {
-      toast.error(t("Intent not found"));
+      toast.error("Intent không tìm thấy!");
       return;
     }
+
+    // ✅ Lấy giá trị mới từ editingIntentText
+    const lines = editingIntentText
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const newDefine = `- intent: ${
+      (intent as any).name
+    }\n  examples: |\n    - ${lines.join("\n    - ")}`;
+    const updatedIntent = { ...intent, define: newDefine };
+
     setSavingIntentId(intentId);
     try {
-      await intentService.updateIntent(intentId, intent as any);
-      toast.success(t("Lưu câu hỏi thành công!"));
+      await intentService.updateIntent(intentId, updatedIntent as any);
+
+      // ✅ Cập nhật state sau khi save thành công
+      setIntents((prev) =>
+        prev.map((it) =>
+          String(it._id) === String(intentId) ? updatedIntent : it
+        )
+      );
+
+      setEditingIntentId(null);
+      setEditingIntentText("");
+
+      toast.success("Lưu câu hỏi thành công!", {
+        duration: 3000,
+        position: "top-right",
+      });
     } catch (error) {
       console.error("Failed to update intent", error);
-      toast.error(t("Lưu câu hỏi thất bại. Vui lòng thử lại!"));
+      toast.error("Lưu câu hỏi thất bại. Vui lòng thử lại!", {
+        duration: 3000,
+        position: "top-right",
+      });
     } finally {
       setSavingIntentId(null);
     }
@@ -140,16 +168,41 @@ export default function DataInfoDetailPage() {
   const handleSaveResponse = async (responseId: string) => {
     const resp = responses.find((r) => r._id === responseId);
     if (!resp) {
-      toast.error(t("Response not found"));
+      toast.error("Response không tìm thấy!");
       return;
     }
+
+    // ✅ Lấy giá trị mới từ editingResponseText
+    const text = editingResponseText;
+    const newDefine = `${
+      (resp as any).name
+    }:\n  - text: |\n      ${text.replace(/\n/g, "\n      ")}`;
+    const updatedResponse = { ...resp, define: newDefine };
+
     setSavingResponseId(responseId);
     try {
-      await responseService.updateResponse(responseId, resp as any);
-      toast.success(t("Lưu câu trả lời thành công!"));
+      await responseService.updateResponse(responseId, updatedResponse as any);
+
+      // ✅ Cập nhật state sau khi save thành công
+      setResponses((prev) =>
+        prev.map((r) =>
+          String(r._id) === String(responseId) ? updatedResponse : r
+        )
+      );
+
+      setEditingResponseId(null);
+      setEditingResponseText("");
+
+      toast.success("Lưu câu trả lời thành công!", {
+        duration: 3000,
+        position: "top-right",
+      });
     } catch (error) {
       console.error("Failed to update response", error);
-      toast.error(t("Lưu câu trả lời thất bại. Vui lòng thử lại!"));
+      toast.error("Lưu câu trả lời thất bại. Vui lòng thử lại!", {
+        duration: 3000,
+        position: "top-right",
+      });
     } finally {
       setSavingResponseId(null);
     }
