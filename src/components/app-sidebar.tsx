@@ -38,13 +38,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       navMain: [
         {
-          title: "Models",
+          title: "Normal",
+          icon: Bot,
+          hidden: false,
+          items: [
+            { title: "Thêm dữ liệu", url: "/add-data" },
+            { title: "Xem chi tiết", url: "/data-info" },
+          ]
+        },
+        {
+          title: "Expert",
           url: "#",
           icon: Bot,
           hidden: false,
           items: [
-            // Add Data tab inside Models
-            { title: "Add Data", url: "/add-data" },
             {
               title: "Training",
               url: "/training",

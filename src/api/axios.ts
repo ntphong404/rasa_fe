@@ -24,7 +24,6 @@ const axiosInstance = axios.create({
   withCredentials: false,
   headers: {
     "Content-Type": "application/json",
-    'x-platform': 'WEB'
   },
 });
 
@@ -73,7 +72,7 @@ axiosInstance.interceptors.response.use(
         }
 
         const washResp = await axios.post(`${BASE_URL}${ENDPOINTS.AUTH_ENDPOINTS.REFRESH_TOKEN}`, { token: refreshToken }, {
-          headers: { 'Content-Type': 'application/json', 'x-platform': 'WEB' }
+          headers: { 'Content-Type': 'application/json' }
         });
 
         // Response may contain tokens at data.data or data
