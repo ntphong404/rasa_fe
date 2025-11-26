@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { AspectRatio } from "@radix-ui/react-aspect-ratio";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
-import axiosInstance from "@/api/axios";
+import { authService } from "@/features/auth/api/service";
 
 export function ResetPasswordPage({
   className,
@@ -21,7 +21,6 @@ export function ResetPasswordPage({
   const navigate = useNavigate();
   const location = useLocation();
 
-  const id = location.state?.id;
   const otp = location.state?.otp;
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -37,7 +36,7 @@ export function ResetPasswordPage({
       return;
     }
 
-    if (!id || !otp) {
+    if (!otp) {
       toast.error("Thiếu thông tin xác thực. Vui lòng thực hiện lại quy trình quên mật khẩu!");
       navigate("/auth/forgot-password");
       return;
@@ -45,12 +44,11 @@ export function ResetPasswordPage({
 
     try {
       setLoading(true);
-      await axiosInstance.post(
-        "/api/auth/reset-password",
-        { id, otp, password }
-      );
+      await authService.resetPassword({ otp, newPassword: password });
 
       toast.success("Đặt lại mật khẩu thành công! Vui lòng đăng nhập.");
+      // Xóa pre-access token sau khi reset password thành công
+      localStorage.removeItem('authToken');
       navigate("/auth");
     } catch (err: unknown) {
       let message = "Đặt lại mật khẩu thất bại!";

@@ -8,6 +8,7 @@ import { AspectRatio } from "@radix-ui/react-aspect-ratio";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { useVerify } from "@/hooks/useVerify";
+import { authService } from "@/features/auth/api/service";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -18,7 +19,7 @@ export function VerifyPage({
   const { verify, isLoading } = useVerify();
   const navigate = useNavigate();
   const location = useLocation();
-  const { email, token, type } = location.state || {};
+  const { email, type } = location.state || {};
 
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -49,7 +50,15 @@ export function VerifyPage({
 
     try {
       setLoading(true);
-      const result = await verify(otp, token);
+
+      let result;
+      if (type === "forgot") {
+        // Gọi verify-reset-otp cho luồng forgot password
+        result = await authService.verifyResetOtp(otp);
+      } else {
+        // Gọi verify-email cho luồng register
+        result = await verify(otp);
+      }
 
       if (!result || result.success === false) {
         const msg = result?.message || "Xác thực thất bại!";
@@ -62,7 +71,7 @@ export function VerifyPage({
       if (type === "register") {
         navigate("/auth");
       } else if (type === "forgot") {
-        navigate("/auth/reset-password", { state: { email, token } });
+        navigate("/auth/reset-password", { state: { otp } });
       } else {
         navigate("/auth");
       }
@@ -143,9 +152,9 @@ export function VerifyPage({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Button 
-                type="submit" 
-                className="w-full bg-[#FC6D26] hover:bg-[#E24329] text-white" 
+              <Button
+                type="submit"
+                className="w-full bg-[#FC6D26] hover:bg-[#E24329] text-white"
                 disabled={loading || isLoading}
               >
                 {loading || isLoading ? "Đang xác thực..." : "Xác thực"}

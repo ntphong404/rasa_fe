@@ -31,14 +31,22 @@ export const authService = {
     if (refresh) localStorage.setItem('refreshToken', refresh);
     return payload;
   },
-  verify: async (otp: string, token?: string): Promise<any> => {
-    // Nếu có token thì truyền lên, không thì chỉ truyền otp
-    const payload = token ? { otp, token } : { otp };
+  verify: async (otp: string): Promise<any> => {
+    const payload = { otp };
     const response = await axiosInstance.post(ENDPOINTS.AUTH_ENDPOINTS.VERIFY, payload);
     return response.data;
   },
   forgotPassword: async (data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
     const response = await axiosInstance.post(ENDPOINTS.AUTH_ENDPOINTS.FORGOT_PASSWORD, data);
+    const payload = response.data?.data ?? response.data;
+    // Lưu pre-access token để dùng cho verify-reset-otp và reset-password
+    if (payload?.accessToken) {
+      localStorage.setItem('authToken', payload.accessToken);
+    }
+    return payload;
+  },
+  verifyResetOtp: async (otp: string): Promise<{ success: boolean; message?: string }> => {
+    const response = await axiosInstance.post(ENDPOINTS.AUTH_ENDPOINTS.VERIFY_RESET_OTP, { otp });
     return response.data?.data ?? response.data;
   },
   resetPassword: async (data: ResetPasswordRequest): Promise<ResetPasswordResponse> => {
