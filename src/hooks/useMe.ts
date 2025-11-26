@@ -26,7 +26,7 @@ export const useMe = () => {
         catch (err: any) {
             setError(
                 err.response?.data?.message ||
-                "Fetching user profile failed."
+                "Lấy thông tin người dùng thất bại."
             );
             throw err; // Re-throw the error for further handling if needed
         }
@@ -39,13 +39,13 @@ export const useMe = () => {
         setIsLoading(true);
         try {
             const response = await authService.updateMe(data);
-            toast.success("User profile updated successfully");
+            toast.success("Cập nhật thông tin người dùng thành công!");
             updateUser(response);
             return response;
         } catch (err: any) {
             setError(
                 err.response?.data?.message ||
-                "Updating user profile failed."
+                "Cập nhật thông tin người dùng thất bại."
             );
             throw err;
         } finally {

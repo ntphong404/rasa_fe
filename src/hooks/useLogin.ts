@@ -24,11 +24,23 @@ export const useLogin = () => {
 
             return payload;
         } catch (err: any) {
-            setError(
-                err.response?.data?.message ||
-                "Login failed. Please check your credentials."
-            );
-            throw err; // Re-throw the error for further handling if needed
+                // Map network/no-response errors to a clearer message
+                if (!err?.response) {
+                    const networkMsg = err?.message === 'Network Error'
+                        ? 'Không thể kết nối tới máy chủ. Vui lòng kiểm tra kết nối mạng hoặc cấu hình API.'
+                        : `Lỗi kết nối: ${err?.message ?? 'Unknown'}`;
+                    setError(networkMsg);
+                    const e = new Error(networkMsg);
+                    // attach original for debugging
+                    (e as any).original = err;
+                    throw e;
+                }
+
+                setError(
+                    err.response?.data?.message ||
+                    "Login failed. Please check your credentials."
+                );
+                throw err; // Re-throw the error for further handling if needed
         }
         finally {
             setLoading(false);

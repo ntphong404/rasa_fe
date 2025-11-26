@@ -17,15 +17,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Popover, PopoverTrigger } from "@radix-ui/react-popover";
-import { CalendarIcon } from "lucide-react";
-import "react-day-picker/dist/style.css"; // optional: style mặc định của DayPicker
+import { CalendarIcon, ArrowLeft } from "lucide-react";
+import "react-day-picker/dist/style.css";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useRegister } from "@/hooks/useRegister";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
+import { AspectRatio } from "@radix-ui/react-aspect-ratio";
+import toast from "react-hot-toast";
 
 export function SignUpPage({
   className,
@@ -33,9 +36,25 @@ export function SignUpPage({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [date, setDate] = useState<Date>();
   const [gender, setGender] = useState<string>("");
-  const { register, isLoading, error: apiError } = useRegister();
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { register, isLoading } = useRegister();
   const navigate = useNavigate();
+
+  const passwordStrength = useMemo(() => {
+    const checks = [
+      (p: string) => p.length >= 8,
+      (p: string) => /[0-9]/.test(p),
+      (p: string) => /[A-Z]/.test(p),
+      (p: string) => /[^A-Za-z0-9]/.test(p),
+    ];
+    const score = checks.reduce((acc, fn) => acc + (fn(password) ? 1 : 0), 0);
+    const label = score <= 1 ? "Yếu" : score === 2 ? "Trung bình" : score === 3 ? "Tốt" : "Rất tốt";
+    const color = score <= 1 ? "bg-red-500" : score === 2 ? "bg-yellow-400" : score === 3 ? "bg-emerald-400" : "bg-green-600";
+    return { score, label, color };
+  }, [password]);
 
   const validateForm = (formData: {
     email: string;
@@ -43,259 +62,270 @@ export function SignUpPage({
     confirmPassword: string;
     firstName: string;
     lastName: string;
-    // phone: string;
-    // address: string;
   }) => {
-    // Kiểm tra độ mạnh mật khẩu
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\W).{8,}$/;
-    if (!passwordRegex.test(formData.password)) {
-      setValidationError(
-        "Password must be at least 8 characters, include an uppercase letter and a special character"
-      );
+    if (!formData.firstName.trim()) {
+      toast.error("Vui lòng nhập họ!");
       return false;
     }
-
-    //Kiểm tra mật khẩu khớp nhau
-    if (formData.password !== formData.confirmPassword) {
-      setValidationError("Passwords do not match");
+    if (!formData.lastName.trim()) {
+      toast.error("Vui lòng nhập tên!");
       return false;
     }
-
-    //Kiểm tra email hợp lệ
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      setValidationError("Please enter a valid email address");
+      toast.error("Vui lòng nhập địa chỉ email hợp lệ!");
       return false;
     }
-
-    //Kiểm tra ngày sinh
     if (!date) {
-      setValidationError("Date of birth is required");
+      toast.error("Vui lòng chọn ngày sinh!");
       return false;
     }
-
-    // Kiểm tra giới tính
     if (!gender) {
-      setValidationError("Please select your gender");
+      toast.error("Vui lòng chọn giới tính!");
       return false;
     }
-
-    // Kiểm tra số điện thoại
-    // const phoneRegex = /^\+?[0-9\s\-$$$$]{8,}$/;
-    // if (!phoneRegex.test(formData.phone)) {
-    //   setValidationError("Please enter a valid phone number");
-    //   return false;
-    // }
-
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\W).{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      toast.error("Mật khẩu phải có ít nhất 8 ký tự, bao gồm 1 chữ hoa và 1 ký tự đặc biệt!");
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Mật khẩu xác nhận không khớp!");
+      return false;
+    }
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setValidationError(null);
-
     const formData = new FormData(e.currentTarget);
     const formValues = {
       email: formData.get("email") as string,
-
-      password: formData.get("password") as string,
-      confirmPassword: formData.get("confirmPassword") as string,
+      password: password,
+      confirmPassword: confirmPassword,
       firstName: formData.get("firstName") as string,
       lastName: formData.get("lastName") as string,
-      // phone: formData.get("phone") as string,
-      // address: formData.get("address") as string,
     };
-    console.log({ formValues, date, gender });
 
-    // Validate form trước khi gửi
-    if (!validateForm(formValues)) {
-      return;
-    }
+    if (!validateForm(formValues)) return;
+
     try {
-      // Chuẩn bị dữ liệu để gửi đến API
       const registerData = {
         email: formValues.email,
         password: formValues.password,
         firstName: formValues.firstName,
         lastName: formValues.lastName,
-        // phone: formValues.phone,
-        // address: formValues.address,
         dateOfBirth: date ? new Date(date).toISOString() : "",
         gender: gender.toUpperCase(),
       };
-
-      // Gọi API đăng ký thông qua hook
       await register(registerData);
-      navigate("/auth/verify");
-    } catch (err) {
-      // Lỗi đã được xử lý trong hook
-      console.error("Form submission error:", err);
+      toast.success("Đăng ký thành công! Vui lòng xác thực email.");
+      navigate("/auth/verify", { state: { email: formValues.email, type: "register" } });
+    } catch (err: unknown) {
+      let message = "Đăng ký thất bại!";
+      if (err && typeof err === "object" && "response" in err) {
+        const response = (err as { response?: { data?: { message?: string } } }).response;
+        if (response?.data?.message) {
+          message = response.data.message;
+        }
+      }
+      toast.error(message);
     }
   };
 
-  // Hiển thị lỗi từ API hoặc lỗi validation
-  const displayError = validationError || apiError;
-
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="w-full max-w-3xl mx-auto">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Register</CardTitle>
-          <CardDescription>Create a new account to get started</CardDescription>
+    <div className={cn("flex flex-col gap-6 items-center justify-start min-h-[70vh]", className)} {...props}>
+      <Card className="w-full max-w-5xl shadow-lg border rounded-2xl">
+        <CardHeader className="text-center space-y-0 relative pt-1">
+          <div className="flex items-center justify-center relative mb-0">
+            <button
+              type="button"
+              onClick={() => navigate("/auth")}
+              className="absolute left-0 p-2 rounded-full hover:bg-slate-100 transition-colors"
+              aria-label="Quay lại đăng nhập"
+            >
+              <ArrowLeft className="w-5 h-5 text-slate-600" />
+            </button>
+            <CardTitle className="text-lg">Đăng ký tài khoản</CardTitle>
+          </div>
+          <CardDescription className="-mt-1">Tạo tài khoản mới để bắt đầu sử dụng</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mx-auto mb-6 w-[120px] h-[120px] p-2 items-center">
-            <img
-              src="/logo.png"
-              alt="Logo"
-              className="rounded-full object-cover"
-            />
+          <div className="mx-auto mb-4 w-32 h-32 p-0 items-center -mt-2">
+            <AspectRatio ratio={1}>
+              <img src="/logo.png" alt="Logo" className="rounded-md object-cover" />
+            </AspectRatio>
           </div>
-          {displayError && (
-            <div className="mb-4 p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
-              {displayError}
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Personal Information */}
-              <div className="grid gap-2">
-                <Label htmlFor="name">First Name</Label>
-                <Input
-                  id="name"
-                  name="firstName"
-                  placeholder="John"
-                  required
-                  disabled={isLoading}
-                />
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid gap-1">
+                <Label htmlFor="firstName">Họ</Label>
+                <Input id="firstName" name="firstName" placeholder="Nguyễn" required disabled={isLoading} className="!text-xs py-1.5 px-2" />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="username">Last Name</Label>
-                <Input
-                  id="username"
-                  name="lastName"
-                  placeholder="Doe"
-                  required
-                  disabled={isLoading}
-                />
+              <div className="grid gap-1">
+                <Label htmlFor="lastName">Tên</Label>
+                <Input id="lastName" name="lastName" placeholder="Văn A" required disabled={isLoading} className="!text-xs py-1.5 px-2" />
               </div>
-              <div className="grid gap-2 md:col-span-2">
+
+              <div className="grid gap-1 md:col-span-2">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="john@example.com"
-                  required
-                  disabled={isLoading}
-                />
+                <Input id="email" name="email" type="email" placeholder="example@email.com" required disabled={isLoading} className="!text-xs py-1.5 px-2" />
               </div>
-              {/* <div className="grid gap-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  placeholder="+1 (555) 123-4567"
-                  required
-                  //   disabled={isLoading}
-                />
-              </div> */}
-              <div className="grid gap-2 md:col-span-2">
-                <Label htmlFor="dob">Date of Birth</Label>
+
+              <div className="grid gap-1">
+                <Label htmlFor="dob">Ngày sinh</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       type="button"
-                      //   variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
-                      )}
+                      variant="outline"
+                      className={cn("w-full justify-start text-left font-normal !text-xs py-1.5 px-2 h-auto", !date && "text-muted-foreground")}
                       disabled={isLoading}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "PPP") : "Select date"}
+                      {date ? format(date, "dd/MM/yyyy", { locale: vi }) : "Chọn ngày sinh"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      initialFocus
-                      captionLayout="dropdown-buttons"
-                      fromYear={1940}
-                      toYear={2010}
-                    />
+                    <Calendar mode="single" selected={date} onSelect={setDate} initialFocus captionLayout="dropdown-buttons" fromYear={1940} toYear={2010} />
                   </PopoverContent>
                 </Popover>
               </div>
-              <div className="grid gap-2 md:col-span-2">
-                <Label htmlFor="gender">Gender</Label>
-                <Select
-                  value={gender}
-                  onValueChange={setGender}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select gender" />
+
+              <div className="grid gap-1">
+                <Label htmlFor="gender">Giới tính</Label>
+                <Select value={gender} onValueChange={setGender} disabled={isLoading}>
+                  <SelectTrigger className="w-full !text-xs py-1.5 px-2 h-auto">
+                    <SelectValue placeholder="Chọn giới tính" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MALE">Male</SelectItem>
-                    <SelectItem value="FEMALE">Female</SelectItem>
-                    <SelectItem value="OTHER">Other</SelectItem>
+                    <SelectItem value="MALE">Nam</SelectItem>
+                    <SelectItem value="FEMALE">Nữ</SelectItem>
+                    <SelectItem value="OTHER">Khác</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              {/* <div className="grid gap-2 md:col-span-2">
-                <Label htmlFor="address">Address</Label>
-                <Textarea
-                  id="address"
-                  name="address"
-                  placeholder="Enter your full address"
-                  className="resize-none"
-                  rows={3}
-                  //   disabled={isLoading}
-                />
-              </div> */}
 
-              {/* Password Section */}
-              <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  disabled={isLoading}
-                />
+              <div className="grid gap-1">
+                <Label htmlFor="password">Mật khẩu</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Nhập mật khẩu"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="!text-xs py-1.5 px-2 pr-10"
+                    style={!showPassword ? { WebkitTextSecurity: "circle" } as React.CSSProperties : {}}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-700"
+                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  >
+                    {showPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 17a5 5 0 100-10 5 5 0 000 10z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  disabled={isLoading}
-                />
+
+              <div className="grid gap-1">
+                <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Nhập lại mật khẩu"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="!text-xs py-1.5 px-2 pr-10"
+                    style={!showConfirmPassword ? { WebkitTextSecurity: "circle" } as React.CSSProperties : {}}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((s) => !s)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-700"
+                  >
+                    {showConfirmPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 17a5 5 0 100-10 5 5 0 000 10z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth={2} />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 md:col-span-2 -mt-3">
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <div className="flex-1 h-2 rounded bg-slate-200 overflow-hidden">
+                    <div className={`${passwordStrength.color} h-full transition-all duration-200`} style={{ width: `${(passwordStrength.score / 4) * 100}%` }} />
+                  </div>
+                  <div className="relative group">
+                    <button type="button" className="w-5 h-5 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2}>
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 115.82 1c0 2-3 2.5-3 4"></path>
+                        <line x1="12" y1="17" x2="12" y2="17"></line>
+                      </svg>
+                    </button>
+                    <div className="absolute left-0 mt-2 w-56 p-2 bg-white border rounded shadow-sm text-xs opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-10">
+                      Ít nhất 8 ký tự, 1 chữ hoa, 1 ký tự đặc biệt.
+                    </div>
+                  </div>
+                  <span className="whitespace-nowrap">Độ mạnh: <span className="font-semibold text-slate-700">{passwordStrength.label}</span></span>
+                </div>
+                <div className="flex items-center justify-end min-h-[16px]">
+                  {confirmPassword && password !== confirmPassword && (
+                    <p className="text-xs text-red-500">Mật khẩu không khớp</p>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 pt-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating Account..." : "Create Account"}
+            <div className="flex flex-col gap-2">
+              <Button type="submit" className="w-full bg-[#FC6D26] hover:bg-[#E24329] text-white" disabled={isLoading}>
+                {isLoading ? "Đang tạo tài khoản..." : "Đăng ký"}
+              </Button>
+              <Button variant="outline" type="button" className="w-full flex items-center justify-center gap-2" disabled={isLoading}>
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Đăng ký bằng Google
               </Button>
             </div>
 
-            <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
-              <a
-                href="/auth"
-                className="text-primary underline underline-offset-4"
-              >
-                Login
+            <div className="text-center text-sm text-muted-foreground -mt-2">
+              Đã có tài khoản?{" "}
+              <a href="/auth" className="text-[#FC6D26] hover:text-[#E24329] font-medium underline">
+                Đăng nhập
               </a>
             </div>
           </form>

@@ -22,6 +22,7 @@ function formatIntentName(input?: string) {
 
 export function ImportIntentPage() {
     const navigate = useNavigate();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [file, setFile] = useState<File | null>(null);
     const [isParsing, setIsParsing] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
@@ -75,7 +76,7 @@ export function ImportIntentPage() {
                     parsed = await parseXLSX(f);
                 } catch (err) {
                     console.error("XLSX parse error", err);
-                    toast.error("Failed to parse Excel file. Make sure 'xlsx' is installed.");
+                    toast.error("Phân tích file Excel thất bại. Vui lòng kiểm tra rằng thư viện 'xlsx' đã được cài đặt.");
                     setIsParsing(false);
                     return;
                 }
@@ -91,7 +92,7 @@ export function ImportIntentPage() {
             setSelected(sel);
         } catch (err) {
             console.error(err);
-            toast.error("Failed to parse file");
+            toast.error("Phân tích file thất bại");
         } finally {
             setIsParsing(false);
         }
@@ -120,7 +121,7 @@ export function ImportIntentPage() {
 
     const handleImport = async () => {
         const toImport = rows.filter((_, i) => selected[i]);
-        if (toImport.length === 0) return toast.error("No rows selected");
+        if (toImport.length === 0) return toast.error("Chưa có hàng nào được chọn");
         setIsImporting(true);
         setProgress({ done: 0, total: toImport.length });
 
@@ -133,6 +134,7 @@ export function ImportIntentPage() {
                     define: row.examples.split(";").map((s) => `- ${s.trim()}`).join("\n"),
                     entities: [],
                 };
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 await intentService.createIntent(intentPayload as any);
             } catch (err) {
                 console.error("Row import error", row, err);
@@ -140,7 +142,7 @@ export function ImportIntentPage() {
             setProgress((p) => ({ ...p, done: p.done + 1 }));
         }
 
-        toast.success(`Imported ${toImport.length} intents`);
+        toast.success(`Đã nhập ${toImport.length} intents`);
         setIsImporting(false);
         navigate("/");
     };
@@ -184,11 +186,12 @@ export function ImportIntentPage() {
             a.remove();
             URL.revokeObjectURL(url);
             return;
-        } catch (err) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_err) {
             // fallback to CSV
         }
 
-        const escapeCell = (v: any) => {
+        const escapeCell = (v: unknown) => {
             const s = String(v ?? "");
             return `"${s.replace(/"/g, '""')}"`;
         };
@@ -235,11 +238,11 @@ export function ImportIntentPage() {
                 <div className="flex items-center gap-4 mb-6">
                     <Button variant="ghost" size="sm" onClick={handleCancel} className="gap-2">
                         <ArrowLeft className="h-4 w-4" />
-                        Back
+                            Quay lại
                     </Button>
-                    <h1 className="text-2xl font-bold">Import intents from file</h1>
+                        <h1 className="text-2xl font-bold">Nhập intents từ file</h1>
                     <div className="ml-auto">
-                        <Button variant="outline" size="sm" onClick={downloadTemplate} className="ml-2">Download template</Button>
+                            <Button variant="outline" size="sm" onClick={downloadTemplate} className="ml-2">Tải mẫu</Button>
                     </div>
                 </div>
 
@@ -259,13 +262,13 @@ export function ImportIntentPage() {
                             className="hidden"
                             onChange={handleFileChange}
                         />
-                        <div className="text-xl font-semibold text-indigo-700">Drop anywhere to import</div>
+                        <div className="text-xl font-semibold text-indigo-700">Kéo thả để nhập</div>
                         <div className="mt-2 text-sm text-slate-500">Or select <button onClick={(e) => { e.stopPropagation(); handleClickChoose(); }} className="text-indigo-600 underline">files</button></div>
                         <div className="mt-3 text-sm text-slate-400">Supported: CSV, TSV, TXT, XLS, XLSX</div>
                     </div>
                 </div>
 
-                {isParsing && <div>Parsing file...</div>}
+                {isParsing && <div>Đang phân tích file...</div>}
 
                 {rows.length > 0 && (
                     <div className="bg-white p-4 rounded-lg shadow-lg">
@@ -299,8 +302,8 @@ export function ImportIntentPage() {
                         </div>
 
                         <div className="flex gap-3 mt-4">
-                            <Button onClick={handleImport} disabled={isImporting} className="bg-indigo-600 text-white hover:bg-indigo-700">{isImporting ? 'Importing...' : 'Import selected'}</Button>
-                            <Button variant="ghost" onClick={() => { setRows([]); setFile(null); setSelected({}); }}>{'Cancel / Clear'}</Button>
+                            <Button onClick={handleImport} disabled={isImporting} className="bg-indigo-600 text-white hover:bg-indigo-700">{isImporting ? 'Đang nhập...' : 'Nhập mục đã chọn'}</Button>
+                            <Button variant="ghost" onClick={() => { setRows([]); setFile(null); setSelected({}); }}>{'Hủy / Xóa'}</Button>
                         </div>
                     </div>
                 )}

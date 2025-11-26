@@ -350,7 +350,7 @@ ${exampleLines || "    - example1"}`;
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-5xl">
+    <div className="container mx-auto py-6 max-w-5xl p-3">
       {/* Help Button - Fixed position */}
       <Button
         variant="outline"

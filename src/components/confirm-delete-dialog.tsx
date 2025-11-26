@@ -25,10 +25,10 @@ export function ConfirmDeleteDialog({
   const handleDelete = async () => {
     try {
       await onConfirm();
-      toast.success("Deleted Successfully!");
+      toast.success("Xóa thành công!");
       onOpenChange(false);
     } catch (error) {
-      toast.error("Delete failed, please try again!");
+      toast.error("Xóa thất bại, vui lòng thử lại!");
       console.error("Delete error:", error);
     }
   };
@@ -41,21 +41,19 @@ export function ConfirmDeleteDialog({
       <DialogContent className="max-w-sm p-6 text-center space-y-4">
         <DialogHeader className="flex flex-col items-center space-y-2">
           <AlertTriangle className="text-red-500 w-10 h-10" />
-          <DialogTitle className="text-lg">Confirm Deletion</DialogTitle>
+          <DialogTitle className="text-lg">Xác nhận xóa</DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
-            Are you sure you want to{" "}
-            <span className="text-red-500 font-semibold">delete</span> this
-            item?
+            Bạn có chắc muốn <span className="text-red-500 font-semibold">xóa</span> mục này không?
             <br />
-            This action cannot be undone.
+            Hành động này không thể hoàn tác.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex justify-center gap-4 pt-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Hủy
           </Button>
           <Button variant="destructive" onClick={handleDelete}>
-            Confirm
+            Xác nhận
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -78,10 +76,10 @@ export function ConfirmSoftDeleteDialog({
   const handleSoftDelete = async () => {
     try {
       await onConfirm();
-      toast.success("Moved to trash successfully!");
+      toast.success("Đã chuyển vào thùng rác!");
       onOpenChange(false);
     } catch (error) {
-      toast.error("Failed to move to trash, please try again!");
+      toast.error("Di chuyển vào thùng rác thất bại, vui lòng thử lại!");
       console.error("Soft delete error:", error);
     }
   };
@@ -94,7 +92,7 @@ export function ConfirmSoftDeleteDialog({
           <div className="bg-orange-100 p-3 rounded-full">
             <Archive className="text-orange-600 w-8 h-8" />
           </div>
-          <DialogTitle className="text-lg">Move to Trash</DialogTitle>
+          <DialogTitle className="text-lg">Chuyển vào Thùng rác</DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
             Are you sure you want to move this item to trash?
             <br />
@@ -105,13 +103,13 @@ export function ConfirmSoftDeleteDialog({
         </DialogHeader>
         <DialogFooter className="flex justify-center gap-4 pt-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Hủy
           </Button>
           <Button
             className="bg-orange-600 hover:bg-orange-700"
             onClick={handleSoftDelete}
           >
-            Move to Trash
+            Chuyển vào Thùng rác
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -128,10 +126,10 @@ export function ConfirmHardDeleteDialog({
   const handleHardDelete = async () => {
     try {
       await onConfirm();
-      toast.success("Permanently deleted!");
+      toast.success("Đã xóa vĩnh viễn!");
       onOpenChange(false);
     } catch (error) {
-      toast.error("Delete failed, please try again!");
+      toast.error("Xóa thất bại, vui lòng thử lại!");
       console.error("Hard delete error:", error);
     }
   };
@@ -144,19 +142,11 @@ export function ConfirmHardDeleteDialog({
           <div className="bg-red-100 p-3 rounded-full">
             <AlertTriangle className="text-red-500 w-8 h-8" />
           </div>
-          <DialogTitle className="text-lg text-red-600">
-            Permanent Deletion
-          </DialogTitle>
+          <DialogTitle className="text-lg text-red-600">Xóa vĩnh viễn</DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
-            Are you sure you want to{" "}
-            <span className="text-red-600 font-semibold">
-              permanently delete
-            </span>{" "}
-            this item?
+            Bạn có chắc muốn <span className="text-red-600 font-semibold">xóa vĩnh viễn</span> mục này?
             <br />
-            <span className="text-red-600 font-bold">
-              This action CANNOT be undone!
-            </span>
+            <span className="text-red-600 font-bold">Hành động này KHÔNG thể hoàn tác!</span>
           </DialogDescription>
         </DialogHeader>
         <div className="bg-red-50 border border-red-200 rounded-md p-3">
@@ -167,7 +157,7 @@ export function ConfirmHardDeleteDialog({
         </div>
         <DialogFooter className="flex justify-center gap-4 pt-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Hủy
           </Button>
           <Button
             variant="destructive"
@@ -175,7 +165,7 @@ export function ConfirmHardDeleteDialog({
             className="bg-red-600 hover:bg-red-700"
           >
             <Trash2 className="w-4 h-4 mr-2" />
-            Delete Forever
+            Xóa vĩnh viễn
           </Button>
         </DialogFooter>
       </DialogContent>

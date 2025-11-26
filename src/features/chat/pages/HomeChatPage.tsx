@@ -1,19 +1,19 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { MessageSquare, Mic, Plus, Search, SendHorizonal } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
+// import { cn } from "@/lib/utils";
+// import { MessageSquare, Mic, Plus, Search, SendHorizonal } from "lucide-react";
+// import { useEffect, useRef, useState } from "react";
 
-export function HomeChat() {
-  //   const [inputValue, setInputValue] = useState("");
-  //   //   const { messages, sendMessage, loading, error } = useChatRasa();
+// export function HomeChat() {
+//     const [inputValue, setInputValue] = useState("");
+//     //   const { messages, sendMessage, loading, error } = useChatRasa();
   //   const messagesEndRef = useRef<HTMLDivElement>(null);
   //   //   const chatbots = useUserStore((state) => state.user?.role?.chatbots || []);
   //   const [selectedBotUrl, setSelectedBotUrl] = useState<string | null>();
@@ -227,9 +227,9 @@ export function HomeChat() {
   //       </footer>
   //     </div>
   //   );
-  return (
-    <>
-      <div>Home Chat Page</div>
-    </>
-  );
-}
+//   return (
+//     <>
+//       <div>Home Chat Page</div>
+//     </>
+//   );
+// }

@@ -4,7 +4,6 @@ import {
   Mic,
   Plus,
   SendHorizonal,
-  Sparkles,
   Lightbulb,
   Code,
   Palette,
@@ -19,6 +18,20 @@ import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 import { useAuthStore } from "@/store/auth";
 import toast from "react-hot-toast";
 import { useChatContext } from "@/features/chat/context/ChatContext";
+
+// List of available quick suggestions (stable reference)
+const QUICK_SUGGESTIONS = [
+  { icon: Lightbulb, text: "Chiều cao để xe chữa cháy di chuyển được là bao nhiêu?", color: "from-yellow-200 to-yellow-300" },
+  { icon: Code, text: "Các nội dung thẩm định thiết kế về phòng cháy và chữa cháy?", color: "from-red-200 to-red-300" },
+  { icon: Palette, text: "Hồ sơ đề nghị thẩm định thiết kế về phòng cháy và chữa cháy?", color: "from-orange-200 to-orange-300" },
+  { icon: MessageSquare, text: "Yêu cầu PCCC trong quy hoạch xây dựng", color: "from-blue-200 to-blue-300" },
+  { icon: Bot, text: "Thời hạn thẩm định thiết kế về PCCC bao lâu?", color: "from-emerald-200 to-emerald-300" },
+  { icon: User, text: "Phân loại bộ phân ngăn cháy", color: "from-indigo-200 to-indigo-300" },
+  { icon: Plus, text: "Quy định Chiều mở cửa thoát nạn", color: "from-pink-200 to-pink-300" },
+  { icon: Mic, text: "Quy định Nguồn điện cho hệ thống báo cháy tự động", color: "from-cyan-200 to-cyan-300" },
+  { icon: SendHorizonal, text: "Độ cao lắp đặt của hộp nút ấn báo cháy", color: "from-lime-200 to-lime-300" },
+  { icon: MessageSquare, text: "Số lượng bơm chữa cháy dự phòng", color: "from-sky-200 to-sky-300" },
+];
 
 export function HomeChatDemo() {
   const [inputMessage, setInputMessage] = useState("");
@@ -41,6 +54,9 @@ export function HomeChatDemo() {
     currentConversationId,
     startNewConversation,
   } = chatHook;
+
+  // Khi đã có tin nhắn, muốn khung chat lớn hơn và cố định chiều cao
+  const chatHeightClass = messages && messages.length > 0 ? 'h-[400px] md:h-[465px]' : 'h-[200px] md:h-[300px]';
 
   // Auto scroll to bottom khi có tin nhắn mới
   useEffect(() => {
@@ -96,32 +112,30 @@ export function HomeChatDemo() {
     setInputMessage(text);
   };
 
-  const quickSuggestions = [
-    {
-      icon: Lightbulb,
-      text: "Kiến thức về PCCC",
-      color: "from-yellow-200 to-yellow-300",
-    },
-    {
-      icon: Code,
-      text: "Hướng dẫn an toàn về PCCC",
-      color: "from-red-200 to-red-300",
-    },
-    {
-      icon: Palette,
-      text: "Phương pháp PCCC",
-      color: "from-orange-200 to-orange-300",
-    },
-    {
-      icon: MessageSquare,
-      text: "Yêu cầu PCCC trong quy hoạch xây dựng",
-      color: "from-blue-200 to-blue-300",
-    },
-  ];
+  
+
+  // show 4 random suggestions on mount
+  const [visibleSuggestions, setVisibleSuggestions] = useState(() => QUICK_SUGGESTIONS.slice(0, 4));
+
+  useEffect(() => {
+    const shuffled = [...QUICK_SUGGESTIONS].sort(() => Math.random() - 0.5);
+    setVisibleSuggestions(shuffled.slice(0, 4));
+    // run only on mount
+  }, []);
+
+  // Auto-rotate suggestions every 8 seconds while still on the new chat empty state
+  useEffect(() => {
+    if (!(messages.length === 0 && contextChat.isNewChat)) return;
+    const id = setInterval(() => {
+      const shuffled = [...QUICK_SUGGESTIONS].sort(() => Math.random() - 0.5);
+      setVisibleSuggestions(shuffled.slice(0, 4));
+    }, 8000);
+    return () => clearInterval(id);
+  }, [messages.length, contextChat.isNewChat]);
 
   return (
     <div
-      className="relative flex flex-col min-h-screen text-foreground"
+      className="relative flex flex-col min-h-0 text-foreground"
       style={{
         background: "linear-gradient(180deg, #f0f9ff 0%, #fefefe 100%)",
       }}
@@ -147,49 +161,13 @@ export function HomeChatDemo() {
       </div>
 
       {/* Main Content */}
-      <main className="relative flex-1 flex flex-col items-center justify-center p-3 md:p-4 max-h-screen overflow-hidden">
-        <div className="max-w-4xl w-full flex flex-col gap-3 h-full justify-center py-2">
-          {/* Header Section with Icon */}
-          <div
-            className="text-center space-y-0.5"
-            style={{
-              animation: "fadeInUp 0.6s ease-out",
-            }}
-          >
-            <div
-              className="inline-flex items-center justify-center w-8 h-8 rounded-full mb-0 relative"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1))",
-                backdropFilter: "blur(10px)",
-                boxShadow: "0 2px 12px rgba(59, 130, 246, 0.1)",
-              }}
-            >
-              <Sparkles className="h-4 w-4 text-blue-500" />
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-                  background: "rgba(59, 130, 246, 0.1)",
-                }}
-              />
-            </div>
-            <h2
-              className="text-sm font-bold text-gray-700"
-              style={{
-                textShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
-              }}
-            >
-              Tôi có thể giúp gì cho bạn?
-            </h2>
-            <p className="text-xs text-gray-600 max-w-xs mx-auto">
-              Trợ lý AI phòng cháy chữa cháy
-            </p>
-          </div>
+      <main className="relative flex flex-col items-center justify-center p-3 md:p-4 max-h-screen overflow-hidden">
+        <div className="max-w-4xl w-full flex flex-col gap-3 min-h-0 justify-center py-2">
+          {/* Header removed as requested */}
 
           {/* Chat Area */}
           <div
-            className="rounded-3xl flex flex-col h-[350px] md:h-[450px] relative flex-shrink-0 overflow-hidden"
+            className={`rounded-3xl flex flex-col ${chatHeightClass} relative flex-shrink overflow-hidden`}
             style={{
               background: "rgba(255, 255, 255, 0.8)",
               backdropFilter: "blur(15px)",
@@ -200,8 +178,8 @@ export function HomeChatDemo() {
           >
             {/* Chat Header */}
             {messages.length > 0 && (
-              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-white/60 backdrop-blur-sm rounded-t-3xl">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-white/60 backdrop-blur-sm rounded-t-3xl">
+                <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
                     <MessageSquare className="h-4 w-4 text-white" />
                   </div>
@@ -223,7 +201,7 @@ export function HomeChatDemo() {
 
             {/* Chat Messages */}
             <div
-              className="flex-1 p-4 overflow-y-auto chat-container"
+              className="flex-1 p-2 overflow-y-auto chat-container"
               style={{
                 scrollBehavior: "smooth",
               }}
@@ -379,74 +357,60 @@ export function HomeChatDemo() {
 
           {/* Quick Suggestions Grid */}
           {messages.length === 0 && contextChat.isNewChat && (
-            <div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 flex-shrink-0"
-              style={{
-                animation: "fadeIn 1s ease-out 0.4s backwards",
-              }}
-            >
-              {quickSuggestions.map((suggestion, index) => {
-                const Icon = suggestion.icon;
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleQuickSuggestion(suggestion.text)}
-                    className="group relative p-4 rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-                    style={{
-                      background: "rgba(255, 255, 255, 0.85)",
-                      backdropFilter: "blur(12px)",
-                      border: "1px solid rgba(59, 130, 246, 0.2)",
-                      boxShadow: "0 4px 15px rgba(59, 130, 246, 0.1)",
-                      animation: `fadeInUp 0.6s ease-out ${0.15 * index
-                        }s backwards`,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(255, 255, 255, 0.95)";
-                      e.currentTarget.style.boxShadow =
-                        "0 8px 25px rgba(59, 130, 246, 0.2)";
-                      e.currentTarget.style.borderColor =
-                        "rgba(59, 130, 246, 0.3)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(255, 255, 255, 0.85)";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 15px rgba(59, 130, 246, 0.1)";
-                      e.currentTarget.style.borderColor =
-                        "rgba(59, 130, 246, 0.2)";
-                    }}
-                  >
-                    <div className="flex flex-col items-center gap-3 text-center">
-                      <div
-                        className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${suggestion.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
-                        style={{
-                          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.15)",
-                        }}
-                      >
-                        <Icon className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <span className="text-sm font-semibold text-gray-800 leading-tight block">
-                          {suggestion.text}
-                        </span>
-                        <span className="text-xs text-gray-500 mt-1 block">
-                          Nhấn để bắt đầu
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Hover gradient effect */}
-                    <div
-                      className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-5 transition-opacity duration-300"
+            <div className="relative w-full">
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 flex-shrink-0"
+                style={{
+                  animation: "fadeIn 1s ease-out 0.4s backwards",
+                }}
+              >
+                {visibleSuggestions.map((suggestion, index) => {
+                  const Icon = suggestion.icon;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleQuickSuggestion(suggestion.text)}
+                      className="group relative p-4 rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                       style={{
-                        background: `linear-gradient(135deg, ${suggestion.color.split(" ")[1]
-                          } 0%, ${suggestion.color.split(" ")[3]} 100%)`,
+                        background: "rgba(255, 255, 255, 0.85)",
+                        backdropFilter: "blur(12px)",
+                        border: "1px solid rgba(59, 130, 246, 0.2)",
+                        boxShadow: "0 4px 15px rgba(59, 130, 246, 0.1)",
+                        animation: `fadeInUp 0.6s ease-out ${0.08 * index}s backwards`,
                       }}
-                    />
-                  </button>
-                );
-              })}
+                    >
+                      <div className="flex flex-col items-center gap-3 text-center">
+                        <div
+                          className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${suggestion.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
+                          style={{
+                            boxShadow: "0 4px 15px rgba(0, 0, 0, 0.15)",
+                          }}
+                        >
+                          <Icon className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <span className="text-sm font-semibold text-gray-800 leading-tight block">
+                            {suggestion.text}
+                          </span>
+                          <span className="text-xs text-gray-500 mt-1 block">
+                            Nhấn để bắt đầu
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Hover gradient effect */}
+                      <div
+                        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-5 transition-opacity duration-300"
+                        style={{
+                          background: `linear-gradient(135deg, ${suggestion.color.split(" ")[1]} 0%, ${suggestion.color.split(" ")[3]} 100%)`,
+                        }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Suggestions randomized on mount; navigation removed */}
             </div>
           )}
 

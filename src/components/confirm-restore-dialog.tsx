@@ -25,10 +25,10 @@ export function ConfirmRestoreDialog({
   const handleRestore = async () => {
     try {
       await onConfirm();
-      toast.success("Restored successfully!");
+      toast.success("Khôi phục thành công!");
       onOpenChange(false);
     } catch (error) {
-      toast.error("Restore failed, please try again!");
+      toast.error("Khôi phục thất bại, vui lòng thử lại!");
       console.error("Restore error:", error);
     }
   };
@@ -41,25 +41,23 @@ export function ConfirmRestoreDialog({
           <div className="bg-green-100 p-3 rounded-full">
             <RotateCcw className="text-green-600 w-8 h-8" />
           </div>
-          <DialogTitle className="text-lg">Restore Item</DialogTitle>
+          <DialogTitle className="text-lg">Khôi phục mục</DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
-            Are you sure you want to restore this item?
+            Bạn có chắc muốn khôi phục mục này?
             <br />
-            <span className="text-green-600 font-medium">
-              It will be moved back to the active list.
-            </span>
+            <span className="text-green-600 font-medium">Nó sẽ được chuyển về danh sách hoạt động.</span>
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex justify-center gap-4 pt-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Hủy
           </Button>
           <Button
             className="bg-green-600 hover:bg-green-700"
             onClick={handleRestore}
           >
             <RotateCcw className="w-4 h-4 mr-2" />
-            Restore
+            Khôi phục
           </Button>
         </DialogFooter>
       </DialogContent>

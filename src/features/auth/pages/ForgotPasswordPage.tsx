@@ -45,6 +45,7 @@ export function ForgotPasswordPage({
         state: { email, token: res.accessToken, type: "forgot" },
       });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const message = err?.response?.data?.message;
 
@@ -57,17 +58,17 @@ export function ForgotPasswordPage({
   }
 
   return (
-    <div className={cn("flex flex-col gap-6 items-center justify-center min-h-screen", className)} {...props}>
+    <div className={cn("flex flex-col gap-6 items-center justify-center min-h-auto", className)} {...props}>
       <Card className="w-full max-w-md shadow-lg border rounded-2xl">
         <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-2xl font-semibold">Quên mật khẩu</CardTitle>
+          <CardTitle className="text-lg">Quên mật khẩu</CardTitle>
           <CardDescription>Nhập email để nhận mã OTP đặt lại mật khẩu</CardDescription>
         </CardHeader>
 
         <CardContent>
-          <div className="mx-auto mb-6 w-[120px] h-[120px]">
+          <div className="mx-auto mb-0 w-32 h-32 p-0 items-center">
             <AspectRatio ratio={1}>
-              <img src="/logo.png" alt="Logo" className="rounded-md object-contain" />
+              <img src="/logo.png" alt="Logo" className="rounded-md object-cover" />
             </AspectRatio>
           </div>
 
@@ -99,7 +100,7 @@ export function ForgotPasswordPage({
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-[#FC6D26] hover:bg-[#E24329] text-white"
               disabled={loading || cooldown > 0}
             >
               {loading
