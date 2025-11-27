@@ -4,7 +4,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +23,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useTranslation } from "react-i18next";
-import { FileCode, FileText, Plus, Trash2, Eye, EyeOff, HelpCircle } from "lucide-react";
+import { FileCode, FileText, Plus, Trash2, Eye, EyeOff, HelpCircle, Tag, Info } from "lucide-react";
 import { entityService } from "../api/service";
 import { Badge } from "@/components/ui/badge";
 
@@ -200,20 +199,25 @@ ${examplesList || "      - example1"}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <Plus className="h-6 w-6" />
-            {t("Create New Entity")}
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-3 pt-4 pb-3 border-b bg-gradient-to-r from-emerald-50 to-teal-50">
+          <div className="flex items-center gap-2">
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <Plus className="h-6 w-6 text-emerald-600" />
+              {t("Create New Entity")}
+            </DialogTitle>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="ml-auto">
-                  <HelpCircle className="h-5 w-5 text-muted-foreground" />
+                <Button variant="ghost" size="sm" className="mr-8">
+                  <HelpCircle className="h-5 w-5 text-emerald-600" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80" align="end">
                 <div className="space-y-2">
-                  <h4 className="font-medium">{t("What is an Entity?")}</h4>
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Info className="h-4 w-4 text-emerald-600" />
+                    {t("What is an Entity?")}
+                  </h4>
                   <p className="text-sm text-muted-foreground">
                     {t("Entities are structured data that can be extracted from user input. There are three types:")}
                   </p>
@@ -225,196 +229,222 @@ ${examplesList || "      - example1"}`;
                 </div>
               </PopoverContent>
             </Popover>
-          </DialogTitle>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Common Fields */}
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="entity-name">{t("Entity Name")} *</Label>
-              <Input
-                id="entity-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onBlur={(e) => setName(toSnakeCase(e.target.value))}
-                placeholder={t("e.g., help, country, credit")}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t("Use lowercase and underscores (e.g., my_entity_name)")}
-              </p>
-            </div>
+        <div className="flex-1 overflow-y-auto px-3 py-3 pt-0">
+          <div className="space-y-2">
+            {/* Common Fields Card */}
+            <div className="bg-white border rounded-lg p-3 shadow-sm">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-4">
+                <Tag className="h-4 w-4 text-emerald-600" />
+                {t("Basic Information")}
+              </h3>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="entity-name">{t("Entity Name")} *</Label>
+                  <Input
+                    id="entity-name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onBlur={(e) => setName(toSnakeCase(e.target.value))}
+                    placeholder={t("e.g., help, country, credit")}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("Use lowercase and underscores (e.g., my_entity_name)")}
+                  </p>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="entity-desc">{t("Description")}</Label>
-              <Textarea
-                id="entity-desc"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t("Describe what this entity is for")}
-                rows={2}
-              />
-            </div>
-          </div>
-
-          {/* Mode Switch */}
-          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-            <div className="flex items-center gap-2">
-              {expertMode ? (
-                <FileCode className="h-5 w-5" />
-              ) : (
-                <FileText className="h-5 w-5" />
-              )}
-              <Label htmlFor="mode-switch" className="cursor-pointer">
-                {expertMode ? t("Expert Mode") : t("Normal Mode")}
-              </Label>
-            </div>
-            <Switch
-              id="mode-switch"
-              checked={expertMode}
-              onCheckedChange={setExpertMode}
-            />
-          </div>
-
-          {/* Expert Mode */}
-          {expertMode && (
-            <div className="space-y-4">
-              <div className="flex flex-col gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => generateTemplate("regex")}
-                  className="justify-start"
-                >
-                  <Badge variant="secondary" className="mr-2">regex</Badge>
-                  {t("Generate Template")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => generateTemplate("lookup")}
-                  className="justify-start"
-                >
-                  <Badge variant="secondary" className="mr-2">lookup</Badge>
-                  {t("Generate Template")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => generateTemplate("synonym")}
-                  className="justify-start"
-                >
-                  <Badge variant="secondary" className="mr-2">synonym</Badge>
-                  {t("Generate Template")}
-                </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="entity-desc">{t("Description")}</Label>
+                  <Textarea
+                    id="entity-desc"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder={t("Describe what this entity is for")}
+                    rows={2}
+                  />
+                </div>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="yaml-define">{t("YAML Definition")}</Label>
-                <Textarea
-                  id="yaml-define"
-                  value={yamlDefine}
-                  onChange={(e) => {
-                    setYamlDefine(e.target.value);
-                    validateYAML(e.target.value);
-                  }}
-                  placeholder={t("Enter YAML definition")}
-                  className="font-mono text-sm"
-                  rows={12}
+            {/* Mode Switch */}
+            <div className="bg-white border rounded-lg p-3 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {expertMode ? (
+                    <FileCode className="h-5 w-5 text-emerald-600" />
+                  ) : (
+                    <FileText className="h-5 w-5 text-teal-600" />
+                  )}
+                  <Label htmlFor="mode-switch" className="cursor-pointer font-medium">
+                    {expertMode ? t("Expert Mode") : t("Normal Mode")}
+                  </Label>
+                  <Badge variant="secondary" className="ml-2">
+                    {expertMode ? "YAML" : "Form"}
+                  </Badge>
+                </div>
+                <Switch
+                  id="mode-switch"
+                  checked={expertMode}
+                  onCheckedChange={setExpertMode}
                 />
-                {yamlError && (
-                  <p className="text-sm text-destructive">{yamlError}</p>
-                )}
               </div>
             </div>
-          )}
 
-          {/* Normal Mode */}
-          {!expertMode && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="entity-type">{t("Entity Type")} *</Label>
-                <Select value={entityType} onValueChange={(value) => setEntityType(value as EntityType)}>
-                  <SelectTrigger id="entity-type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="regex">regex</SelectItem>
-                    <SelectItem value="lookup">lookup</SelectItem>
-                    <SelectItem value="synonym">synonym</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>{t("Examples")}</Label>
+            {/* Expert Mode */}
+            {expertMode && (
+              <div className="bg-white border rounded-lg p-3 shadow-sm space-y-3">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <FileCode className="h-4 w-4 text-emerald-600" />
+                  {t("YAML Definition")}
+                </h3>
+                <div className="flex flex-col gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={addExample}
+                    onClick={() => generateTemplate("regex")}
+                    className="justify-start"
                   >
-                    <Plus className="h-4 w-4 mr-1" />
-                    {t("Add Example")}
+                    <Badge variant="secondary" className="mr-2">regex</Badge>
+                    {t("Generate Template")}
                   </Button>
-                </div>
-                <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                  {examples.map((example, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={example}
-                        onChange={(e) => updateExample(index, e.target.value)}
-                        placeholder={`${t("Example")} ${index + 1}`}
-                      />
-                      {examples.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => removeExample(index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Preview */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>{t("Preview")}</Label>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    onClick={() => setShowPreview(!showPreview)}
+                    onClick={() => generateTemplate("lookup")}
+                    className="justify-start"
                   >
-                    {showPreview ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    <Badge variant="secondary" className="mr-2">lookup</Badge>
+                    {t("Generate Template")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => generateTemplate("synonym")}
+                    className="justify-start"
+                  >
+                    <Badge variant="secondary" className="mr-2">synonym</Badge>
+                    {t("Generate Template")}
                   </Button>
                 </div>
-                {showPreview && (
-                  <div className="bg-muted rounded-lg p-4">
-                    <pre className="text-xs font-mono whitespace-pre-wrap">
-                      {generateYAMLFromForm()}
-                    </pre>
-                  </div>
-                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="yaml-define">{t("YAML Code")}</Label>
+                  <Textarea
+                    id="yaml-define"
+                    value={yamlDefine}
+                    onChange={(e) => {
+                      setYamlDefine(e.target.value);
+                      validateYAML(e.target.value);
+                    }}
+                    placeholder={t("Enter YAML definition")}
+                    className="font-mono text-sm bg-slate-900 text-slate-100 border-slate-700"
+                    rows={12}
+                  />
+                  {yamlError && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      <HelpCircle className="h-3 w-3" />
+                      {yamlError}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Normal Mode */}
+            {!expertMode && (
+              <div className="space-y-2">
+                <div className="bg-white border rounded-lg p-3 shadow-sm space-y-3">
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                    <FileText className="h-4 w-4 text-teal-600" />
+                    {t("Entity Configuration")}
+                  </h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="entity-type">{t("Entity Type")} *</Label>
+                    <Select value={entityType} onValueChange={(value) => setEntityType(value as EntityType)}>
+                      <SelectTrigger id="entity-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="regex">regex</SelectItem>
+                        <SelectItem value="lookup">lookup</SelectItem>
+                        <SelectItem value="synonym">synonym</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>{t("Examples")}</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addExample}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        {t("Add Example")}
+                      </Button>
+                    </div>
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                      {examples.map((example, index) => (
+                        <div key={index} className="flex gap-2">
+                          <Input
+                            value={example}
+                            onChange={(e) => updateExample(index, e.target.value)}
+                            placeholder={`${t("Example")} ${index + 1}`}
+                          />
+                          {examples.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => removeExample(index)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preview */}
+                <div className="bg-white border rounded-lg p-3 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <Label className="text-sm font-semibold text-gray-700">{t("Preview")}</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPreview(!showPreview)}
+                    >
+                      {showPreview ? (
+                        <><EyeOff className="h-4 w-4 mr-1" /> {t("Hide")}</>
+                      ) : (
+                        <><Eye className="h-4 w-4 mr-1" /> {t("Show")}</>
+                      )}
+                    </Button>
+                  </div>
+                  {showPreview && (
+                    <div className="bg-slate-900 text-slate-100 rounded-lg p-4">
+                      <pre className="text-xs font-mono whitespace-pre-wrap">
+                        {generateYAMLFromForm()}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        <DialogFooter className="gap-2">
+        <div className="flex justify-end gap-2 px-3 py-3 border-t bg-gray-50">
           <Button
             type="button"
             variant="outline"
@@ -435,11 +465,11 @@ ${examplesList || "      - example1"}`;
             type="button"
             onClick={() => handleSubmit(false)}
             disabled={isSubmitting}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-emerald-600 hover:bg-emerald-700"
           >
             {isSubmitting ? t("Creating...") : t("Create Entity")}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

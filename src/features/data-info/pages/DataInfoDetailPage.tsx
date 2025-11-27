@@ -10,6 +10,7 @@ import {
   X,
   MessageSquare,
   BookOpen,
+  Check,
 } from "lucide-react";
 import { storyService } from "@/features/stories/api/service";
 import { intentService } from "@/features/intents/api/service";
@@ -45,6 +46,10 @@ export default function DataInfoDetailPage() {
     null
   );
   const [editingResponseText, setEditingResponseText] = useState<string>("");
+  
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [descriptionText, setDescriptionText] = useState<string>("");
+  const [savingDescription, setSavingDescription] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -165,6 +170,32 @@ export default function DataInfoDetailPage() {
     }
   };
 
+  const handleSaveDescription = async () => {
+    if (!story || !storyId) return;
+
+    setSavingDescription(true);
+    try {
+      const updatedStory = { ...story, description: descriptionText };
+      await storyService.updateStory(storyId, updatedStory as any);
+      
+      setStory(updatedStory);
+      setEditingDescription(false);
+      
+      toast.success("Cập nhật mô tả thành công!", {
+        duration: 3000,
+        position: "top-right",
+      });
+    } catch (error) {
+      console.error("Failed to update description", error);
+      toast.error("Cập nhật mô tả thất bại. Vui lòng thử lại!", {
+        duration: 3000,
+        position: "top-right",
+      });
+    } finally {
+      setSavingDescription(false);
+    }
+  };
+
   const handleSaveResponse = async (responseId: string) => {
     const resp = responses.find((r) => r._id === responseId);
     if (!resp) {
@@ -210,8 +241,8 @@ export default function DataInfoDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto p-6 max-w-6xl">
+      <div className="min-h-screen bg-slate-50">
+        <div className="px-3 py-3 pr-6 max-w-6xl mx-auto">
           <div className="flex items-center justify-center h-64">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
@@ -227,9 +258,9 @@ export default function DataInfoDetailPage() {
 
   if (loadError || !story) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto p-6 max-w-6xl">
-          <div className="mb-6">
+      <div className="min-h-screen bg-slate-50">
+        <div className="px-3 py-3 pr-6 max-w-6xl mx-auto">
+          <div className="mb-3">
             <Button
               variant="ghost"
               size="sm"
@@ -240,7 +271,7 @@ export default function DataInfoDetailPage() {
               {t("Back")}
             </Button>
           </div>
-          <div className="text-center py-12 bg-white rounded-xl shadow-sm">
+          <div className="text-center py-12 bg-white rounded-lg shadow-sm">
             <p className="text-red-500 mb-4 text-lg">
               {loadError || t("Story not found")}
             </p>
@@ -257,52 +288,96 @@ export default function DataInfoDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto p-6 max-w-6xl">
-        {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(-1)}
-            className="gap-2 mb-4 hover:bg-white transition-all"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {t("Back")}
-          </Button>
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-violet-50 to-fuchsia-50 border-b shadow-sm">
+        <div className="px-3 py-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(-1)}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {t("Back")}
+            </Button>
+            <div className="flex items-center gap-2 flex-1">
+              <BookOpen className="h-6 w-6 text-violet-600" />
+              <div className="flex-1">
+                <h1 className="text-xl font-bold text-violet-900">{story.name}</h1>
+                {editingDescription ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="text"
+                      className="flex-1 text-xs px-2 py-1 border border-violet-300 rounded focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white"
+                      value={descriptionText}
+                      onChange={(e) => setDescriptionText(e.target.value)}
+                      placeholder="Nhập mô tả..."
+                      autoFocus
+                    />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setEditingDescription(false);
+                        setDescriptionText("");
+                      }}
+                      className="h-6 px-2"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleSaveDescription}
+                      disabled={savingDescription}
+                      className="h-6 px-2 bg-violet-600 hover:bg-violet-700"
+                    >
+                      {savingDescription ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Check className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-xs text-violet-600">{story.description || t("No description provided")}</p>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setEditingDescription(true);
+                        setDescriptionText(story.description || "");
+                      }}
+                      className="h-5 px-1 hover:bg-violet-100"
+                    >
+                      <Edit2 className="h-3 w-3 text-violet-600" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          <div className="relative bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
-            <div className="relative p-8">
-              <div className="flex items-start gap-6">
-                <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                  <BookOpen className="h-8 w-8 text-indigo-600" />
+      <div className="px-3 py-3 pr-6 max-w-6xl mx-auto">
+        {/* Story Info Card */}
+        <div className="mb-3">
+          <div className="bg-white rounded-lg shadow-sm border border-violet-100 p-3">
+            <div className="flex items-center gap-3">
+              <div className="text-xs font-semibold text-violet-600 uppercase tracking-wide">
+                {t("Story Details")}
+              </div>
+              <div className="flex gap-2">
+                <div className="px-3 py-1 bg-indigo-50 rounded-full border border-indigo-200">
+                  <span className="text-xs text-gray-600">Intents: </span>
+                  <span className="text-xs font-bold text-indigo-600">{intents.length}</span>
                 </div>
-                <div className="flex-1">
-                  <div className="inline-block px-3 py-1 bg-gray-100 rounded-full text-xs font-semibold text-gray-700 mb-3">
-                    {t("Story Details")}
-                  </div>
-                  <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                    {story.name}
-                  </h1>
-                  <p className="text-gray-600 text-base max-w-3xl">
-                    {story.description || t("No description provided")}
-                  </p>
-
-                  {/* Stats badges */}
-                  <div className="flex gap-3 mt-6">
-                    <div className="px-4 py-2 bg-indigo-50 rounded-lg border border-indigo-100">
-                      <div className="text-xs text-gray-600">Intents</div>
-                      <div className="text-lg font-bold text-indigo-600">
-                        {intents.length}
-                      </div>
-                    </div>
-                    <div className="px-4 py-2 bg-green-50 rounded-lg border border-green-100">
-                      <div className="text-xs text-gray-600">Responses</div>
-                      <div className="text-lg font-bold text-green-600">
-                        {responses.length}
-                      </div>
-                    </div>
-                  </div>
+                <div className="px-3 py-1 bg-green-50 rounded-full border border-green-200">
+                  <span className="text-xs text-gray-600">Responses: </span>
+                  <span className="text-xs font-bold text-green-600">{responses.length}</span>
                 </div>
               </div>
             </div>
@@ -310,15 +385,13 @@ export default function DataInfoDetailPage() {
         </div>
 
         {/* Q&A Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-200">
-              <MessageSquare className="h-5 w-5 text-indigo-600" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-800">{t("Q&A ")}</h1>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 mb-3">
+            <MessageSquare className="h-5 w-5 text-violet-600" />
+            <h2 className="text-lg font-bold text-gray-800">{t("Q&A")}</h2>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {(() => {
               const parseStepsFromDefine = (def?: string) => {
                 const res: Array<{ kind: string; ids: string[] }> = [];
@@ -445,9 +518,9 @@ export default function DataInfoDetailPage() {
 
               if (filteredPairs.length === 0) {
                 return (
-                  <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200">
-                    <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">{t("No Q&A found")}</p>
+                  <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
+                    <MessageSquare className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500 text-sm">{t("No Q&A found")}</p>
                   </div>
                 );
               }
@@ -464,10 +537,10 @@ export default function DataInfoDetailPage() {
                 return (
                   <div
                     key={idx}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                    className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
                   >
                     {/* Question Section */}
-                    <div className="bg-indigo-50 p-6 border-b border-indigo-100">
+                    <div className="bg-indigo-50 p-3 border-b border-indigo-100">
                       <div className="flex items-start justify-between gap-4 mb-4">
                         <div className="flex items-center gap-2 text-indigo-700 font-semibold text-sm uppercase tracking-wide">
                           <MessageSquare className="h-5 w-5" />
@@ -558,7 +631,7 @@ export default function DataInfoDetailPage() {
 
                     {/* Similar Questions */}
                     {similar.length > 0 && (
-                      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                      <div className="bg-gray-50 px-3 py-3 border-b border-gray-200">
                         <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
                           <div className="w-1 h-4 bg-indigo-400 rounded-full"></div>
                           Các câu hỏi tương tự ({similar.length})
@@ -580,7 +653,7 @@ export default function DataInfoDetailPage() {
                     )}
 
                     {/* Answer Section */}
-                    <div className="p-6">
+                    <div className="p-3">
                       <div className="flex items-start justify-between gap-4 mb-4">
                         <div className="flex items-center gap-2 text-green-700 font-semibold text-sm uppercase tracking-wide">
                           <MessageSquare className="h-5 w-5" />

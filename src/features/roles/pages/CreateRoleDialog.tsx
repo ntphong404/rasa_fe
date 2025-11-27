@@ -9,7 +9,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -28,8 +27,6 @@ import { useRole } from "@/hooks/useRole";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-
 import { z } from "zod";
 
 const createRoleSchema = z.object({
@@ -50,7 +47,6 @@ export function CreateRoleDialog({
   onOpenChange,
   onRoleCreated,
 }: CreateRoleDialogProps) {
-  const { t } = useTranslation();
   const { createRole } = useRole();
   const { fetchPermissions } = usePermission();
   //   const { fetchChatBots } = useChatBot();
@@ -141,94 +137,95 @@ export function CreateRoleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[90vw] sm:max-w-[800px] max-h-[80vh] overflow-y-auto p-4">
-        <DialogHeader>
-          <DialogTitle>{t("Create Role")}</DialogTitle>
-          <DialogDescription>
-            {t("Enter details for the new role.")}
+      <DialogContent className="max-w-3xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b px-4 py-4">
+          <DialogTitle className="text-xl font-bold text-indigo-900">Tạo vai trò mới</DialogTitle>
+          <DialogDescription className="text-sm text-slate-600 mt-1">
+            Nhập thông tin chi tiết cho vai trò mới
           </DialogDescription>
-        </DialogHeader>
+        </div>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("Role Name")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={t("Enter role name")}
-                        {...field}
-                        className="w-full"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("Description")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={t("Enter description")}
-                        {...field}
-                        className="w-full"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+            <div className="overflow-y-auto px-4 py-4 space-y-4" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold text-slate-700">Tên vai trò</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Nhập tên vai trò"
+                          {...field}
+                          className="w-full border-2 border-slate-200 focus:border-indigo-400"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold text-slate-700">Mô tả</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Nhập mô tả vai trò"
+                          {...field}
+                          className="w-full border-2 border-slate-200 focus:border-indigo-400"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-            <div className="mt-6">
-              <h3 className="text-lg font-medium mb-2">{t("Permissions")}:</h3>
-              <FormField
-                control={form.control}
-                name="permissions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <div className="space-y-2">
-                        {isLoading ? (
-                          <div className="text-sm text-muted-foreground">
-                            {t("Loading...")}
-                          </div>
-                        ) : Object.keys(groupedPermissions).length > 0 ? (
-                          <Accordion
-                            type="multiple"
-                            className="w-full border rounded-lg"
-                          >
+              <div className="mt-2">
+                <h3 className="text-sm font-bold text-slate-700 mb-3">Quyền hạn</h3>
+                <FormField
+                  control={form.control}
+                  name="permissions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="space-y-2">
+                          {isLoading ? (
+                            <div className="text-sm text-muted-foreground">
+                              Đang tải...
+                            </div>
+                          ) : Object.keys(groupedPermissions).length > 0 ? (
+                            <Accordion
+                              type="multiple"
+                              className="w-full border-2 border-slate-200 rounded-lg"
+                            >
                             {Object.entries(groupedPermissions).map(
                               ([module, perms]) => (
-                                <AccordionItem
-                                  value={module}
-                                  key={module}
-                                  className="border-b last:border-b-0"
-                                >
-                                  <AccordionTrigger className="px-4 py-3 hover:bg-muted/50">
-                                    <div className="flex items-center justify-between w-full pr-4">
-                                      <div className="font-medium">
-                                        {t("Module")}: {module}
-                                      </div>
-                                      <div
-                                        className="flex items-center gap-2"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <span className="text-xs text-muted-foreground">
-                                          {
-                                            field.value.filter((id) =>
-                                              perms.some((p) => p._id === id)
-                                            ).length
-                                          }
-                                          /{perms.length}
-                                        </span>
+                                  <AccordionItem
+                                    value={module}
+                                    key={module}
+                                    className="border-b last:border-b-0"
+                                  >
+                                    <AccordionTrigger className="px-3 py-3 hover:bg-indigo-50/50 transition-colors">
+                                      <div className="flex items-center justify-between w-full pr-4">
+                                        <div className="font-semibold text-sm text-slate-800">
+                                          Phân hệ: {module}
+                                        </div>
+                                        <div
+                                          className="flex items-center gap-2"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <span className="text-xs bg-indigo-50 px-2 py-1 rounded-full text-indigo-700 font-medium">
+                                            {
+                                              field.value.filter((id) =>
+                                                perms.some((p) => p._id === id)
+                                              ).length
+                                            }
+                                            /{perms.length}
+                                          </span>
                                         <Switch
                                           checked={perms.every((perm) =>
                                             field.value.includes(perm._id)
@@ -263,39 +260,39 @@ export function CreateRoleDialog({
                                         />
                                       </div>
                                     </div>
-                                  </AccordionTrigger>
-                                  <AccordionContent className="px-4 pb-3">
-                                    <div className="space-y-2">
-                                      {perms.map((perm) => (
-                                        <div
-                                          key={perm._id}
-                                          className="flex items-center justify-between py-2 border-b last:border-b-0"
-                                        >
-                                          <div className="flex flex-col">
-                                            <div className="font-medium">
-                                              {perm.originalUrl}
+                                    </AccordionTrigger>
+                                    <AccordionContent className="px-3 pb-3 pt-2">
+                                      <div className="space-y-2">
+                                        {perms.map((perm) => (
+                                          <div
+                                            key={perm._id}
+                                            className="flex items-center justify-between p-2 border-2 border-slate-200 rounded-lg hover:border-indigo-300 transition-colors bg-white"
+                                          >
+                                            <div className="flex flex-col gap-1 flex-1 min-w-0">
+                                              <div className="text-xs text-slate-600 truncate">
+                                                {perm.description || perm.originalUrl}
+                                              </div>
+                                              <div className="flex items-center gap-2">
+                                                <span
+                                                  className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                                                    perm.method === "GET"
+                                                      ? "bg-blue-100 text-blue-700"
+                                                      : perm.method === "POST"
+                                                      ? "bg-green-100 text-green-700"
+                                                      : perm.method === "PUT"
+                                                      ? "bg-yellow-100 text-yellow-700"
+                                                      : perm.method === "DELETE"
+                                                      ? "bg-red-100 text-red-700"
+                                                      : "bg-gray-100 text-gray-700"
+                                                  }`}
+                                                >
+                                                  {perm.method}
+                                                </span>
+                                                <span className="text-xs text-slate-500 font-mono truncate">{perm.originalUrl}</span>
+                                              </div>
                                             </div>
-                                            <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                              <span
-                                                className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                                  perm.method === "GET"
-                                                    ? "bg-blue-100 text-blue-700"
-                                                    : perm.method === "POST"
-                                                    ? "bg-green-100 text-green-700"
-                                                    : perm.method === "PUT"
-                                                    ? "bg-yellow-100 text-yellow-700"
-                                                    : perm.method === "DELETE"
-                                                    ? "bg-red-100 text-red-700"
-                                                    : "bg-gray-100 text-gray-700"
-                                                }`}
-                                              >
-                                                {perm.method}
-                                              </span>
-                                              <span>{perm.originalUrl}</span>
-                                            </div>
-                                          </div>
-                                          <div className="flex items-center">
-                                            <Switch
+                                            <div className="flex items-center ml-2">
+                                              <Switch
                                               checked={field.value.includes(
                                                 perm._id
                                               )}
@@ -323,18 +320,18 @@ export function CreateRoleDialog({
                               )
                             )}
                           </Accordion>
-                        ) : (
-                          <div className="text-sm text-muted-foreground">
-                            {t("No permissions available")}
-                          </div>
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground">
+                              Không có quyền hạn
+                            </div>
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
             {/* <FormField
               control={form.control}
@@ -401,9 +398,19 @@ export function CreateRoleDialog({
                 </FormItem>
               )}
             /> */}
-            <div className="flex justify-end pt-4">
-              <Button type="submit" disabled={isLoading}>
-                {t("Create")}
+            </div>
+            <div className="border-t px-4 py-3 flex justify-end gap-2 bg-slate-50/50">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isLoading}
+                className="border-2"
+              >
+                Hủy
+              </Button>
+              <Button type="submit" disabled={isLoading} className="bg-indigo-600 hover:bg-indigo-700">
+                {isLoading ? "Đang tạo..." : "Tạo vai trò"}
               </Button>
             </div>
           </form>

@@ -63,7 +63,7 @@ export default function EditRoleDialog({
   const { updateRole } = useRole();
   const { fetchPermissions } = usePermission();
   //   const { fetchChatBots } = useChatBot();
-  const [permissionsList, setPermissionsList] = useState<Permission[]>([]);
+  const [ setPermissionsList] = useState<Permission[]>([]);
   //   const [chatbotsList, setChatbotsList] = useState<ChatBot[]>([]);
   const [groupedPermissions, setGroupedPermissions] = useState<{
     [key: string]: Permission[];

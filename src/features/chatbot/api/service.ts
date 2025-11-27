@@ -86,6 +86,11 @@ export const chatBotService = {
     const response = await axiosInstance.post(ENDPOINTS.CHATBOT_ENDPOINTS.PUSH_ACTION(id), data);
     return response.data.data;
   },
+
+  runActionsServer: async (id: string): Promise<{ success: boolean; message?: string }> => {
+    const response = await axiosInstance.post(ENDPOINTS.CHATBOT_ENDPOINTS.RUN_ACTION(id));
+    return response.data;
+  },
 };
 
 // My Model Service

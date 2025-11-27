@@ -132,15 +132,15 @@ class ${className}(Action):
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-none w-[90vw] h-[90vh] flex flex-col p-6 overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <Plus className="h-6 w-6" />
+      <DialogContent className="!max-w-none w-[90vw] h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-r from-purple-50 to-pink-50">
+          <DialogTitle className="flex items-center gap-2 text-2xl">
+            <Plus className="h-6 w-6 text-purple-600" />
             {t("Create New Action")}
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="ml-auto">
-                  <HelpCircle className="h-5 w-5 text-muted-foreground" />
+                  <HelpCircle className="h-5 w-5 text-purple-600" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80" align="end">
@@ -157,59 +157,67 @@ class ${className}(Action):
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4 overflow-y-auto pr-2">
-          {/* Fields */}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="action-name">{t("Action Name")} *</Label>
-              <Input
-                id="action-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onBlur={(e) => setName(toSnakeCase(e.target.value))}
-                placeholder={t("e.g., action_hello_world")}
-              />
-            </div>
+            {/* Basic Info Card */}
+            <div className="bg-white border rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">{t("Basic Information")}</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="action-name">{t("Action Name")} *</Label>
+                  <Input
+                    id="action-name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onBlur={(e) => setName(toSnakeCase(e.target.value))}
+                    placeholder={t("e.g., action_hello_world")}
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="action-desc">{t("Description")}</Label>
-              <Textarea
-                id="action-desc"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t("Describe what this action does")}
-                rows={2}
-              />
-            </div>
-          </div>
-
-          {/* Editor */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>{t("Action Code (Python)")}</Label>
-              <Button type="button" variant="outline" size="sm" onClick={generateTemplate}>
-                <Code className="h-4 w-4 mr-2" />
-                {t("Generate Template")}
-              </Button>
-            </div>
-            {syntaxError && (
-              <div className="flex items-start gap-3 text-sm border border-red-300 rounded-lg p-3 bg-red-50 shadow-sm">
-                <AlertTriangle className="w-5 h-5 text-red-600 mt-[1px] flex-shrink-0" />
-                <div className="text-red-700 leading-relaxed whitespace-pre-wrap">
-                  <strong className="block mb-1">{t("Python Syntax Error")}</strong>
-                  <span className="font-mono text-[13px]">{syntaxError}</span>
+                <div className="space-y-2">
+                  <Label htmlFor="action-desc">{t("Description")}</Label>
+                  <Textarea
+                    id="action-desc"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder={t("Describe what this action does")}
+                    rows={2}
+                  />
                 </div>
               </div>
-            )}
-            <PythonCodeEditor
-              value={define}
-              onChange={setDefine}
-              onClearError={() => setSyntaxError(null)}
-            />
+            </div>
+
+            {/* Code Editor Card */}
+            <div className="bg-white border rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-gray-700">{t("Python Code")}</h3>
+                <Button type="button" variant="outline" size="sm" onClick={generateTemplate}>
+                  <Code className="h-4 w-4 mr-2" />
+                  {t("Generate Template")}
+                </Button>
+              </div>
+              {syntaxError && (
+                <div className="flex items-start gap-3 text-sm border border-red-300 rounded-lg p-3 bg-red-50 shadow-sm mb-3">
+                  <AlertTriangle className="w-5 h-5 text-red-600 mt-[1px] flex-shrink-0" />
+                  <div className="text-red-700 leading-relaxed whitespace-pre-wrap">
+                    <strong className="block mb-1">{t("Python Syntax Error")}</strong>
+                    <span className="font-mono text-[13px]">{syntaxError}</span>
+                  </div>
+                </div>
+              )}
+              <div className="h-[calc(90vh-450px)] min-h-[400px] overflow-auto">
+                <PythonCodeEditor
+                  value={define}
+                  onChange={setDefine}
+                  onClearError={() => setSyntaxError(null)}
+                  className="h-full border rounded-md bg-white"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        <DialogFooter className="gap-2 mt-auto pt-4">
+        <DialogFooter className="gap-2 px-6 py-4 border-t bg-gray-50">
           <Button
             type="button"
             variant="outline"
@@ -230,7 +238,7 @@ class ${className}(Action):
             type="button"
             onClick={() => handleSubmit(false)}
             disabled={isSubmitting || !name || isPyodideLoading || !!syntaxError}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-purple-600 hover:bg-purple-700"
           >
             {isSubmitting
               ? t("Creating...")

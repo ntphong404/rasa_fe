@@ -106,7 +106,7 @@ export function CreateDataPage() {
     // Generate examples using Gemini (configurable via env)
     const handleGenerate = async () => {
         if (isGenerating) return;
-        setIsGenerating(true);
+        
         // Require all main fields before generating: intent name, at least one example, and response
         const seed = examples[0] || initialExample || "";
         const newErrors: typeof errors = {};
@@ -128,8 +128,11 @@ export function CreateDataPage() {
                 responseRef.current.focus();
                 responseRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
-            return toast.error(msg);
+            toast.error(msg);
+            return;
         }
+
+        setIsGenerating(true);
 
         // Preserve the original user example (first one), and generate to fill up to 10 total
         // Always keep the user's initial example at the beginning
@@ -296,29 +299,33 @@ export function CreateDataPage() {
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-indigo-200 dark:border-indigo-900 grid gap-6 relative">
+                <div className="bg-white p-6 rounded-lg shadow-lg border-2 border-slate-300 dark:border-slate-600 grid gap-6 relative">
                     <div>
                         <label className="block text-base font-medium mb-2 text-slate-700">Tên nhóm câu hỏi</label>
-                        <Input
-                            ref={intentRef}
-                            className={`h-12 text-base ${errors.intentName ? 'border-red-500 ring-1 ring-red-300' : ''}`}
-                            value={intentName}
-                            onChange={(e) => { setIntentName(e.target.value); setErrors((p) => ({ ...p, intentName: undefined })); }}
-                        />
-                        {errors.intentName && <div className="mt-1 text-sm text-red-600">{errors.intentName}</div>}
-                        <div className="mt-3 text-sm text-slate-600">Tên chuẩn hóa: <span className="font-mono text-sm ml-2 text-indigo-700">{formattedIntent || <span className="text-slate-400">(sẽ được tạo tự động)</span>}</span></div>
+                        <div className="relative mb-7">
+                            <Input
+                                ref={intentRef}
+                                className={`h-12 text-base ${errors.intentName ? 'border-red-500 ring-1 ring-red-300' : ''}`}
+                                value={intentName}
+                                onChange={(e) => { setIntentName(e.target.value); setErrors((p) => ({ ...p, intentName: undefined })); }}
+                            />
+                            {errors.intentName && <div className="absolute left-0 top-full mt-1 text-sm text-red-600 whitespace-nowrap z-10">{errors.intentName}</div>}
+                        </div>
+                        <div className="text-sm text-slate-600">Tên chuẩn hóa: <span className="font-mono text-sm ml-2 text-indigo-700">{formattedIntent || <span className="text-slate-400">(sẽ được tạo tự động)</span>}</span></div>
                     </div>
 
                     {step === 'form' ? (
                         <div>
                             <label className="block text-base font-medium mb-2 text-slate-700">Câu hỏi mẫu (nhập 1 câu hỏi để bắt đầu)</label>
-                            <Input
-                                ref={initialExampleRef}
-                                className={`h-12 text-base ${errors.initialExample ? 'border-red-500 ring-1 ring-red-300' : ''}`}
-                                value={initialExample}
-                                onChange={(e) => { setInitialExample(e.target.value); setErrors((p) => ({ ...p, initialExample: undefined, examples: undefined })); }}
-                            />
-                            {errors.initialExample && <div className="mt-1 text-sm text-red-600">{errors.initialExample}</div>}
+                            <div className="relative">
+                                <Input
+                                    ref={initialExampleRef}
+                                    className={`h-12 text-base ${errors.initialExample ? 'border-red-500 ring-1 ring-red-300' : ''}`}
+                                    value={initialExample}
+                                    onChange={(e) => { setInitialExample(e.target.value); setErrors((p) => ({ ...p, initialExample: undefined, examples: undefined })); }}
+                                />
+                                {errors.initialExample && <div className="absolute left-0 top-full mt-1 text-sm text-red-600 whitespace-nowrap">{errors.initialExample}</div>}
+                            </div>
                             {/* Removed inline example action buttons — controls moved to bottom-right */}
                         </div>
                     ) : (
@@ -345,21 +352,23 @@ export function CreateDataPage() {
 
                             {/* example buttons removed from here and placed at bottom-right */}
 
-                            <div className="mt-4 flex items-center gap-2">
+                            <div className="mt-4 flex items-center gap-2 relative">
                                 <Button variant="ghost" onClick={() => setStep('form')}>Quay lại</Button>
+                                {errors.examples && <div className="absolute left-0 top-full mt-2 text-sm text-red-600 whitespace-nowrap">{errors.examples}</div>}
                             </div>
-                            {errors.examples && <div className="mt-2 text-sm text-red-600">{errors.examples}</div>}
                         </div>
                     )}
 
                     <div>
                         <label className="block text-base font-medium mb-2 text-slate-700">Câu trả lời</label>
-                        <Textarea
-                            className={`h-24 text-base ${errors.responseText ? 'border-red-500 ring-1 ring-red-300' : ''}`}
-                            value={responseText}
-                            onChange={(e) => { setResponseText(e.target.value); setErrors((p) => ({ ...p, responseText: undefined })); }}
-                        />
-                        {errors.responseText && <div className="mt-1 text-sm text-red-600">{errors.responseText}</div>}
+                        <div className="relative mb-4">
+                            <Textarea
+                                className={`h-24 text-base ${errors.responseText ? 'border-red-500 ring-1 ring-red-300' : ''}`}
+                                value={responseText}
+                                onChange={(e) => { setResponseText(e.target.value); setErrors((p) => ({ ...p, responseText: undefined })); }}
+                            />
+                            {errors.responseText && <div className="absolute left-0 top-full mt-1 text-sm text-red-600 whitespace-nowrap z-10">{errors.responseText}</div>}
+                        </div>
                     </div>
 
                     <div className="flex gap-2">

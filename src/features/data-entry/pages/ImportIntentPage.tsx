@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Pencil, Save, X, Sparkles, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowLeft, Pencil, Save, X, Sparkles, ChevronDown, ChevronRight, Upload, Database, FileUp } from "lucide-react";
 import { toast } from "sonner";
 import { intentService } from "@/features/intents/api/service";
 import { responseService } from "@/features/reponses/api/service";
@@ -60,9 +60,12 @@ export function ImportIntentPage() {
             setHasImported(false);
             // Hide file upload area after successful parse
             setFile(null);
+            toast.success(`Đã đọc thành công ${parsed.length} dòng từ file ${f.name}`);
         } catch (err) {
             console.error(err);
-            toast.error("Failed to parse file");
+            const errorMessage = err instanceof Error ? err.message : "Không thể đọc file";
+            toast.error(`Lỗi khi đọc file: ${errorMessage}. Vui lòng kiểm tra định dạng file (Excel hoặc CSV).`);
+            setFile(null);
         } finally {
             setIsParsing(false);
         }
@@ -486,73 +489,110 @@ export function ImportIntentPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 p-8">
-            <div className="max-w-full mx-auto px-4">
-                <div className="flex items-center gap-4 mb-6">
-                    <Button variant="ghost" size="sm" onClick={handleCancel} className="gap-2">
-                        <ArrowLeft className="h-4 w-4" />
-                        Quay lại
-                    </Button>
-                    <h1 className="text-2xl font-bold">Nhập nhóm câu hỏi từ file</h1>
-                    <div className="ml-auto">
-                        <Button variant="outline" size="sm" onClick={downloadTemplate} className="ml-2">Tải file mẫu</Button>
+        <div className="min-h-screen bg-slate-50">
+            <div className="max-w-full mx-auto">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b shadow-sm">
+                    <div className="px-3 py-4">
+                        <div className="flex items-center gap-3">
+                            <Button variant="ghost" size="sm" onClick={handleCancel} className="gap-2">
+                                <ArrowLeft className="h-4 w-4" />
+                                
+                            </Button>
+                            <div className="flex items-center gap-2">
+                                <FileUp className="h-6 w-6 text-indigo-600" />
+                                <div>
+                                    <h1 className="text-xl font-bold text-indigo-900">Nhập nhóm câu hỏi từ file</h1>
+                                    <p className="text-xs text-indigo-600">Import intents và tạo stories tự động</p>
+                                </div>
+                            </div>
+                            <div className="ml-auto">
+                                <Button variant="outline" size="sm" onClick={downloadTemplate} className="gap-2">
+                                    <Upload className="h-4 w-4" />
+                                    Tải file mẫu
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Only show upload area if no rows loaded */}
-                {rows.length === 0 && (
-                    <div className="mb-6 max-w-4xl mx-auto">
-                        <div
-                            onDrop={handleDrop}
-                            onDragOver={(e) => e.preventDefault()}
-                            className="border-2 border-indigo-200 bg-white rounded-lg p-10 text-center cursor-pointer mb-4 shadow-sm hover:shadow-md"
-                            onClick={handleClickChoose}
-                            role="button"
-                            aria-label="Drop files here or click to select"
-                        >
-                            <input
-                                ref={inputRef}
-                                type="file"
-                                accept=".csv,.tsv,.txt,.xls,.xlsx"
-                                className="hidden"
-                                onChange={handleFileChange}
-                            />
-                            <div className="text-xl font-semibold text-indigo-700">Kéo thả file vào đây để nhập</div>
-                            <div className="mt-2 text-sm text-slate-500">Hoặc <button onClick={(e) => { e.stopPropagation(); handleClickChoose(); }} className="text-indigo-600 underline">chọn file</button></div>
-                            <div className="mt-3 text-sm text-slate-400">Hỗ trợ: Excel (XLSX, XLS), CSV</div>
-                        </div>
-                    </div>
-                )}
+                <div className="px-3 pt-2 pr-6" style={{ height: 'calc(100vh - 120px)' }}>
 
-                {isParsing && <div className="text-center">Đang đọc file...</div>}
-
-                {rows.length > 0 && (
-                    <div className="bg-white p-4 rounded-lg shadow-lg">
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="font-semibold text-lg">Xem trước <span className="text-sm text-slate-400">({rows.length})</span></div>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    onClick={handleGenerateIntents}
-                                    disabled={isGenerating || rows.length === 0}
-                                    variant="outline"
-                                    size="sm"
-                                    className="gap-1"
-                                >
-                                    <Sparkles className="h-4 w-4" />
-                                    {isGenerating ? 'Đang tạo...' : 'Tạo thêm nhóm câu hỏi'}
-                                </Button>
-                                <div className="text-sm text-slate-400">Tiến trình: {progress.done}/{progress.total}</div>
+                    {/* Only show upload area if no rows loaded */}
+                    {rows.length === 0 && (
+                        <div className="max-w-3xl mx-auto">
+                            <div
+                                onDrop={handleDrop}
+                                onDragOver={(e) => e.preventDefault()}
+                                className="border-2 border-dashed border-indigo-300 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-10 text-center cursor-pointer shadow-sm hover:shadow-lg hover:border-indigo-400 transition-all"
+                                onClick={handleClickChoose}
+                                role="button"
+                                aria-label="Drop files here or click to select"
+                            >
+                                <input
+                                    ref={inputRef}
+                                    type="file"
+                                    accept=".csv,.tsv,.txt,.xls,.xlsx"
+                                    className="hidden"
+                                    onChange={handleFileChange}
+                                />
+                                <Upload className="h-12 w-12 text-indigo-400 mx-auto mb-3" />
+                                <div className="text-xl font-bold text-indigo-900 mb-2">Kéo thả file vào đây để nhập</div>
+                                <div className="text-base text-slate-600 mb-3">
+                                    Hoặc <button onClick={(e) => { e.stopPropagation(); handleClickChoose(); }} className="text-indigo-600 font-semibold underline hover:text-indigo-700">chọn file từ máy tính</button>
+                                </div>
+                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-indigo-200">
+                                    <Database className="h-4 w-4 text-indigo-600" />
+                                    <span className="text-sm font-medium text-slate-700">Hỗ trợ: Excel (XLSX, XLS), CSV</span>
+                                </div>
                             </div>
                         </div>
-                        <div className="overflow-auto max-h-96 border rounded">
-                            <table className="w-full text-left divide-y">
-                                <thead className="bg-slate-50 sticky top-0">
+                    )}
+
+                    {isParsing && (
+                        <div className="text-center py-8">
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-2"></div>
+                            <div className="text-indigo-700 font-medium text-sm">Đang đọc file...</div>
+                        </div>
+                    )}
+
+                    {rows.length > 0 && (
+                        <div className="bg-white rounded-lg shadow-lg border border-indigo-100 flex flex-col h-full">
+                            <div className="flex items-center justify-between px-3 py-3 border-b bg-gradient-to-r from-indigo-50 to-purple-50 flex-shrink-0">
+                                <div className="flex items-center gap-2">
+                                    <Database className="h-4 w-4 text-indigo-600" />
+                                    <div>
+                                        <div className="font-semibold text-base text-indigo-900">Xem trước dữ liệu</div>
+                                        <div className="text-xs text-indigo-600">{rows.length} nhóm câu hỏi</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    {progress.total > 0 && (
+                                        <div className="text-sm text-indigo-700 font-medium bg-white px-3 py-1.5 rounded-full border border-indigo-200">
+                                            Tiến trình: {progress.done}/{progress.total}
+                                        </div>
+                                    )}
+                                    <Button
+                                        onClick={handleGenerateIntents}
+                                        disabled={isGenerating || rows.length === 0}
+                                        variant="outline"
+                                        size="sm"
+                                        className="gap-2 border-indigo-300 hover:bg-indigo-50"
+                                    >
+                                        <Sparkles className="h-4 w-4" />
+                                        {isGenerating ? 'Đang tạo...' : 'Tạo thêm nhóm câu hỏi'}
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="overflow-auto flex-1 border-t">
+                            <table className="w-full text-left table-fixed">
+                                <thead className="bg-gradient-to-r from-slate-50 to-slate-100 sticky top-0 border-b">
                                     <tr>
-                                        <th className="px-4 py-2 w-12">#</th>
-                                        <th className="px-4 py-2 w-16">Chọn</th>
-                                        <th className="px-4 py-2 w-80">Tên nhóm câu hỏi</th>
-                                        <th className="px-4 py-2">Câu trả lời</th>
-                                        <th className="px-4 py-2 w-28">Thao tác</th>
+                                        <th className="px-4 py-3 w-12 text-xs font-semibold text-slate-600 uppercase">#</th>
+                                        <th className="px-4 py-3 w-16 text-xs font-semibold text-slate-600 uppercase">Chọn</th>
+                                        <th className="px-4 py-3 w-80 text-xs font-semibold text-slate-600 uppercase">Tên nhóm câu hỏi</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-slate-600 uppercase">Câu trả lời</th>
+                                        <th className="px-4 py-3 w-32 text-xs font-semibold text-slate-600 uppercase">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -561,14 +601,14 @@ export function ImportIntentPage() {
                                         const isError = r.status === 'error';
                                         const hasValidationError = !!r.validationError;
                                         const rowClasses = isSuccess
-                                            ? "opacity-50"
+                                            ? "opacity-50 bg-slate-100"
                                             : (isError || hasValidationError)
-                                                ? "bg-red-50"
-                                                : (i % 2 === 0 ? "bg-white" : "bg-slate-50");
+                                                ? "bg-red-100"
+                                                : (i % 2 === 0 ? "bg-indigo-100/60" : "bg-white");
 
                                         return (
                                             <>
-                                                <tr key={i} className={rowClasses}>
+                                                <tr key={i} className={`${rowClasses} border-b`}>
                                                     <td className="px-4 py-2 align-top">{i + 1}</td>
                                                     <td className="px-4 py-2 align-top">
                                                         <input
@@ -637,8 +677,8 @@ export function ImportIntentPage() {
                                                                             <ChevronRight className="h-4 w-4" />
                                                                         )}
                                                                     </Button>
-                                                                    <div className="flex-1">
-                                                                        <div className="font-medium text-sm font-mono text-indigo-700">{r.name}</div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="font-medium text-sm font-mono text-indigo-700 truncate" title={r.name}>{r.name}</div>
                                                                         <div className="text-xs text-slate-400 mt-1">
                                                                             {r.examples.length} câu hỏi
                                                                         </div>
@@ -646,12 +686,12 @@ export function ImportIntentPage() {
                                                                 </div>
                                                             </td>
                                                             <td className="px-4 py-2 align-top">
-                                                                <div className="text-sm text-slate-600 line-clamp-3">
+                                                                <div className="text-sm text-slate-600 line-clamp-2 break-words" title={r.response}>
                                                                     {r.response}
                                                                 </div>
                                                             </td>
                                                             <td className="px-4 py-2 align-top">
-                                                                <div className="flex gap-1 flex-wrap">
+                                                                <div className="flex gap-1 items-center">
                                                                     {isSuccess ? (
                                                                         <span className="text-green-600 text-sm font-medium">✓ Đã lưu</span>
                                                                     ) : (
@@ -693,15 +733,15 @@ export function ImportIntentPage() {
                                                 </tr>
                                                 {expandedRows[i] && !isSuccess && (
                                                     <tr key={`${i}-examples`} className={rowClasses}>
-                                                        <td colSpan={5} className="px-4 py-2">
-                                                            <div className="ml-8 border-l-2 border-indigo-200 pl-4">
+                                                        <td colSpan={5} className="px-2 py-2">
+                                                            <div className="ml-8 border-l-2 border-indigo-200 pl-3 border rounded-lg p-2 bg-slate-50/50">
                                                                 <div className="font-medium text-sm mb-2 text-indigo-700">
                                                                     Các câu hỏi tương tự:
                                                                 </div>
-                                                                <div className="space-y-2">
+                                                                <div className="space-y-1">
                                                                     {r.examples.map((ex, exIdx) => (
-                                                                        <div key={exIdx} className="flex items-start gap-2 group">
-                                                                            <span className="text-xs text-slate-400 mt-1 w-6">{exIdx + 1}.</span>
+                                                                        <div key={exIdx} className={`flex items-start gap-2 group p-2 rounded border border-slate-300 ${i % 2 === 0 ? 'bg-indigo-50/50' : 'bg-white'} hover:border-indigo-400 transition-colors`}>
+                                                                            <span className="text-xs text-slate-400 mt-0.5 w-6 flex-shrink-0">{exIdx + 1}.</span>
                                                                             {editingExample?.rowIdx === i && editingExample?.exampleIdx === exIdx ? (
                                                                                 <div className="flex-1 flex gap-2">
                                                                                     <Input
@@ -729,7 +769,7 @@ export function ImportIntentPage() {
                                                                             ) : (
                                                                                 <>
                                                                                     <span className="flex-1 text-sm">{ex}</span>
-                                                                                    <div className="opacity-0 group-hover:opacity-100 flex gap-1">
+                                                                                    <div className="opacity-0 group-hover:opacity-100 flex gap-1 flex-shrink-0">
                                                                                         <Button
                                                                                             size="sm"
                                                                                             variant="ghost"
@@ -793,15 +833,33 @@ export function ImportIntentPage() {
                             </table>
                         </div>
 
-                        <div className="flex gap-3 mt-4">
-                            <Button onClick={handleImport} disabled={isImporting} className="bg-indigo-600 text-white hover:bg-indigo-700">{isImporting ? 'Đang nhập...' : 'Nhập dữ liệu đã chọn'}</Button>
-                            {hasImported && rows.some(r => r.status === 'error') && (
-                                <Button onClick={handleRetryFailed} variant="outline" disabled={isImporting}>Thử lại các dòng lỗi</Button>
-                            )}
-                            <Button variant="ghost" onClick={() => { setRows([]); setFile(null); setSelected({}); setHasImported(false); }}>Hủy / Xóa tất cả</Button>
+                            <div className="flex gap-3 px-3 py-3 border-t bg-gray-50 flex-shrink-0">
+                                <Button 
+                                    onClick={handleImport} 
+                                    disabled={isImporting} 
+                                    className="bg-indigo-600 text-white hover:bg-indigo-700 gap-2"
+                                >
+                                    <Database className="h-4 w-4" />
+                                    {isImporting ? 'Đang nhập...' : 'Nhập dữ liệu đã chọn'}
+                                </Button>
+                                {hasImported && rows.some(r => r.status === 'error') && (
+                                    <Button onClick={handleRetryFailed} variant="outline" disabled={isImporting} className="gap-2">
+                                        <Sparkles className="h-4 w-4" />
+                                        Thử lại các dòng lỗi
+                                    </Button>
+                                )}
+                                <Button 
+                                    variant="ghost" 
+                                    onClick={() => { setRows([]); setFile(null); setSelected({}); setHasImported(false); }}
+                                    className="gap-2"
+                                >
+                                    <X className="h-4 w-4" />
+                                    Hủy / Xóa tất cả
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );

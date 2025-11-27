@@ -37,6 +37,12 @@ export function ResetPasswordPage({
       return;
     }
 
+    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[A-Za-z\d\W]{8,256}$/;
+    if (!passwordRegex.test(password)) {
+      toast.error("Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ cái và số!");
+      return;
+    }
+
     if (!id || !otp) {
       toast.error("Thiếu thông tin xác thực. Vui lòng thực hiện lại quy trình quên mật khẩu!");
       navigate("/auth/forgot-password");
@@ -167,7 +173,7 @@ export function ResetPasswordPage({
                     </button>
 
                     <div className="absolute right-0 mt-2 w-64 p-2 bg-white border border-slate-200 rounded shadow-sm text-xs text-slate-700 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 group-hover:pointer-events-auto transition-opacity">
-                      Ít nhất 6 ký tự, 1 chữ hoa, 1 chữ số, 1 ký tự đặc biệt.
+                      Ít nhất 8 ký tự, bao gồm chữ cái và số.
                     </div>
                   </div>
                 </div>

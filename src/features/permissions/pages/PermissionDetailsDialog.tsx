@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { Permission } from "../api/dto/permissions.dto";
 
@@ -38,7 +37,6 @@ export function PermissionDetailsDialog({
   open,
   onOpenChange,
 }: PermissionDetailsDialogProps) {
-  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
 
   // giả lập hiệu ứng loading khi mở dialog
@@ -61,156 +59,165 @@ export function PermissionDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[90vw] sm:max-w-lg max-h-[80vh] overflow-y-auto">
-        <DialogHeader className="space-y-3">
-          <DialogTitle className="text-2xl font-semibold flex items-center gap-2">
-            <ShieldCheck className="h-6 w-6 text-primary" />
-            {t("Permission Details")}
-          </DialogTitle>
-          <DialogDescription className="text-base">
-            {t("View full details for this permission")}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-[90vw] sm:max-w-3xl max-h-[90vh] overflow-hidden p-0">
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b px-3 pt-4">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3 text-indigo-900">
+              <div className="p-2 bg-white rounded-lg shadow-sm">
+                <ShieldCheck className="h-6 w-6 text-indigo-600" />
+              </div>
+              Chi tiết quyền hạn
+            </DialogTitle>
+            <DialogDescription className="text-sm text-indigo-600">
+              Xem thông tin chi tiết về quyền hạn này
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+        
+        <div className="overflow-y-auto px-3 py-3 pt-0" style={{ maxHeight: 'calc(90vh - 120px)' }}>
 
-        {isLoading ? (
-          <div className="space-y-5 py-3">
-            <Skeleton className="h-6 w-40" />
-            <Skeleton className="h-6 w-56" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-6 w-28" />
-            <Skeleton className="h-6 w-32" />
-          </div>
-        ) : permission ? (
-          <div className="space-y-6 py-2">
-            {/* Endpoint */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Tag className="h-4 w-4" />
-                {t("Endpoint")}
-              </div>
-              <div className="rounded-lg bg-muted/50 px-4 py-3">
-                <p className="text-sm font-mono break-all">
-                  {permission.originalUrl}
-                </p>
-              </div>
+          {isLoading ? (
+            <div className="space-y-5 py-3">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-6 w-56" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-6 w-28" />
+              <Skeleton className="h-6 w-32" />
             </div>
-
-            <Separator />
-
-            {/* Method */}
+          ) : permission ? (
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <ShieldCheck className="h-4 w-4" />
-                {t("Method")}
-                <Badge
-                  variant={
-                    permission.method === "GET"
-                      ? "outline"
-                      : permission.method === "POST"
-                      ? "secondary"
-                      : permission.method === "PUT"
-                      ? "default"
-                      : "destructive"
-                  }
-                  className="ml-auto"
-                >
-                  {permission.method}
-                </Badge>
+              {/* Endpoint */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                  <Tag className="h-4 w-4 text-indigo-600" />
+                  Đường dẫn API
+                </div>
+                <div className="rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 px-3 py-2 shadow-sm">
+                  <p className="text-sm font-mono break-all font-semibold text-indigo-900">
+                    {permission.originalUrl}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <Separator />
+              <Separator className="bg-slate-200" />
 
-            {/* Description */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <FileText className="h-4 w-4" />
-                {t("Description")}
+              {/* Method */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                  <ShieldCheck className="h-4 w-4 text-indigo-600" />
+                  Phương thức
+                  <Badge
+                    variant={
+                      permission.method === "GET"
+                        ? "outline"
+                        : permission.method === "POST"
+                        ? "secondary"
+                        : permission.method === "PUT"
+                        ? "default"
+                        : "destructive"
+                    }
+                    className="ml-auto text-sm font-bold"
+                  >
+                    {permission.method}
+                  </Badge>
+                </div>
               </div>
-              <div className="rounded-lg bg-muted/50 px-4 py-3">
-                <p className="text-sm leading-relaxed">
-                  {permission.description || (
-                    <span className="italic text-muted-foreground">
-                      {t("No description")}
-                    </span>
+
+              <Separator className="bg-slate-200" />
+
+              {/* Description */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                  <FileText className="h-4 w-4 text-purple-600" />
+                  Mô tả
+                </div>
+                <div className="rounded-lg bg-slate-50 border-2 border-slate-200 px-3 py-2 shadow-sm">
+                  <p className="text-sm leading-relaxed text-slate-700">
+                    {permission.description || (
+                      <span className="italic text-slate-400">
+                        Không có mô tả
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <Separator className="bg-slate-200" />
+
+              {/* Module */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                  <Puzzle className="h-4 w-4 text-orange-600" />
+                  Phân hệ
+                </div>
+                <div className="rounded-lg bg-orange-50 border-2 border-orange-200 px-3 py-2 shadow-sm">
+                  <p className="text-sm font-bold text-orange-900">{permission.module}</p>
+                </div>
+              </div>
+
+              <Separator className="bg-slate-200" />
+
+              {/* Public / Private */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                  <Globe className="h-4 w-4 text-blue-600" />
+                  Quyền truy cập
+                </div>
+                <div className={`rounded-lg px-3 py-2 flex items-center gap-2 border-2 shadow-sm ${permission.isPublic ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                  {permission.isPublic ? (
+                    <>
+                      <Unlock className="h-5 w-5 text-green-600" />
+                      <span className="text-sm font-bold text-green-700">
+                        Công khai
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-5 w-5 text-red-600" />
+                      <span className="text-sm font-bold text-red-700">
+                        Riêng tư
+                      </span>
+                    </>
                   )}
-                </p>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Module */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Puzzle className="h-4 w-4" />
-                {t("Module")}
-              </div>
-              <div className="rounded-lg bg-muted/50 px-4 py-2">
-                <p className="text-sm font-medium">{permission.module}</p>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Public / Private */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Globe className="h-4 w-4" />
-                {t("Access")}
-              </div>
-              <div className="rounded-lg bg-muted/50 px-4 py-2 flex items-center gap-2">
-                {permission.isPublic ? (
-                  <>
-                    <Unlock className="h-4 w-4 text-green-500" />
-                    <span className="text-sm font-medium text-green-600">
-                      {t("Public")}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Lock className="h-4 w-4 text-red-500" />
-                    <span className="text-sm font-medium text-red-600">
-                      {t("Private")}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Timestamps */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  {t("Created At")}
-                </div>
-                <div className="rounded-lg bg-muted/50 px-3 py-2">
-                  <p className="text-sm">{formatDate(permission.createdAt)}</p>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  {t("Updated At")}
+              <Separator className="bg-slate-200" />
+
+              {/* Timestamps */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                    <Calendar className="h-4 w-4 text-green-600" />
+                    Ngày tạo
+                  </div>
+                  <div className="rounded-lg bg-green-50 border-2 border-green-200 px-3 py-2 shadow-sm">
+                    <p className="text-sm font-semibold text-green-900">{formatDate(permission.createdAt)}</p>
+                  </div>
                 </div>
-                <div className="rounded-lg bg-muted/50 px-3 py-2">
-                  <p className="text-sm">{formatDate(permission.updatedAt)}</p>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                    <Calendar className="h-4 w-4 text-blue-600" />
+                    Ngày cập nhật
+                  </div>
+                  <div className="rounded-lg bg-blue-50 border-2 border-blue-200 px-3 py-2 shadow-sm">
+                    <p className="text-sm font-semibold text-blue-900">{formatDate(permission.updatedAt)}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-12">
-            <AlertCircle className="h-12 w-12 text-muted-foreground/50 mb-3" />
-            <p className="text-sm text-muted-foreground">
-              {t("No permission selected")}
-            </p>
-          </div>
-        )}
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="p-4 bg-slate-100 rounded-full mb-4">
+                <AlertCircle className="h-12 w-12 text-slate-400" />
+              </div>
+              <p className="text-base font-medium text-slate-600">
+                Chưa chọn quyền hạn
+              </p>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

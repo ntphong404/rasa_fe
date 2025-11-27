@@ -5,8 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Loader2, BookText, Tag, Code, Calendar, Zap } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { storyService } from "../api/service";
 import { StoryDetailResponse } from "../api/dto/StoryDto";
@@ -100,57 +99,17 @@ export default function StoryDetailsDialog({
       }
     });
 
-    // Split by lines and process each line for syntax highlighting
-    const lines = processedText.split('\n');
-    const processedLines = lines.map((line, index) => {
-      // Simple YAML syntax highlighting
-      if (line.trim().startsWith('- story:')) {
-        return (
-          <div key={index} className="text-blue-600 font-semibold">
-            {line}
-          </div>
-        );
-      }
-      if (line.trim().startsWith('steps:')) {
-        return (
-          <div key={index} className="text-green-600 font-medium">
-            {line}
-          </div>
-        );
-      }
-      if (line.trim().startsWith('- intent:') || line.trim().startsWith('- action:')) {
-        return (
-          <div key={index} className="text-purple-600">
-            {line}
-          </div>
-        );
-      }
-      if (line.trim().startsWith('entities:') || line.trim().startsWith('slots:')) {
-        return (
-          <div key={index} className="text-orange-600">
-            {line}
-          </div>
-        );
-      }
-      return (
-        <div key={index} className="text-gray-700 dark:text-gray-300">
-          {line}
-        </div>
-      );
-    });
-
-    return (
-      <div className="font-mono text-sm whitespace-pre-wrap">
-        {processedLines}
-      </div>
-    );
+    return processedText;
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t("Story Details")}</DialogTitle>
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-r from-violet-50 to-fuchsia-50">
+          <DialogTitle className="flex items-center gap-2 text-2xl">
+            <BookText className="h-6 w-6 text-violet-600" />
+            {t("Story Details")}
+          </DialogTitle>
         </DialogHeader>
 
         {loading && (
@@ -167,141 +126,127 @@ export default function StoryDetailsDialog({
         )}
 
         {story && (
-          <div className="space-y-6">
-            {/* Basic Information */}
-            <div className="border rounded-lg p-4">
-              <h3 className="font-semibold text-lg mb-3">{t("Thông tin Cơ bản")}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    {t("Story Name")}
-                  </label>
-                  <p className="text-lg font-medium">{story.data?.name || "N/A"}</p>
-                </div>
-                {story.data?.description && (
+          <div className="flex-1 overflow-y-auto px-3 py-3 pt-0">
+            <div className="space-y-2">
+              {/* Name & Description Card */}
+              <div className="bg-gradient-to-br from-violet-50 to-fuchsia-50 border border-violet-200 rounded-lg p-3">
+                <div className="space-y-2">
                   <div>
-                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      {t("Description")}
-                    </label>
-                    <p>{story.data.description}</p>
+                    <h3 className="text-xs font-semibold text-violet-600 uppercase tracking-wide mb-1">
+                      {t("Story Name")}
+                    </h3>
+                    <p className="text-lg font-bold text-violet-900">{story.data?.name || "N/A"}</p>
                   </div>
-                )}
-                <div>
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    {t("Tạo lúc")}
-                  </label>
-                  <p>{story.data?.createdAt ? new Date(story.data.createdAt).toLocaleString("vi-VN") : "Invalid Date"}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    {t("Cập nhật lúc")}
-                  </label>
-                  <p>{story.data?.updatedAt ? new Date(story.data.updatedAt).toLocaleString("vi-VN") : "Invalid Date"}</p>
+                  {story.data?.description && (
+                    <div>
+                      <h3 className="text-xs font-semibold text-fuchsia-600 uppercase tracking-wide mb-1">
+                        {t("Description")}
+                      </h3>
+                      <p className="text-sm text-gray-700">{story.data.description}</p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
 
-            {/* Related Data */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Intents */}
-              <div className="border rounded-lg p-4">
-                <h4 className="font-semibold mb-2">{t("Intent Liên quan")}</h4>
-                {Array.isArray(story?.data?.intents) && story.data.intents.length > 0 ? (
-                  <div className="space-y-1 max-h-32 overflow-y-auto">
-                    {story.data.intents.map((intent: any, index: number) => (
-                      <div key={intent?._id || intent?.id || index} className="flex">
-                        <Badge variant="secondary" className="w-full">
-                          <span className="truncate block" title={intent?.name || intent || 'Unknown Intent'}>
-                            {intent?.name || intent || 'Unknown Intent'}
-                          </span>
-                        </Badge>
-                      </div>
-                    ))}
+              {/* Related Data */}
+              <div className="bg-white border rounded-lg p-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {/* Intents */}
+                  <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                      <Tag className="h-4 w-4 text-indigo-600" />
+                      {t("Intents")}
+                      <span className="ml-auto text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                        {story.data?.intents?.length || 0}
+                      </span>
+                    </h3>
                   </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">{t("Không có intent")}</p>
-                )}
+
+                  {/* Actions */}
+                  <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                      <Zap className="h-4 w-4 text-purple-600" />
+                      {t("Actions")}
+                      <span className="ml-auto text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                        {story.data?.action?.length || 0}
+                      </span>
+                    </h3>
+                  </div>
+
+                  {/* Responses */}
+                  <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                      <Tag className="h-4 w-4 text-amber-600" />
+                      {t("Responses")}
+                      <span className="ml-auto text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                        {story.data?.responses?.length || 0}
+                      </span>
+                    </h3>
+                  </div>
+
+                  {/* Entities */}
+                  <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                      <Tag className="h-4 w-4 text-emerald-600" />
+                      {t("Entities")}
+                      <span className="ml-auto text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                        {story.data?.entities?.length || 0}
+                      </span>
+                    </h3>
+                  </div>
+                </div>
               </div>
 
-              {/* Actions */}
-              <div className="border rounded-lg p-4">
-                <h4 className="font-semibold mb-2">{t("Action Liên quan")}</h4>
-                {Array.isArray(story?.data?.action) && story.data.action.length > 0 ? (
-                  <div className="space-y-1 max-h-32 overflow-y-auto">
-                    {story.data.action.map((action: any, index: number) => (
-                      <div key={action?._id || action?.id || index} className="flex">
-                        <Badge variant="secondary" className="w-full">
-                          <span className="truncate block" title={action?.name || action || 'Unknown Action'}>
-                            {action?.name || action || 'Unknown Action'}
-                          </span>
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">{t("Không có action")}</p>
-                )}
-              </div>
-
-              {/* Responses */}
-              <div className="border rounded-lg p-4">
-                <h4 className="font-semibold mb-2">{t("Response Liên quan")}</h4>
-                {Array.isArray(story?.data?.responses) && story.data.responses.length > 0 ? (
-                  <div className="space-y-1 max-h-32 overflow-y-auto">
-                    {story.data.responses.map((response: any, index: number) => (
-                      <div key={response?._id || response?.id || index} className="flex">
-                        <Badge variant="secondary" className="w-full">
-                          <span className="truncate block" title={response?.name || response || 'Unknown Response'}>
-                            {response?.name || response || 'Unknown Response'}
-                          </span>
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">{t("Không có response")}</p>
-                )}
-              </div>
-
-              {/* Entities */}
-              <div className="border rounded-lg p-4">
-                <h4 className="font-semibold mb-2">{t("Entity Liên quan")}</h4>
-                {Array.isArray(story?.data?.entities) && story.data.entities.length > 0 ? (
-                  <div className="space-y-1 max-h-32 overflow-y-auto">
-                    {story.data.entities.map((entity: any, index: number) => (
-                      <div key={entity?._id || entity?.id || index} className="flex">
-                        <Badge variant="secondary" className="w-full">
-                          <span className="truncate block" title={entity?.name || entity || 'Unknown Entity'}>
-                            {entity?.name || entity || 'Unknown Entity'}
-                          </span>
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm">{t("Không có entity")}</p>
-                )}
-              </div>
-            </div>
-
-            {/* YAML Define */}
-            <div className="border rounded-lg p-4">
-              <h3 className="font-semibold text-lg mb-3">{t("Định nghĩa YAML")}</h3>
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-md p-4 overflow-x-auto max-h-96 overflow-y-auto">
+              {/* YAML Definition */}
+              <div className="bg-white border rounded-lg p-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Code className="h-4 w-4 text-violet-600" />
+                  {t("YAML Definition")}
+                </h3>
                 {story?.data?.define ? (
-                  <div className="break-words">
-                    {processDefine(
-                      story.data.define,
-                      story.data?.intents || [],
-                      story.data?.action || [],
-                      story.data?.responses || [],
-                      story.data?.entities || [],
-                      story.data?.slots || []
-                    )}
+                  <div className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto font-mono text-sm">
+                    <pre className="whitespace-pre-wrap">
+                      {processDefine(
+                        story.data.define,
+                        story.data?.intents || [],
+                        story.data?.action || [],
+                        story.data?.responses || [],
+                        story.data?.entities || [],
+                        story.data?.slots || []
+                      )}
+                    </pre>
                   </div>
                 ) : (
-                  <p className="text-gray-500 italic">{t("Không có định nghĩa YAML")}</p>
+                  <p className="text-sm text-muted-foreground italic">
+                    {t("No definition provided")}
+                  </p>
                 )}
+              </div>
+
+              {/* Timestamps */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 border rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-slate-600 mb-2">
+                    <Calendar className="h-4 w-4" />
+                    <h3 className="text-xs font-semibold uppercase tracking-wide">
+                      {t("Created At")}
+                    </h3>
+                  </div>
+                  <p className="text-sm font-medium text-slate-900">
+                    {story.data?.createdAt ? new Date(story.data.createdAt).toLocaleString() : "Invalid Date"}
+                  </p>
+                </div>
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 border rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-slate-600 mb-2">
+                    <Calendar className="h-4 w-4" />
+                    <h3 className="text-xs font-semibold uppercase tracking-wide">
+                      {t("Updated At")}
+                    </h3>
+                  </div>
+                  <p className="text-sm font-medium text-slate-900">
+                    {story.data?.updatedAt ? new Date(story.data.updatedAt).toLocaleString() : "Invalid Date"}
+                  </p>
+                </div>
               </div>
             </div>
           </div>

@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Bot, Network } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -90,91 +91,120 @@ export function EditChatBotDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[90vw] sm:max-w-lg max-h-[80vh] overflow-y-auto p-4">
-        <DialogHeader>
-          <DialogTitle>{t("Edit ChatBot")}</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-r from-cyan-50 to-blue-50">
+          <DialogTitle className="flex items-center gap-2 text-2xl">
+            <Bot className="h-6 w-6 text-cyan-600" />
+            {t("Edit ChatBot")}
+          </DialogTitle>
+          <DialogDescription className="text-gray-600">
             {t("Update details for the chatbot.")}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("ChatBot Name")}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t("Enter chatbot name")}
-                      {...field}
-                      className="w-full"
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="space-y-4">
+              {/* Basic Info Card */}
+              <div className="bg-white border rounded-lg p-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-4">
+                  <Bot className="h-4 w-4 text-cyan-600" />
+                  {t("Basic Information")}
+                </h3>
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("ChatBot Name")}</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t("Enter chatbot name")}
+                          {...field}
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Network Configuration Card */}
+              <div className="bg-white border rounded-lg p-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-4">
+                  <Network className="h-4 w-4 text-blue-600" />
+                  {t("Network Configuration")}
+                </h3>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="ip"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("IP Address")}</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={t("Enter IP address (e.g., 192.168.1.100)")}
+                            {...field}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="rasaPort"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("Rasa Port")}</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="5005"
+                              {...field}
+                              onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="ip"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("IP Address")}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t("Enter IP address (e.g., 192.168.1.100)")}
-                      {...field}
-                      className="w-full"
+                    <FormField
+                      control={form.control}
+                      name="flaskPort"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("Flask Port")}</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="5000"
+                              {...field}
+                              onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="rasaPort"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("Rasa Port")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="5005"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
-                        className="w-full"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="flaskPort"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("Flask Port")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="5000"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
-                        className="w-full"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-end pt-4">
-              <Button type="submit">{t("Save")}</Button>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-2 pt-6 pb-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                {t("Cancel")}
+              </Button>
+              <Button type="submit" className="bg-cyan-600 hover:bg-cyan-700">
+                {t("Save Changes")}
+              </Button>
             </div>
           </form>
         </Form>

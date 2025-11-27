@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -35,13 +34,10 @@ export function TrainModelDialog({
   onOpenChange,
   onTrainSuccess,
 }: TrainModelDialogProps) {
-  const { t } = useTranslation();
-
   // Form state
   const [selectedChatbot, setSelectedChatbot] = useState<string>("");
   const [selectedRules, setSelectedRules] = useState<string[]>([]);
   const [selectedStories, setSelectedStories] = useState<string[]>([]);
-  const [finetune, setFinetune] = useState(false);
 
   // Data
   const [chatbots, setChatbots] = useState<IChatbot[]>([]);
@@ -78,7 +74,7 @@ export function TrainModelDialog({
       }
     } catch (error) {
       console.error("Error loading data:", error);
-      toast.error(t("Failed to load data"));
+      toast.error("Không thể tải dữ liệu");
     } finally {
       setIsLoading(false);
     }
@@ -102,17 +98,17 @@ export function TrainModelDialog({
 
   const handleTrain = async () => {
     if (!selectedChatbot) {
-      toast.error(t("Please select a chatbot"));
+      toast.error("Vui lòng chọn chatbot");
       return;
     }
 
     if (selectedRules.length === 0) {
-      toast.error(t("Please select at least one rule"));
+      toast.error("Vui lòng chọn ít nhất một Rule");
       return;
     }
 
     if (selectedStories.length === 0) {
-      toast.error(t("Please select at least one story"));
+      toast.error("Vui lòng chọn ít nhất một Story");
       return;
     }
 
@@ -121,20 +117,19 @@ export function TrainModelDialog({
       await trainingService.trainModel(selectedChatbot, {
         ruleIds: selectedRules,
         storyIds: selectedStories,
-        firetune: finetune,
+        firetune: false,
       });
 
-      toast.success(t("Training started successfully"));
+      toast.success("Bắt đầu huấn luyện thành công");
       onTrainSuccess();
       onOpenChange(false);
 
       // Reset form
       setSelectedRules([]);
       setSelectedStories([]);
-      setFinetune(false);
     } catch (error) {
       console.error("Error training model:", error);
-      toast.error(t("Failed to start training"));
+      toast.error("Không thể bắt đầu huấn luyện");
     } finally {
       setIsTraining(false);
     }
@@ -145,19 +140,18 @@ export function TrainModelDialog({
     // Reset form
     setSelectedRules([]);
     setSelectedStories([]);
-    setFinetune(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Train className="h-5 w-5" />
-            {t("Train Model")}
+      <DialogContent className="max-w-[85vw] h-[85vh] flex flex-col p-0">
+        <DialogHeader className="px-4 pt-4 pb-1 border-b">
+          <DialogTitle className="flex items-center gap-2 text-2xl">
+            <Train className="h-6 w-6 text-green-600" />
+            Huấn luyện mô hình
           </DialogTitle>
-          <DialogDescription>
-            {t("Select rules, stories and configure training options")}
+          <DialogDescription className="text-base mt-2">
+            Chọn Rules, Stories và cấu hình các tùy chọn huấn luyện
           </DialogDescription>
         </DialogHeader>
 
@@ -166,19 +160,19 @@ export function TrainModelDialog({
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
         ) : (
-          <div className="flex-1 flex flex-col gap-6 overflow-hidden">
+          <div className="flex-1 flex flex-col gap-4 overflow-hidden px-6">
             {/* Chatbot Selection */}
             <div className="space-y-2">
-              <Label htmlFor="chatbot">{t("Select Chatbot")}</Label>
+              <Label htmlFor="chatbot" className="text-base font-semibold">Chọn Chatbot</Label>
               <Select value={selectedChatbot} onValueChange={setSelectedChatbot}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t("Choose a chatbot")} />
+                <SelectTrigger className="h-auto py-3">
+                  <SelectValue placeholder="Chọn một chatbot" />
                 </SelectTrigger>
                 <SelectContent>
                   {chatbots.map((chatbot) => (
                     <SelectItem key={chatbot._id} value={chatbot._id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{chatbot.name}</span>
+                      <div className="flex flex-col py-1">
+                        <span className="font-medium text-sm">{chatbot.name}</span>
                         <span className="text-xs text-muted-foreground">
                           {chatbot.ip}:{chatbot.rasaPort}
                         </span>
@@ -191,31 +185,54 @@ export function TrainModelDialog({
 
             <div className="flex-1 flex gap-6 min-h-0">
               {/* Rules Selection */}
-              <div className="flex-1 flex flex-col">
-                <Label className="mb-2">{t("Select Rules")} ({selectedRules.length})</Label>
-                <div className="flex-1 border rounded-md p-4 overflow-y-auto">
+              <div className="flex-1 flex flex-col bg-white rounded-lg border shadow-sm">
+                <div className="px-5 py-3 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex items-center justify-between">
+                  <Label className="text-base font-semibold text-blue-900">
+                    Chọn Rules
+                    <span className="ml-2 px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">
+                      {selectedRules.length}
+                    </span>
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (selectedRules.length === rules.length) {
+                        setSelectedRules([]);
+                      } else {
+                        setSelectedRules(rules.map(r => r._id));
+                      }
+                    }}
+                    className="text-xs h-7 px-2 text-blue-700 hover:text-blue-900 hover:bg-blue-100"
+                  >
+                    {selectedRules.length === rules.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                  </Button>
+                </div>
+                <div className="flex-1 overflow-y-auto">
                   {rules.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-8">
-                      {t("No rules available")}
+                    <p className="text-sm text-muted-foreground text-center py-12">
+                      Không có Rules nào
                     </p>
                   ) : (
-                    <div className="space-y-3">
+                    <div>
                       {rules.map((rule) => (
-                        <div key={rule._id} className="flex items-start space-x-2">
+                        <div key={rule._id} className="flex items-start space-x-3 px-4 py-2 hover:bg-blue-50/50 transition-colors border-b border-slate-100 last:border-0">
                           <Checkbox
                             id={`rule-${rule._id}`}
                             checked={selectedRules.includes(rule._id)}
                             onCheckedChange={() => handleRuleToggle(rule._id)}
+                            className="mt-0.5"
                           />
                           <div className="flex-1 min-w-0">
                             <label
                               htmlFor={`rule-${rule._id}`}
-                              className="text-sm font-medium cursor-pointer block"
+                              className="text-sm font-medium cursor-pointer block hover:text-blue-700"
                             >
                               {rule.name}
                             </label>
                             {rule.description && (
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                                 {rule.description}
                               </p>
                             )}
@@ -228,31 +245,54 @@ export function TrainModelDialog({
               </div>
 
               {/* Stories Selection */}
-              <div className="flex-1 flex flex-col">
-                <Label className="mb-2">{t("Select Stories")} ({selectedStories.length})</Label>
-                <div className="flex-1 border rounded-md p-4 overflow-y-auto">
+              <div className="flex-1 flex flex-col bg-white rounded-lg border shadow-sm">
+                <div className="px-5 py-3 border-b bg-gradient-to-r from-purple-50 to-purple-100/50 flex items-center justify-between">
+                  <Label className="text-base font-semibold text-purple-900">
+                    Chọn Stories
+                    <span className="ml-2 px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">
+                      {selectedStories.length}
+                    </span>
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (selectedStories.length === stories.length) {
+                        setSelectedStories([]);
+                      } else {
+                        setSelectedStories(stories.map(s => s._id));
+                      }
+                    }}
+                    className="text-xs h-7 px-2 text-purple-700 hover:text-purple-900 hover:bg-purple-100"
+                  >
+                    {selectedStories.length === stories.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                  </Button>
+                </div>
+                <div className="flex-1 overflow-y-auto">
                   {stories.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-8">
-                      {t("No stories available")}
+                    <p className="text-sm text-muted-foreground text-center py-12">
+                      Không có Stories nào
                     </p>
                   ) : (
-                    <div className="space-y-3">
+                    <div>
                       {stories.map((story) => (
-                        <div key={story._id} className="flex items-start space-x-2">
+                        <div key={story._id} className="flex items-start space-x-3 px-4 py-2 hover:bg-purple-50/50 transition-colors border-b border-slate-100 last:border-0">
                           <Checkbox
                             id={`story-${story._id}`}
                             checked={selectedStories.includes(story._id)}
                             onCheckedChange={() => handleStoryToggle(story._id)}
+                            className="mt-0.5"
                           />
                           <div className="flex-1 min-w-0">
                             <label
                               htmlFor={`story-${story._id}`}
-                              className="text-sm font-medium cursor-pointer block"
+                              className="text-sm font-medium cursor-pointer block hover:text-purple-700"
                             >
                               {story.name}
                             </label>
                             {story.description && (
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                                 {story.description}
                               </p>
                             )}
@@ -265,41 +305,30 @@ export function TrainModelDialog({
               </div>
             </div>
 
-            {/* Finetune Option */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="finetune"
-                checked={finetune}
-                onCheckedChange={(checked) => setFinetune(checked as boolean)}
-              />
-              <Label htmlFor="finetune" className="text-sm font-medium">
-                {t("Enable Finetune")}
-              </Label>
-            </div>
-
             {/* Actions */}
-            <div className="flex gap-2 justify-end pt-4 border-t">
+            <div className="flex gap-3 justify-end pt-4 pb-6 border-t">
               <Button
                 variant="outline"
                 onClick={handleClose}
                 disabled={isTraining}
+                className="px-6"
               >
-                {t("Cancel")}
+                Hủy
               </Button>
               <Button
                 onClick={handleTrain}
                 disabled={isTraining || !selectedChatbot || selectedRules.length === 0 || selectedStories.length === 0}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-green-600 hover:bg-green-700 text-white px-6"
               >
                 {isTraining ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("Training...")}
+                    Đang huấn luyện...
                   </>
                 ) : (
                   <>
                     <Train className="mr-2 h-4 w-4" />
-                    {t("Start Training")}
+                    Bắt đầu huấn luyện
                   </>
                 )}
               </Button>

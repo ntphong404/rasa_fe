@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Loader2, BookOpen, Tag, Code, Calendar, AlertCircle, Zap } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ruleService } from "../api/service";
 import { RuleDetailResponse } from "../api/dto/RuleResponse";
@@ -83,47 +83,17 @@ export default function RuleDetailsDialog({
       }
     });
 
-    // Split by lines and process each line for syntax highlighting
-    const lines = processedText.split('\n');
-    const processedLines = lines.map((line, index) => {
-      // Simple YAML syntax highlighting
-      if (line.trim().startsWith('- rule:')) {
-        return (
-          <div key={index} className="text-blue-600 font-semibold">
-            {line}
-          </div>
-        );
-      }
-      if (line.trim().startsWith('condition:') || line.trim().startsWith('steps:')) {
-        return (
-          <div key={index} className="text-green-600 font-medium">
-            {line}
-          </div>
-        );
-      }
-      if (line.trim().startsWith('- intent:') || line.trim().startsWith('- action:')) {
-        return (
-          <div key={index} className="text-purple-600">
-            {line}
-          </div>
-        );
-      }
-
-      return (
-        <div key={index}>
-          {line}
-        </div>
-      );
-    });
-
-    return processedLines;
+    return processedText;
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t("Rule Details")}</DialogTitle>
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-r from-blue-50 to-cyan-50">
+          <DialogTitle className="flex items-center gap-2 text-2xl">
+            <BookOpen className="h-6 w-6 text-blue-600" />
+            {t("Rule Details")}
+          </DialogTitle>
         </DialogHeader>
 
         {loading && (
@@ -137,124 +107,168 @@ export default function RuleDetailsDialog({
         )}
 
         {rule && !loading && !error && (
-          <div className="space-y-6">
-            {/* Basic Information */}
-            <div className="grid gap-4">
-              <div>
-                <h3 className="text-lg font-semibold mb-2">{t("Basic Information")}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">
-                      {t("Name")}
-                    </label>
-                    <p className="text-lg font-semibold">{rule.name}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">
-                      {t("Status")}
-                    </label>
+          <div className="flex-1 overflow-y-auto px-3 py-3 pt-0">
+            <div className="space-y-2">
+              {/* Name & Description Card */}
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-3">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
                     <div>
-                      {rule.deleted ? (
-                        <Badge variant="destructive">{t("Deleted")}</Badge>
-                      ) : (
-                        <Badge variant="default">{t("Active")}</Badge>
-                      )}
+                      <h3 className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
+                        {t("Name")}
+                      </h3>
+                      <p className="text-lg font-bold text-blue-900">{rule.name}</p>
                     </div>
+                    {rule.deleted ? (
+                      <Badge variant="destructive" className="h-6">{t("Deleted")}</Badge>
+                    ) : (
+                      <Badge variant="default" className="bg-green-600 h-6">{t("Active")}</Badge>
+                    )}
                   </div>
-                  <div className="md:col-span-2">
-                    <label className="text-sm font-medium text-gray-600">
-                      {t("Description")}
-                    </label>
-                    <p className="text-sm text-gray-700 mt-1">
-                      {rule.description || t("No description provided")}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Intents */}
-              {rule.intents && rule.intents.length > 0 && (
-                <div>
-                  <h4 className="text-md font-semibold mb-2">{t("Associated Intents")}</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {rule.intents.map((intent, index) => (
-                      <Badge key={index} variant="secondary">
-                        {typeof intent === 'string' ? intent : intent.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Actions */}
-              {rule.action && rule.action.length > 0 && (
-                <div>
-                  <h4 className="text-md font-semibold mb-2">{t("Associated Actions")}</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {rule.action.map((action, index) => (
-                      <Badge key={index} variant="outline">
-                        {typeof action === 'string' ? action : action.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Responses */}
-              {rule.responses && rule.responses.length > 0 && (
-                <div>
-                  <h4 className="text-md font-semibold mb-2">{t("Associated Responses")}</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {rule.responses.map((response, index) => (
-                      <Badge key={index} variant="outline">
-                        {typeof response === 'string' ? response : response.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* YAML Definition */}
-              <div>
-                <h3 className="text-lg font-semibold mb-2">{t("YAML Definition")}</h3>
-                <div className="bg-gray-50 p-4 rounded-lg border">
-                  <pre className="text-sm font-mono whitespace-pre-wrap overflow-x-auto">
-                    {rule.define ? processDefine(
-                      rule.define,
-                      rule.intents || [],
-                      rule.action || [],
-                      rule.responses || []
-                    ) : t("No definition provided")}
-                  </pre>
-                </div>
-              </div>
-
-              {/* Metadata */}
-              <div>
-                <h3 className="text-lg font-semibold mb-2">{t("Metadata")}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <label className="font-medium text-gray-600">
-                      {t("Created At")}
-                    </label>
-                    <p>{new Date(rule.createdAt).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <label className="font-medium text-gray-600">
-                      {t("Updated At")}
-                    </label>
-                    <p>{new Date(rule.updatedAt).toLocaleString()}</p>
-                  </div>
-                  {rule.deletedAt && (
+                  {rule.description && (
                     <div>
-                      <label className="font-medium text-gray-600">
-                        {t("Deleted At")}
-                      </label>
-                      <p>{new Date(rule.deletedAt).toLocaleString()}</p>
+                      <h3 className="text-xs font-semibold text-cyan-600 uppercase tracking-wide mb-1">
+                        {t("Description")}
+                      </h3>
+                      <p className="text-sm text-gray-700">{rule.description}</p>
                     </div>
                   )}
                 </div>
               </div>
+
+              {/* Intents, Actions & Responses */}
+              <div className="bg-white border rounded-lg p-4">
+                <div className="grid grid-cols-3 gap-6">
+                  {/* Intents */}
+                  <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                      <Tag className="h-4 w-4 text-indigo-600" />
+                      {t("Intents")}
+                      <span className="ml-auto text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                        {rule.intents?.length || 0}
+                      </span>
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {rule.intents && rule.intents.length > 0 ? (
+                        rule.intents.map((intent, index) => (
+                          <Badge key={index} className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border-indigo-300">
+                            {typeof intent === 'string' ? intent : intent.name}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">-</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                      <Zap className="h-4 w-4 text-purple-600" />
+                      {t("Actions")}
+                      <span className="ml-auto text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                        {rule.action?.length || 0}
+                      </span>
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {rule.action && rule.action.length > 0 ? (
+                        rule.action.map((action, index) => (
+                          <Badge key={index} className="bg-purple-100 text-purple-700 hover:bg-purple-200 border-purple-300">
+                            {typeof action === 'string' ? action : action.name}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">-</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Responses */}
+                  <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                      <Tag className="h-4 w-4 text-amber-600" />
+                      {t("Responses")}
+                      <span className="ml-auto text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                        {rule.responses?.length || 0}
+                      </span>
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {rule.responses && rule.responses.length > 0 ? (
+                        rule.responses.map((response, index) => (
+                          <Badge key={index} className="bg-amber-100 text-amber-700 hover:bg-amber-200 border-amber-300">
+                            {typeof response === 'string' ? response : response.name}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">-</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* YAML Definition */}
+              <div className="bg-white border rounded-lg p-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Code className="h-4 w-4 text-blue-600" />
+                  {t("YAML Definition")}
+                </h3>
+                {rule.define ? (
+                  <div className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto font-mono text-sm">
+                    <pre className="whitespace-pre-wrap">
+                      {processDefine(
+                        rule.define,
+                        rule.intents || [],
+                        rule.action || [],
+                        rule.responses || []
+                      )}
+                    </pre>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">
+                    {t("No definition provided")}
+                  </p>
+                )}
+              </div>
+
+              {/* Timestamps */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 border rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-slate-600 mb-2">
+                    <Calendar className="h-4 w-4" />
+                    <h3 className="text-xs font-semibold uppercase tracking-wide">
+                      {t("Created At")}
+                    </h3>
+                  </div>
+                  <p className="text-sm font-medium text-slate-900">
+                    {new Date(rule.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 border rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-slate-600 mb-2">
+                    <Calendar className="h-4 w-4" />
+                    <h3 className="text-xs font-semibold uppercase tracking-wide">
+                      {t("Updated At")}
+                    </h3>
+                  </div>
+                  <p className="text-sm font-medium text-slate-900">
+                    {new Date(rule.updatedAt).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Deleted status */}
+              {rule.deleted && rule.deletedAt && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-red-600" />
+                    <Badge variant="destructive" className="text-sm">{t("Deleted")}</Badge>
+                    <span className="text-sm text-red-600 font-medium">
+                      {t("on")} {new Date(rule.deletedAt).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

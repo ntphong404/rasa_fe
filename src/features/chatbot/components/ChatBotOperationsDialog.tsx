@@ -33,6 +33,9 @@ import {
   HealthCheckResponse,
   ModelDetail
 } from "../api/dto/ChatBotResponse";
+import { actionService } from "@/features/action/api/service";
+import { ActionQuery } from "@/features/action/api/dto/ActionQuery";
+import { IAction } from "@/interfaces/action.interface";
 
 interface ChatBotOperationsDialogProps {
   chatBot: ChatBot | null;
@@ -59,9 +62,13 @@ export function ChatBotOperationsDialog({
   const [mongoModelsList, setMongoModelsList] = useState<ModelDetail[]>([]);
   const [mongoModelsLoading, setMongoModelsLoading] = useState(false);
 
-  // Actions List
-  const [actionsList, setActionsList] = useState<ActionsListResponse["actions"]>([]);
-  const [actionsLoading, setActionsLoading] = useState(false);
+  // Actions List from MongoDB
+  const [mongoActionsList, setMongoActionsList] = useState<IAction[]>([]);
+  const [mongoActionsLoading, setMongoActionsLoading] = useState(false);
+
+  // Actions List from Rasa
+  const [rasaActionsList, setRasaActionsList] = useState<ActionsListResponse["actions"]>([]);
+  const [rasaActionsLoading, setRasaActionsLoading] = useState(false);
 
   // Send Model (share to another chatbot)
   const [selectedModelId, setSelectedModelId] = useState("");
@@ -75,6 +82,9 @@ export function ChatBotOperationsDialog({
   const [pushActionModelId, setPushActionModelId] = useState("");
   const [selectedActionIds, setSelectedActionIds] = useState<string[]>([]);
   const [pushActionLoading, setPushActionLoading] = useState(false);
+
+  // Run Actions Server
+  const [runActionsLoading, setRunActionsLoading] = useState(false);
 
   const handleHealthCheck = async () => {
     if (!chatBot) return;
@@ -148,18 +158,46 @@ export function ChatBotOperationsDialog({
     }
   };
 
-  const handleGetActionsList = async () => {
+  const handleGetMongoActionsList = async () => {
     if (!chatBot) return;
-    setActionsLoading(true);
+    setMongoActionsLoading(true);
+    try {
+      const query: ActionQuery = {
+        page: 1,
+        limit: 100,
+        deleted: false
+      };
+      const result = await actionService.fetchActions(query);
+      setMongoActionsList(result.data || []);
+      if (result.meta.total === 0) {
+        toast.warning(t("No actions found in MongoDB"));
+      } else {
+        toast.success(`${t("Found")} ${result.meta.total} ${t("actions in MongoDB")}`);
+      }
+    } catch (error) {
+      console.error("Get MongoDB actions error:", error);
+      toast.error(t("Failed to fetch actions from MongoDB"));
+    } finally {
+      setMongoActionsLoading(false);
+    }
+  };
+
+  const handleGetRasaActionsList = async () => {
+    if (!chatBot) return;
+    setRasaActionsLoading(true);
     try {
       const result = await chatBotService.getActionsList(chatBot._id);
-      setActionsList(result.actions || []);
-      toast.success(`${t("Found")} ${result.total} ${t("actions in MongoDB")}`);
+      setRasaActionsList(result.actions || []);
+      if (result.total === 0) {
+        toast.warning(t("No actions found in Rasa server"));
+      } else {
+        toast.success(`${t("Found")} ${result.total} ${t("actions in Rasa")}`);
+      }
     } catch (error) {
-      console.error("Get actions error:", error);
-      toast.error(t("Failed to fetch actions"));
+      console.error("Get Rasa actions error:", error);
+      toast.error(t("Failed to fetch actions from Rasa"));
     } finally {
-      setActionsLoading(false);
+      setRasaActionsLoading(false);
     }
   };
 
@@ -213,6 +251,20 @@ export function ChatBotOperationsDialog({
     }
   };
 
+  const handleRunActionsServer = async () => {
+    if (!chatBot) return;
+    setRunActionsLoading(true);
+    try {
+      await chatBotService.runActionsServer(chatBot._id);
+      toast.success(t("Actions server started successfully"));
+    } catch (error) {
+      console.error("Run actions server error:", error);
+      toast.error(t("Failed to start actions server"));
+    } finally {
+      setRunActionsLoading(false);
+    }
+  };
+
   const toggleActionSelection = (actionId: string) => {
     setSelectedActionIds(prev =>
       prev.includes(actionId)
@@ -222,24 +274,24 @@ export function ChatBotOperationsDialog({
   };
 
   const toggleAllActions = () => {
-    if (selectedActionIds.length === actionsList.length) {
+    if (selectedActionIds.length === mongoActionsList.length) {
       setSelectedActionIds([]);
     } else {
-      setSelectedActionIds(actionsList.map(a => a._id));
+      setSelectedActionIds(mongoActionsList.map(a => a._id));
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[90vw] sm:max-w-3xl h-[700px] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-[90vw] sm:max-w-3xl max-h-[90vh] h-[90vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6">
           <DialogTitle>{t("ChatBot Operations")}</DialogTitle>
           <DialogDescription>
             {t("Manage operations for")} {chatBot?.name}
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="health" className="w-full flex-1 flex flex-col overflow-hidden">
+        <Tabs defaultValue="health" className="w-full flex-1 flex flex-col overflow-hidden px-6 pb-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="health">{t("Health")}</TabsTrigger>
             <TabsTrigger value="models">{t("Models")}</TabsTrigger>
@@ -528,61 +580,133 @@ export function ChatBotOperationsDialog({
           {/* Actions Tab */}
           <TabsContent value="actions" className="flex-1 overflow-y-auto mt-4">
             <div className="space-y-4 h-full">
-              {/* Get Actions List */}
-              <div className="space-y-2">
+              {/* Run Actions Server Button */}
+              <Button
+                onClick={handleRunActionsServer}
+                disabled={runActionsLoading}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                {runActionsLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Play className="mr-2 h-4 w-4" />
+                )}
+                {t("Run Actions Server")}
+              </Button>
+
+              {/* Get Actions List Buttons */}
+              <div className="grid grid-cols-2 gap-2">
                 <Button
-                  onClick={handleGetActionsList}
-                  disabled={actionsLoading}
+                  onClick={handleGetMongoActionsList}
+                  disabled={mongoActionsLoading}
                   className="w-full"
                 >
-                  {actionsLoading ? (
+                  {mongoActionsLoading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
                   {t("Get Actions List from MongoDB")}
                 </Button>
 
-                {actionsList.length > 0 && (
-                  <div className="p-4 bg-muted rounded-lg max-h-48 overflow-y-auto">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold">{t("Available Actions")}:</h4>
+                <Button
+                  onClick={handleGetRasaActionsList}
+                  disabled={rasaActionsLoading}
+                  className="w-full"
+                >
+                  {rasaActionsLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  {t("Get Actions List from Rasa")}
+                </Button>
+              </div>
+
+              {/* Actions Lists */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* MongoDB Actions List */}
+                <div className="border-2 border-muted rounded-lg p-4 h-[240px] flex flex-col">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-sm">{t("Available Actions from MongoDB")}:</h4>
+                    {mongoActionsList.length > 0 && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={toggleAllActions}
                       >
-                        {selectedActionIds.length === actionsList.length
+                        {selectedActionIds.length === mongoActionsList.length
                           ? t("Deselect All")
                           : t("Select All")}
                       </Button>
-                    </div>
-                    <div className="space-y-2">
-                      {actionsList.map((action) => (
-                        <div
-                          key={action._id}
-                          className="flex items-start space-x-2 border-b pb-2"
-                        >
-                          <Checkbox
-                            id={`action-${action._id}`}
-                            checked={selectedActionIds.includes(action._id)}
-                            onCheckedChange={() => toggleActionSelection(action._id)}
-                            className="mt-1"
-                          />
-                          <label
-                            htmlFor={`action-${action._id}`}
-                            className="flex-1 cursor-pointer"
-                          >
-                            <div className="font-medium text-sm">{action.name}</div>
-                            {action.description && (
-                              <div className="text-muted-foreground text-xs">
-                                {action.description}
-                              </div>
-                            )}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
+                    )}
                   </div>
-                )}
+                  <div className="flex-1 overflow-y-auto">
+                    {mongoActionsList.length > 0 ? (
+                      <div className="space-y-2 pr-2">
+                        {mongoActionsList.map((action) => (
+                          <div
+                            key={action._id}
+                            className="flex items-start space-x-2 border-b pb-2"
+                          >
+                            <Checkbox
+                              id={`action-${action._id}`}
+                              checked={selectedActionIds.includes(action._id)}
+                              onCheckedChange={() => toggleActionSelection(action._id)}
+                              className="mt-1"
+                            />
+                            <label
+                              htmlFor={`action-${action._id}`}
+                              className="flex-1 cursor-pointer"
+                            >
+                              <div className="font-medium text-sm">{action.name}</div>
+                              {action.description && (
+                                <div className="text-muted-foreground text-xs">
+                                  {action.description}
+                                </div>
+                              )}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                        {t("No actions loaded")}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Rasa Actions List */}
+                <div className="border-2 border-muted rounded-lg p-4 h-[240px] flex flex-col">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-sm">{t("Available Actions from Rasa")}:</h4>
+                    {rasaActionsList.length > 0 && (
+                      <Badge variant="secondary">{rasaActionsList.length} {t("actions")}</Badge>
+                    )}
+                  </div>
+                  <div className="flex-1 overflow-y-auto">
+                    {rasaActionsList.length > 0 ? (
+                      <div className="space-y-2 pr-2">
+                        {rasaActionsList.map((action) => (
+                          <div
+                            key={action._id}
+                            className="flex items-start space-x-2 border-b pb-2"
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium text-sm">{action.name}</div>
+                              {action.description && (
+                                <div className="text-muted-foreground text-xs">
+                                  {action.description}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                        {t("No actions loaded")}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="border-t pt-4 space-y-4">
@@ -629,16 +753,9 @@ export function ChatBotOperationsDialog({
                     </div>
                   )}
 
-                  {selectedActionIds.length === 0 && actionsList.length > 0 && (
-                    <div className="p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded text-sm">
-                      <AlertCircle className="h-4 w-4 inline mr-2" />
-                      {t("No actions selected. Will push all actions to Rasa.")}
-                    </div>
-                  )}
-
                   <Button
                     onClick={handlePushAction}
-                    disabled={pushActionLoading || actionsList.length === 0}
+                    disabled={pushActionLoading || mongoActionsList.length === 0}
                     className="w-full bg-orange-600 hover:bg-orange-700"
                   >
                     {pushActionLoading ? (
@@ -649,9 +766,16 @@ export function ChatBotOperationsDialog({
                     {t("Push Actions to Rasa")}
                   </Button>
 
-                  {actionsList.length === 0 && (
+                  {selectedActionIds.length === 0 && mongoActionsList.length > 0 && (
+                    <div className="flex items-center justify-center px-3 py-1.5 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded text-xs">
+                      <AlertCircle className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+                      <span>{t("No actions selected. Will push all actions to Rasa.")}</span>
+                    </div>
+                  )}
+
+                  {mongoActionsList.length === 0 && (
                     <p className="text-xs text-muted-foreground text-center">
-                      {t("Get actions list first to push them to Rasa")}
+                      {t("Get actions list from MongoDB first to push them to Rasa")}
                     </p>
                   )}
                 </div>

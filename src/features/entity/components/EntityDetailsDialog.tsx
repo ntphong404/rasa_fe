@@ -6,9 +6,8 @@ import {
 } from "@/components/ui/dialog";
 import { IEntity } from "@/interfaces/entity.interface";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { useTranslation } from "react-i18next";
-import { Calendar, FileText, Hash, Clock } from "lucide-react";
+import { Calendar, Hash, Clock, Tag, Code, AlertCircle } from "lucide-react";
 
 interface EntityDetailsDialogProps {
   entity: IEntity | null;
@@ -31,105 +30,111 @@ export default function EntityDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center gap-2">
-            <FileText className="h-6 w-6" />
-            {entity.name}
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-r from-emerald-50 to-teal-50">
+          <DialogTitle className="flex items-center gap-2 text-2xl">
+            <Tag className="h-6 w-6 text-emerald-600" />
+            {t("Entity Details")}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Status Badge */}
-          <div className="flex items-center gap-2">
-            <Badge variant={entity.deleted ? "destructive" : "default"}>
-              {entity.deleted ? t("Deleted") : t("Active")}
-            </Badge>
-          </div>
-
-          <Separator />
-
-          {/* Description */}
+        <div className="flex-1 overflow-y-auto px-3 py-3 pt-0">
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              {t("Description")}
-            </h3>
-            <p className="text-sm">
-              {entity.description || (
-                <span className="text-muted-foreground italic">
-                  {t("No description provided")}
-                </span>
-              )}
-            </p>
-          </div>
-
-          <Separator />
-
-          {/* YAML Definition */}
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-              <Hash className="h-4 w-4" />
-              {t("YAML Definition")}
-            </h3>
-            {entity.define ? (
-              <div className="bg-muted rounded-lg p-4 overflow-x-auto">
-                <pre className="text-xs font-mono whitespace-pre-wrap">
-                  {entity.define}
-                </pre>
+            {/* Name & Description Card */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg p-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-1">
+                      {t("Name")}
+                    </h3>
+                    <p className="text-lg font-bold text-emerald-900">{entity.name}</p>
+                  </div>
+                  <Badge variant={entity.deleted ? "destructive" : "default"} className="h-6">
+                    {entity.deleted ? t("Deleted") : t("Active")}
+                  </Badge>
+                </div>
+                {entity.description && (
+                  <div>
+                    <h3 className="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">
+                      {t("Description")}
+                    </h3>
+                    <p className="text-sm text-gray-700">{entity.description}</p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">
-                {t("No definition provided")}
-              </p>
-            )}
-          </div>
-
-          <Separator />
-
-          {/* Metadata */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                {t("Created At")}
-              </h3>
-              <p className="text-sm">{formatDate(entity.createdAt)}</p>
             </div>
 
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                {t("Updated At")}
+            {/* YAML Definition */}
+            <div className="bg-white border rounded-lg p-4">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <Code className="h-4 w-4 text-emerald-600" />
+                {t("YAML Definition")}
               </h3>
-              <p className="text-sm">
-                {entity.updatedAt
-                  ? formatDate(entity.updatedAt)
-                  : t("Not updated")}
-              </p>
+              {entity.define ? (
+                <div className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto font-mono text-sm">
+                  <pre className="whitespace-pre-wrap">
+                    {entity.define}
+                  </pre>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  {t("No definition provided")}
+                </p>
+              )}
             </div>
 
+            {/* Timestamps */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100 border rounded-lg p-4">
+                <div className="flex items-center gap-2 text-slate-600 mb-2">
+                  <Calendar className="h-4 w-4" />
+                  <h3 className="text-xs font-semibold uppercase tracking-wide">
+                    {t("Created At")}
+                  </h3>
+                </div>
+                <p className="text-sm font-medium text-slate-900">
+                  {formatDate(entity.createdAt)}
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100 border rounded-lg p-4">
+                <div className="flex items-center gap-2 text-slate-600 mb-2">
+                  <Clock className="h-4 w-4" />
+                  <h3 className="text-xs font-semibold uppercase tracking-wide">
+                    {t("Updated At")}
+                  </h3>
+                </div>
+                <p className="text-sm font-medium text-slate-900">
+                  {entity.updatedAt
+                    ? formatDate(entity.updatedAt)
+                    : t("Not updated")}
+                </p>
+              </div>
+            </div>
+
+            {/* Entity ID */}
             {entity._id && (
-              <div className="space-y-2 md:col-span-2">
-                <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-                  <Hash className="h-4 w-4" />
+              <div className="bg-white border rounded-lg p-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Hash className="h-4 w-4 text-slate-600" />
                   {t("Entity ID")}
                 </h3>
-                <p className="text-xs font-mono bg-muted p-2 rounded">
+                <p className="text-xs font-mono bg-slate-100 p-2 rounded text-slate-700">
                   {entity._id}
                 </p>
               </div>
             )}
 
+            {/* Deleted status */}
             {entity.deleted && entity.deletedAt && (
-              <div className="space-y-2 md:col-span-2">
-                <h3 className="text-sm font-semibold text-destructive flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  {t("Deleted At")}
-                </h3>
-                <p className="text-sm text-destructive">
-                  {formatDate(entity.deletedAt)}
-                </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  <Badge variant="destructive" className="text-sm">{t("Deleted")}</Badge>
+                  <span className="text-sm text-red-600 font-medium">
+                    {t("on")} {formatDate(entity.deletedAt)}
+                  </span>
+                </div>
               </div>
             )}
           </div>

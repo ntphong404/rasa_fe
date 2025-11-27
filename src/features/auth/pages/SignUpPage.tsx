@@ -84,9 +84,9 @@ export function SignUpPage({
       toast.error("Vui lòng chọn giới tính!");
       return false;
     }
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\W).{8,}$/;
+    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[A-Za-z\d\W]{8,256}$/;
     if (!passwordRegex.test(formData.password)) {
-      toast.error("Mật khẩu phải có ít nhất 8 ký tự, bao gồm 1 chữ hoa và 1 ký tự đặc biệt!");
+      toast.error("Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ cái và số!");
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
@@ -294,7 +294,7 @@ export function SignUpPage({
                       </svg>
                     </button>
                     <div className="absolute left-0 mt-2 w-56 p-2 bg-white border rounded shadow-sm text-xs opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-10">
-                      Ít nhất 8 ký tự, 1 chữ hoa, 1 ký tự đặc biệt.
+                      Ít nhất 8 ký tự, bao gồm chữ cái và số.
                     </div>
                   </div>
                   <span className="whitespace-nowrap">Độ mạnh: <span className="font-semibold text-slate-700">{passwordStrength.label}</span></span>
