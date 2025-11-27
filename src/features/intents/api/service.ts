@@ -6,7 +6,6 @@ import { IIntent } from "@/interfaces/intent.interface";
 import createIntentQuery, { IntentQuery } from "./dto/IntentQuery";
 import { IEntity } from "@/interfaces/entity.interface";
 import createEntityQuery from "@/features/entity/api/dto/EnityQuery";
-import { G } from "node_modules/framer-motion/dist/types.d-6pKw1mTI";
 import { GeminiExampleResponse } from "./dto/GeminiExampleResponse";
 import { IGeminiExampleRequest } from "./dto/GeminiExampleRequest";
 export const intentService = {

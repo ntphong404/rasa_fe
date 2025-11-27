@@ -1,5 +1,4 @@
 export interface ResetPasswordRequest {
-  id: string;
   otp: string;
-  password: string;
+  newPassword: string;
 }
