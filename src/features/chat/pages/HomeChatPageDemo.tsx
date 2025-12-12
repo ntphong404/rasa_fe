@@ -9,6 +9,17 @@ import {
   Palette,
   Bot,
   User,
+  Calendar,
+  Youtube,
+  Wifi,
+  Facebook,
+  ShieldCheck,
+  Percent,
+  Library,
+  FileText,
+  Info,
+  GraduationCap,
+  Globe,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "@/hooks/useChat";
@@ -21,16 +32,29 @@ import { useChatContext } from "@/features/chat/context/ChatContext";
 
 // List of available quick suggestions (stable reference)
 const QUICK_SUGGESTIONS = [
-  { icon: Lightbulb, text: "Chiều cao để xe chữa cháy di chuyển được là bao nhiêu?", color: "from-yellow-200 to-yellow-300" },
-  { icon: Code, text: "Các nội dung thẩm định thiết kế về phòng cháy và chữa cháy?", color: "from-red-200 to-red-300" },
-  { icon: Palette, text: "Hồ sơ đề nghị thẩm định thiết kế về phòng cháy và chữa cháy?", color: "from-orange-200 to-orange-300" },
-  { icon: MessageSquare, text: "Yêu cầu PCCC trong quy hoạch xây dựng", color: "from-blue-200 to-blue-300" },
-  { icon: Bot, text: "Thời hạn thẩm định thiết kế về PCCC bao lâu?", color: "from-emerald-200 to-emerald-300" },
-  { icon: User, text: "Phân loại bộ phân ngăn cháy", color: "from-indigo-200 to-indigo-300" },
-  { icon: Plus, text: "Quy định Chiều mở cửa thoát nạn", color: "from-pink-200 to-pink-300" },
-  { icon: Mic, text: "Quy định Nguồn điện cho hệ thống báo cháy tự động", color: "from-cyan-200 to-cyan-300" },
-  { icon: SendHorizonal, text: "Độ cao lắp đặt của hộp nút ấn báo cháy", color: "from-lime-200 to-lime-300" },
-  { icon: MessageSquare, text: "Số lượng bơm chữa cháy dự phòng", color: "from-sky-200 to-sky-300" },
+  { icon: Lightbulb, text: "Cách tính điểm học phần", color: "from-yellow-200 to-yellow-300" },
+  { icon: Code, text: "Trường có đào tạo hệ Cao đẳng không?", color: "from-red-200 to-red-300" },
+  { icon: Palette, text: "Học viện Kỹ thuật Mật mã là trường gì?", color: "from-orange-200 to-orange-300" },
+  { icon: MessageSquare, text: "Liên hệ tư vấn tuyển sinh như thế nào?", color: "from-blue-200 to-blue-300" },
+  { icon: Bot, text: "Bảng xếp loại theo thang điểm 4", color: "from-emerald-200 to-emerald-300" },
+  { icon: User, text: "Điều kiện bảo lưu kết quả học tập", color: "from-indigo-200 to-indigo-300" },
+  { icon: Plus, text: "Có được đăng ký học cải thiện không?", color: "from-pink-200 to-pink-300" },
+  { icon: Mic, text: "Website chính thức của trường là gì", color: "from-cyan-200 to-cyan-300" },
+  { icon: SendHorizonal, text: "Hotline của học viện", color: "from-lime-200 to-lime-300" },
+  { icon: MessageSquare, text: "Link facebook chính thức của trường?", color: "from-sky-200 to-sky-300" },
+  // Các câu hỏi mới
+  { icon: Youtube, text: "Youtube chính thức của trường là gì", color: "from-red-200 to-red-300" },
+  { icon: Wifi, text: "Wifi trường password là gì", color: "from-cyan-100 to-cyan-300" },
+  { icon: Calendar, text: "Làm sao để xem lịch thi của tôi?", color: "from-blue-100 to-blue-300" },
+  { icon: ShieldCheck, text: "Điểm tối thiểu để qua môn", color: "from-yellow-100 to-yellow-300" },
+  { icon: FileText, text: "Cách xem đề thi mẫu", color: "from-purple-100 to-purple-300" },
+  { icon: Info, text: "Hướng dẫn cài đặt phần mềm thi SEB", color: "from-indigo-100 to-indigo-300" },
+  { icon: GraduationCap, text: "Đối tượng được miễn học phí", color: "from-green-100 to-green-300" },
+  { icon: Percent, text: "Đối tượng giảm 70% học phí", color: "from-green-200 to-green-400" },
+  { icon: Percent, text: "Chính sách giảm 50% học phí", color: "from-green-300 to-green-500" },
+  { icon: Library, text: "Thư viện số của trường", color: "from-orange-100 to-orange-300" },
+  { icon: Globe, text: "Tiktok học viện kỹ thuật mật mã?", color: "from-pink-200 to-pink-400" },
+  { icon: Facebook, text: "Facebook đoàn TNCS của trường?", color: "from-blue-200 to-blue-400" },
 ];
 
 export function HomeChatDemo() {
