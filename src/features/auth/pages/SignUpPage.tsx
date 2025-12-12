@@ -153,7 +153,7 @@ export function SignUpPage({
         <CardContent>
           <div className="mx-auto mb-4 w-32 h-32 p-0 items-center -mt-2">
             <AspectRatio ratio={1}>
-              <img src="/logo.png" alt="Logo" className="rounded-md object-cover" />
+              <img src="/logo2.png" alt="Logo" className="rounded-md object-cover" />
             </AspectRatio>
           </div>
 
