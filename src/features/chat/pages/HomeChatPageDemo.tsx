@@ -22,6 +22,7 @@ import {
   Globe,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useChat } from "@/hooks/useChat";
 import { MessageActions } from "@/features/chat/components/MessageActions";
 import { ConversationExport } from "@/features/chat/components/ConversationExport";
@@ -62,7 +63,8 @@ export function HomeChatDemo() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const userId = useCurrentUserId();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const chatbotId = "68e22e6345898f7f46405ecc";
+  const chatbotId = "693c5379553ecd6f2bd5f14b";
+  const navigate = useNavigate();
 
   // Get chatHook from context or create default one
   const contextChat = useChatContext();
@@ -130,6 +132,10 @@ export function HomeChatDemo() {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleNavigateToRagChat = () => {
+    navigate('/rag-chat');
   };
 
   const handleQuickSuggestion = (text: string) => {
@@ -481,6 +487,7 @@ export function HomeChatDemo() {
                 {/* Left Button */}
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
                   <button
+                    onClick={handleNavigateToRagChat}
                     className="h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"
                     style={{
                       background: "rgba(59, 130, 246, 0.1)",

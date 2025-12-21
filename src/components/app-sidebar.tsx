@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "./ui/sidebar";
-import { Bot, MessageCircleCode, ShieldCheck, UserCog } from "lucide-react";
+import { BookOpen, Bot, MessageCircleCode, ShieldCheck, UserCog, MessageSquare } from "lucide-react";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { useAuthStore } from "@/store/auth";
@@ -91,30 +91,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             },
           ],
         },
-        // {
-        //   title: t("Documents & Forms"),
-        //   url: "/docs",
-        //   icon: BookOpen,
-        //   hidden: false,
-        //   items: [
-        //     {
-        //       title: t("Categories"),
-        //       url: "/categories",
-        //     },
-        //     {
-        //       title: t("Forms"),
-        //       url: "/forms",
-        //     },
-        //     {
-        //       title: t("Documents"),
-        //       url: "/docs",
-        //     },
-        //     {
-        //       title: t("Analytics & Reports"),
-        //       url: "/doc-analytics",
-        //     },
-        //   ],
-        // },
+        {
+          title: t("Documents & Forms"),
+          url: "/docs",
+          icon: BookOpen,
+          hidden: false,
+          items: [
+            // {
+            //   title: t("Categories"),
+            //   url: "/categories",
+            // },
+            // {
+            //   title: t("Forms"),
+            //   url: "/forms",
+            // },
+            {
+              title: t("Documents"),
+              url: "/docs",
+            },
+            // {
+            //   title: t("Analytics & Reports"),
+            //   url: "/doc-analytics",
+            // },
+          ],
+        },
         {
           title: "RBAC",
           icon: ShieldCheck,

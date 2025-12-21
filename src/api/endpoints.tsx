@@ -139,4 +139,14 @@ export default {
     GET_CONVERSATIONS: (userId: string) =>
       `/api/v1/conversation/user/${userId}`,
   },
+
+  DOC_ENDPOINTS: {
+    GET_ALL_PAGINATED: "/api/v1/documents",
+    GET_BY_ID: (id: string) => `/api/v1/documents/${id}`,
+    CREATE: "/api/v1/documents",
+    UPDATE: (id: string) => `/api/v1/documents/${id}`,
+    HARD_DELETE: (id: string) => `/api/v1/documents/${id}/hard`,
+    SOFT_DELETE: (id: string) => `/api/v1/documents/${id}/soft`,
+    RESTORE: (id: string) => `/api/v1/documents/${id}/restore`,
+  },
 } as const;
