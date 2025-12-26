@@ -93,6 +93,34 @@ export const ragService = {
   },
 
   /**
+   * Summarize text or documents
+   */
+  summarize: async (request: {
+    text?: string;
+    use_context?: boolean;
+    context_filter?: { docs_ids: string[] };
+    instructions?: string;
+    stream?: boolean;
+  }): Promise<any> => {
+    const response = await ragAxios.post(RAG_ENDPOINTS.SUMMARIZE, request);
+    return response.data;
+  },
+
+  /**
+   * Generate completion (for content generation)
+   */
+  completion: async (request: {
+    prompt: string;
+    system_prompt?: string;
+    use_context?: boolean;
+    context_filter?: { docs_ids: string[] };
+    stream?: boolean;
+  }): Promise<any> => {
+    const response = await ragAxios.post(RAG_ENDPOINTS.COMPLETIONS, request);
+    return response.data;
+  },
+
+  /**
    * Health check
    */
   healthCheck: async (): Promise<{ status: string }> => {

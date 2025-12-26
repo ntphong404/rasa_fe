@@ -24,16 +24,24 @@ import { IngestedDocument } from "@/interfaces/rag.interface";
 
 const RASA_URL = import.meta.env.VITE_RASA_URL || 'http://localhost:5005';
 
+interface RasaButton {
+  title: string;
+  payload: string;
+  type?: string;
+}
+
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  buttons?: RasaButton[];
 }
 
 interface RasaResponse {
   recipient_id: string;
   text: string;
+  buttons?: RasaButton[];
 }
 
 export function HomeChatDemoWithoutLogin() {
@@ -105,6 +113,7 @@ export function HomeChatDemoWithoutLogin() {
               text: rasaResponses[0].text,
               isUser: false,
               timestamp: new Date(),
+              buttons: rasaResponses[0].buttons
             };
             setMessages(prev => [...prev, botMessage]);
           } else {
@@ -115,6 +124,7 @@ export function HomeChatDemoWithoutLogin() {
                   text: rasaResponse.text,
                   isUser: false,
                   timestamp: new Date(),
+                  buttons: rasaResponse.buttons
                 };
                 setMessages(prev => [...prev, botMessage]);
               }, index * 800);
@@ -251,6 +261,29 @@ export function HomeChatDemoWithoutLogin() {
                         }`}
                     >
                       <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                      
+                      {/* Message Buttons */}
+                      {message.buttons && message.buttons.length > 0 && (
+                        <div className="flex flex-col gap-2 mt-3">
+                          {message.buttons.map((button, idx) => (
+                            button.type === "web_url" ? (
+                              <a
+                                key={idx}
+                                href={button.payload}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors shadow-sm text-sm no-underline group"
+                              >
+                                <span className="text-lg">📄</span>
+                                <span className="flex-1 text-left truncate font-medium">
+                                  {button.title}
+                                </span>
+                                <span className="opacity-80 group-hover:translate-y-0.5 transition-transform">⬇️</span>
+                              </a>
+                            ) : null
+                          ))}
+                        </div>
+                      )}
                       <p className="text-xs mt-1 opacity-70">
                         {message.timestamp.toLocaleTimeString([], {
                           hour: '2-digit',

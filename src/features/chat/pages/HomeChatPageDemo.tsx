@@ -2,7 +2,6 @@ import { Input } from "@/components/ui/input";
 import {
   MessageSquare,
   Mic,
-  Plus,
   SendHorizonal,
   Lightbulb,
   Code,
@@ -22,14 +21,17 @@ import {
   Globe,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useChat } from "@/hooks/useChat";
 import { MessageActions } from "@/features/chat/components/MessageActions";
 import { ConversationExport } from "@/features/chat/components/ConversationExport";
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
 import { useAuthStore } from "@/store/auth";
-import toast from "react-hot-toast";
 import { useChatContext } from "@/features/chat/context/ChatContext";
+import { IngestedDocument } from "@/interfaces/rag.interface";
+import { ragService } from "@/features/chat/api/ragService";
+import { chatService } from "@/features/chat/api/service";
+import { toast } from "sonner";
 
 // List of available quick suggestions (stable reference)
 const QUICK_SUGGESTIONS = [
@@ -39,7 +41,7 @@ const QUICK_SUGGESTIONS = [
   { icon: MessageSquare, text: "Liên hệ tư vấn tuyển sinh như thế nào?", color: "from-blue-200 to-blue-300" },
   { icon: Bot, text: "Bảng xếp loại theo thang điểm 4", color: "from-emerald-200 to-emerald-300" },
   { icon: User, text: "Điều kiện bảo lưu kết quả học tập", color: "from-indigo-200 to-indigo-300" },
-  { icon: Plus, text: "Có được đăng ký học cải thiện không?", color: "from-pink-200 to-pink-300" },
+  { icon: MessageSquare, text: "Có được đăng ký học cải thiện không?", color: "from-pink-200 to-pink-300" },
   { icon: Mic, text: "Website chính thức của trường là gì", color: "from-cyan-200 to-cyan-300" },
   { icon: SendHorizonal, text: "Hotline của học viện", color: "from-lime-200 to-lime-300" },
   { icon: MessageSquare, text: "Link facebook chính thức của trường?", color: "from-sky-200 to-sky-300" },
@@ -65,6 +67,13 @@ export function HomeChatDemo() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const chatbotId = "693c5379553ecd6f2bd5f14b";
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const conversationIdFromUrl = searchParams.get("conversationId");
+
+  // File upload states
+  const [uploadedFiles, setUploadedFiles] = useState<IngestedDocument[]>([]);
+  const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+  const [showFileUpload, setShowFileUpload] = useState(false);
 
   // Get chatHook from context or create default one
   const contextChat = useChatContext();
@@ -79,10 +88,16 @@ export function HomeChatDemo() {
     clearError,
     currentConversationId,
     startNewConversation,
+    loadConversationHistory,
   } = chatHook;
 
   // Khi đã có tin nhắn, muốn khung chat lớn hơn và cố định chiều cao
   const chatHeightClass = messages && messages.length > 0 ? 'h-[400px] md:h-[465px]' : 'h-[200px] md:h-[300px]';
+
+  // Fetch uploaded documents on mount
+  useEffect(() => {
+    fetchUploadedDocuments();
+  }, []);
 
   // Auto scroll to bottom khi có tin nhắn mới
   useEffect(() => {
@@ -97,25 +112,53 @@ export function HomeChatDemo() {
     }
   }, [error, clearError]);
 
+  // Load conversation from URL if conversationId is present
+  useEffect(() => {
+    const loadConversationFromUrl = async () => {
+      if (conversationIdFromUrl && userId) {
+        try {
+          const response = await chatService.getConversationById(conversationIdFromUrl);
+          if (response.success && response.data) {
+            loadConversationHistory(response.data);
+          }
+        } catch (error) {
+          console.error("Failed to load conversation:", error);
+          toast.error("Không thể tải cuộc hội thoại");
+        }
+      }
+    };
+
+    loadConversationFromUrl();
+  }, [conversationIdFromUrl, userId, loadConversationHistory]);
+
   // Khởi tạo conversation mới khi component mount và chưa có conversationId
   useEffect(() => {
-    if (contextChat.isNewChat && !contextChat.conversationId && !currentConversationId) {
+    if (contextChat.isNewChat && !contextChat.conversationId && !currentConversationId && !conversationIdFromUrl) {
       startNewConversation();
     }
-  }, [contextChat.isNewChat, contextChat.conversationId, currentConversationId, startNewConversation]);
+  }, [contextChat.isNewChat, contextChat.conversationId, currentConversationId, startNewConversation, conversationIdFromUrl]);
+
+  const fetchUploadedDocuments = async () => {
+    try {
+      const response = await ragService.listIngestedDocuments();
+      setUploadedFiles(response.data);
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || loading) return;
 
-    // Bỏ conversationId vì sẽ được handle trong useChat hook
+    // Normal Rasa chat only
     const messageData = {
       message: inputMessage.trim(),
       userId: userId,
-      // Gán trạng thái đăng nhập thực tế (true nếu đã đăng nhập, false nếu chưa)
       isLogined: !!isAuthenticated,
     };
 
@@ -134,15 +177,14 @@ export function HomeChatDemo() {
     }
   };
 
-  const handleNavigateToRagChat = () => {
-    navigate('/rag-chat');
-  };
-
   const handleQuickSuggestion = (text: string) => {
     setInputMessage(text);
   };
 
-  
+  const toggleFileUpload = () => {
+    setShowFileUpload(!showFileUpload);
+  };
+
 
   // show 4 random suggestions on mount
   const [visibleSuggestions, setVisibleSuggestions] = useState(() => QUICK_SUGGESTIONS.slice(0, 4));
@@ -206,6 +248,7 @@ export function HomeChatDemo() {
               animation: "fadeIn 0.8s ease-out 0.2s backwards",
             }}
           >
+
             {/* Chat Header */}
             {messages.length > 0 && (
               <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-white/60 backdrop-blur-sm rounded-t-3xl">
@@ -316,6 +359,29 @@ export function HomeChatDemo() {
                             <p className="text-sm leading-relaxed whitespace-pre-wrap">
                               {message.text}
                             </p>
+                            
+                            {/* Message Buttons */}
+                            {message.buttons && message.buttons.length > 0 && (
+                              <div className="flex flex-col gap-2 mt-3">
+                                {message.buttons.map((button, idx) => (
+                                  button.type === "web_url" ? (
+                                    <a
+                                      key={idx}
+                                      href={button.payload}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors shadow-sm text-sm no-underline group"
+                                    >
+                                      <span className="text-lg">📄</span>
+                                      <span className="flex-1 text-left truncate font-medium">
+                                        {button.title}
+                                      </span>
+                                      <span className="opacity-80 group-hover:translate-y-0.5 transition-transform">⬇️</span>
+                                    </a>
+                                  ) : null
+                                ))}
+                              </div>
+                            )}
                             <div
                               className={`text-xs opacity-75 mt-3 flex items-center justify-between ${isUser ? "text-blue-100" : "text-gray-500"
                                 }`}
@@ -477,38 +543,12 @@ export function HomeChatDemo() {
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   disabled={loading}
-                  className="min-h-[64px] pl-16 pr-32 py-4 rounded-3xl border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base bg-transparent text-gray-800 placeholder:text-gray-500 resize-none"
+                  className="min-h-[64px] pl-6 pr-32 py-4 rounded-3xl border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base bg-transparent text-gray-800 placeholder:text-gray-500 resize-none"
                   style={{
                     fontFamily:
                       "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
                   }}
                 />
-
-                {/* Left Button */}
-                <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                  <button
-                    onClick={handleNavigateToRagChat}
-                    className="h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"
-                    style={{
-                      background: "rgba(59, 130, 246, 0.1)",
-                      backdropFilter: "blur(10px)",
-                      border: "1px solid rgba(59, 130, 246, 0.2)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(59, 130, 246, 0.15)";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 15px rgba(59, 130, 246, 0.2)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(59, 130, 246, 0.1)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                  >
-                    <Plus className="h-5 w-5 text-blue-600" />
-                  </button>
-                </div>
 
                 {/* Right Buttons */}
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2">

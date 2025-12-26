@@ -14,6 +14,7 @@ import {
 } from "./ui/sidebar";
 import { BookOpen, Bot, MessageCircleCode, ShieldCheck, UserCog, MessageSquare } from "lucide-react";
 import { NavMain } from "./nav-main";
+import { NavConversations } from "./nav-conversations";
 import { NavUser } from "./nav-user";
 import { useAuthStore } from "@/store/auth";
 
@@ -97,22 +98,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           icon: BookOpen,
           hidden: false,
           items: [
-            // {
-            //   title: t("Categories"),
-            //   url: "/categories",
-            // },
-            // {
-            //   title: t("Forms"),
-            //   url: "/forms",
-            // },
             {
               title: t("Documents"),
               url: "/docs",
             },
-            // {
-            //   title: t("Analytics & Reports"),
-            //   url: "/doc-analytics",
-            // },
+            {
+              title: "Tài liệu ngữ cảnh",
+              url: "/context-docs",
+            },
           ],
         },
         {
@@ -191,6 +184,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
         {isAuthenticated && <NavMain items={data.navMain} />}
+        {isAuthenticated && <NavConversations />}
         {/* 'Thêm dữ liệu' is now inside Models (NavMain) */}
       </SidebarContent>
       <SidebarFooter>

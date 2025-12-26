@@ -36,6 +36,7 @@ import {
   EditDocumentPage,
 } from "@/features/docs";
 import { RagChatPage } from "@/features/chat/pages/RagChatPage";
+import { ContextDocumentsPage } from "@/features/context-docs";
 
 const router = createBrowserRouter([
   {
@@ -101,6 +102,7 @@ const router = createBrowserRouter([
           { path: "edit", element: <EditDocumentPage /> },
         ],
       },
+      { path: "context-docs", element: <ContextDocumentsPage /> },
       { path: "rag-chat", element: <RagChatPage /> },
     ],
   },

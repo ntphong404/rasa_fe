@@ -138,6 +138,10 @@ export default {
     SEND_MESSAGE: (id: string) => `/api/v1/chatbot/${id}/chat`,
     GET_CONVERSATIONS: (userId: string) =>
       `/api/v1/conversation/user/${userId}`,
+    GET_CONVERSATION_BY_ID: (conversationId: string) =>
+      `/api/v1/conversation/${conversationId}`,
+    DELETE_CONVERSATION: (conversationId: string) =>
+      `/api/v1/conversation/${conversationId}`,
   },
 
   DOC_ENDPOINTS: {
