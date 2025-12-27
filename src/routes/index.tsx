@@ -37,6 +37,13 @@ import {
 } from "@/features/docs";
 import { RagChatPage } from "@/features/chat/pages/RagChatPage";
 import { ContextDocumentsPage } from "@/features/context-docs";
+import {
+  UserStatisticsPage,
+  ConversationStatisticsPage,
+  ChatbotStatisticsPage,
+  NLPStatisticsPage,
+  DocumentStatisticsPage,
+} from "@/features/statistics";
 
 const router = createBrowserRouter([
   {
@@ -104,6 +111,16 @@ const router = createBrowserRouter([
       },
       { path: "context-docs", element: <ContextDocumentsPage /> },
       { path: "rag-chat", element: <RagChatPage /> },
+      {
+        path: "statistics",
+        children: [
+          { path: "users", element: <UserStatisticsPage /> },
+          { path: "conversations", element: <ConversationStatisticsPage /> },
+          { path: "chatbots", element: <ChatbotStatisticsPage /> },
+          { path: "nlp", element: <NLPStatisticsPage /> },
+          { path: "documents", element: <DocumentStatisticsPage /> },
+        ],
+      },
     ],
   },
   {

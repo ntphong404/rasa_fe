@@ -21,7 +21,16 @@ import { useAuthStore } from "@/store/auth";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+
+  // Check if user has admin role
+  const isAdmin = React.useMemo(() => {
+    if (!user?.roles) return false;
+    return user.roles.some(role =>
+      role.name.toUpperCase() === 'ADMIN'
+    );
+  }, [user?.roles]);
 
   //   const infoUser = {
   //     name: user?.name || "",
@@ -109,6 +118,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           ],
         },
         {
+          title: "Báo cáo thống kê",
+          icon: MessageSquare,
+          hidden: false,
+          items: [
+            {
+              title: "Người dùng",
+              url: "/statistics/users",
+            },
+            {
+              title: "Cuộc hội thoại",
+              url: "/statistics/conversations",
+            },
+            {
+              title: "Chatbot",
+              url: "/statistics/chatbots",
+            },
+            {
+              title: "NLP",
+              url: "/statistics/nlp",
+            },
+            {
+              title: "Tài liệu",
+              url: "/statistics/documents",
+            },
+          ],
+        },
+        {
           title: "RBAC",
           icon: ShieldCheck,
           hidden: false,
@@ -183,7 +219,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
-        {isAuthenticated && <NavMain items={data.navMain} />}
+        {isAuthenticated && isAdmin && <NavMain items={data.navMain} />}
         {isAuthenticated && <NavConversations />}
         {/* 'Thêm dữ liệu' is now inside Models (NavMain) */}
       </SidebarContent>

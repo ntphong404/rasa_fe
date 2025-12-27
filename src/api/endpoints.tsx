@@ -153,4 +153,14 @@ export default {
     SOFT_DELETE: (id: string) => `/api/v1/documents/${id}/soft`,
     RESTORE: (id: string) => `/api/v1/documents/${id}/restore`,
   },
+
+  STATISTIC_ENDPOINTS: {
+    OVERALL: "/api/v1/statistic/overall",
+    USERS: "/api/v1/statistic/users",
+    CONVERSATIONS: "/api/v1/statistic/conversations",
+    CHATBOTS: "/api/v1/statistic/chatbots",
+    NLP: "/api/v1/statistic/nlp",
+    DOCUMENTS: "/api/v1/statistic/documents",
+    SYSTEM: "/api/v1/statistic/system",
+  },
 } as const;
