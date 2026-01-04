@@ -14,8 +14,12 @@ export default {
   USER_ENDPOINTS: {
     PROFILE: "/api/v1/user/profile",
     GET_ALL_USERS: "/api/v1/user",
+    CREATE_USER: "/api/v1/user/create-user",
+    CREATE_BULK_USERS: "/api/v1/user/create-users",
     BAN_USER: (id: string) => `/api/v1/user/${id}/ban`,
     UNBAN_USER: (id: string) => `/api/v1/user/${id}/unban`,
+    DELETE_USER: (id: string) => `/api/v1/user/${id}`,
+    SET_ROLE: (id: string) => `/api/v1/user/${id}/set-role`,
   },
   ROLE_ENDPOINTS: {
     GET_ALL: "/api/v1/role/all",

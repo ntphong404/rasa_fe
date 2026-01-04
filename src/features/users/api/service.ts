@@ -12,25 +12,41 @@ export const userService = {
         return response.data;
     },
 
-    // getAllUsers: async (params?: {
-    //     page?: number;
-    //     limit?: number;
-    //     search?: string;
-    //     deleted?: boolean;
-    //     sort?: "ASC" | "DESC";
-    //     status?: string | string[];
-    // }): Promise<User[]> => {
+    createUser: async (data: {
+        email: string;
+        firstName: string;
+        lastName: string;
+        password?: string;
+        phoneNumber?: string;
+        dateOfBirth?: string;
+        gender?: string;
+        address?: string;
+        roleIds?: string[];
+    }) => {
+        const response = await axiosInstance.post(
+            ENDPOINTS.USER_ENDPOINTS.CREATE_USER,
+            data
+        );
+        return response.data.data;
+    },
 
-    //         const formattedParams = Array.isArray(params?.status)
-    //         ? { ...params, "status[$in]": params.status, status: undefined }
-    //         : params;
-
-    //     const response = await axiosInstance.get(
-    //         ENDPOINTS.USER_ENDPOINTS.GET_ALL_USERS,
-    //         { params: formattedParams }
-    //     );
-    //     return response.data.data;
-    // },
+    createBulkUsers: async (data: {
+        users: Array<{
+            email: string;
+            firstName: string;
+            lastName: string;
+            phoneNumber?: string;
+            dateOfBirth?: string;
+            gender?: string;
+            address?: string;
+        }>;
+    }) => {
+        const response = await axiosInstance.post(
+            ENDPOINTS.USER_ENDPOINTS.CREATE_BULK_USERS,
+            data
+        );
+        return response.data.data;
+    },
     
     banUser: async (id: string) => {
         const response = await axiosInstance.post(ENDPOINTS.USER_ENDPOINTS.BAN_USER(id))
@@ -39,8 +55,21 @@ export const userService = {
 
     unbanUser: async (id: string) => {
         const response = await axiosInstance.post(ENDPOINTS.USER_ENDPOINTS.UNBAN_USER(id));
+        return response.data.data;
+    },
 
+    deleteUser: async (id: string) => {
+        const response = await axiosInstance.delete(
+            ENDPOINTS.USER_ENDPOINTS.DELETE_USER(id)
+        );
+        return response.data.data;
+    },
+
+    setRole: async (id: string, roleId: string) => {
+        const response = await axiosInstance.patch(
+            ENDPOINTS.USER_ENDPOINTS.SET_ROLE(id),
+            { roleId }
+        );
         return response.data.data;
     }
-
 };

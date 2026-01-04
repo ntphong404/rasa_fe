@@ -18,6 +18,14 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -46,6 +54,10 @@ import {
   SlidersHorizontal,
   Smartphone,
   Unlock,
+  Trash2,
+  Plus,
+  Upload,
+  Settings,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -56,6 +68,9 @@ import { User } from "../api/dto/User";
 import { userService } from "../api/service";
 import { ConfirmBanUserDialog } from "./ConfirmBanDialog";
 import { ConfirmUnbanUserDialog } from "./ConfirmUnbanDialog";
+import { CreateUserDialog } from "./CreateUserDialog";
+import { BulkCreateUsersDialog } from "./BulkCreateUsersDialog";
+import { SetRoleDialog } from "./SetRoleDialog";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -84,6 +99,12 @@ export const UserManagement = () => {
   const [confirmUnbanOpen, setConfirmUnbanOpen] = useState(false);
   const [userToBan, setUserToBan] = useState<string | null>(null);
   const [userToUnban, setUserToUnban] = useState<string | null>(null);
+  const [createUserOpen, setCreateUserOpen] = useState(false);
+  const [bulkCreateOpen, setBulkCreateOpen] = useState(false);
+  const [setRoleOpen, setSetRoleOpen] = useState(false);
+  const [userForRole, setUserForRole] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const form = useForm<z.infer<typeof filterSchema>>({
     resolver: zodResolver(filterSchema),
@@ -186,6 +207,29 @@ export const UserManagement = () => {
       setUserToUnban(null);
       setConfirmUnbanOpen(false); // <- tự động đóng dialog
     }
+  };
+
+  const handleAskDeleteUser = (id: string) => {
+    setUserToDelete(id);
+    setConfirmDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+    try {
+      await userService.deleteUser(userToDelete);
+      fetchUsers();
+    } catch (err) {
+      console.error("Error deleting user:", err);
+    } finally {
+      setUserToDelete(null);
+      setConfirmDeleteOpen(false);
+    }
+  };
+
+  const handleSetRole = (user: User) => {
+    setUserForRole(user);
+    setSetRoleOpen(true);
   };
 
   const refreshUsers = () => {
@@ -359,24 +403,24 @@ export const UserManagement = () => {
           </Drawer>
 
           <div className="flex-1"></div>
-          {/* <DropdownMenu>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button>
+              <Button className="bg-purple-600 hover:bg-purple-700">
                 <FileCode2 className="mr-2 h-4 w-4" />
                 <span>{t("Features")}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem>
-                <Paperclip className="mr-2 h-4 w-4" />
-                {t("Import Users")}
+              <DropdownMenuItem onClick={() => setCreateUserOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t("Create User")}
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <FileDown className="mr-2 h-4 w-4" />
-                {t("Export Users")}
+              <DropdownMenuItem onClick={() => setBulkCreateOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" />
+                {t("Bulk Create Users")}
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu> */}
+          </DropdownMenu>
         </form>
       </Form>
 
@@ -479,31 +523,35 @@ export const UserManagement = () => {
                         size="sm"
                         className="bg-green-600 hover:bg-green-700"
                         onClick={() => handleViewUser(row.original)}
+                        title={t("View details")}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
 
-                      {/* Device (nếu có) */}
-                      {/* <Button
-                        variant="ghost"
+                      {/* Set Role */}
+                      <Button
                         size="sm"
-                        className="bg-yellow-600 text-white hover:bg-yellow-700"
+                        className="bg-blue-600 hover:bg-blue-700"
+                        onClick={() => handleSetRole(row.original)}
+                        title={t("Set role")}
                       >
-                        <Smartphone className="h-4 w-4" />
-                      </Button> */}
+                        <Settings className="h-4 w-4" />
+                      </Button>
 
+                      {/* Ban/Unban */}
                       <Button
                         size="sm"
                         className={
                           !isBanned
                             ? "bg-red-600 hover:bg-red-700"
-                            : "bg-green-600 hover:bg-green-700"
+                            : "bg-yellow-600 hover:bg-yellow-700"
                         }
                         onClick={() =>
                           !isBanned
                             ? handleAskBanUser(row.original._id)
                             : handleAskUnbanUser(row.original._id)
                         }
+                        title={!isBanned ? t("Ban user") : t("Unban user")}
                       >
                         {!isBanned ? (
                           <Ban className="h-4 w-4" />
@@ -511,6 +559,18 @@ export const UserManagement = () => {
                           <Unlock className="h-4 w-4" />
                         )}
                       </Button>
+
+                      {/* Delete (only for banned users) */}
+                      {isBanned && (
+                        <Button
+                          size="sm"
+                          className="bg-red-700 hover:bg-red-800"
+                          onClick={() => handleAskDeleteUser(row.original._id)}
+                          title={t("Delete banned user")}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   );
                 },
@@ -526,12 +586,6 @@ export const UserManagement = () => {
         </>
       )}
 
-      {/* Edit User Dialog */}
-      {/* <EditUserDialog
-        user={selectedUser}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-      /> */}
       <UserDetailDialog
         user={selectedUser}
         open={viewDialogOpen}
@@ -548,6 +602,55 @@ export const UserManagement = () => {
         onOpenChange={setConfirmUnbanOpen}
         onConfirm={handleUnbanUser}
       />
+
+      <CreateUserDialog
+        open={createUserOpen}
+        onOpenChange={setCreateUserOpen}
+        onSuccess={fetchUsers}
+      />
+
+      <BulkCreateUsersDialog
+        open={bulkCreateOpen}
+        onOpenChange={setBulkCreateOpen}
+        onSuccess={fetchUsers}
+      />
+
+      <SetRoleDialog
+        user={userForRole}
+        open={setRoleOpen}
+        onOpenChange={setSetRoleOpen}
+        onSuccess={fetchUsers}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      {confirmDeleteOpen && (
+        <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t("Delete User")}</DialogTitle>
+              <DialogDescription>
+                {t(
+                  "Are you sure you want to permanently delete this banned user? This action cannot be undone."
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setConfirmDeleteOpen(false)}
+              >
+                {t("Cancel")}
+              </Button>
+              <Button
+                className="bg-red-600 hover:bg-red-700"
+                onClick={handleConfirmDelete}
+              >
+                {t("Delete")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       {/* <ShowDevicesDialog
         user={selectedUser}
         open={showDeviceDialog}
