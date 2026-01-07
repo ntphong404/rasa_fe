@@ -5,9 +5,16 @@ import { User, UserQuery } from "./dto/User";
 export const userService = {
 
     getAllUsers: async (params?: UserQuery) => {
+        // Filter out empty values from params
+        const cleanParams = Object.fromEntries(
+            Object.entries(params || {}).filter(
+                ([_, value]) => value !== undefined && value !== null && value !== ""
+            )
+        );
+        
         const response = await axiosInstance.get(
             ENDPOINTS.USER_ENDPOINTS.GET_ALL_USERS,
-            { params }
+            { params: cleanParams }
         );
         return response.data;
     },

@@ -64,7 +64,7 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { UserDetailDialog } from "./UserDetailsDialog";
-import { User } from "../api/dto/User";
+import { User, EUserStatus } from "../api/dto/User";
 import { userService } from "../api/service";
 import { ConfirmBanUserDialog } from "./ConfirmBanDialog";
 import { ConfirmUnbanUserDialog } from "./ConfirmUnbanDialog";
@@ -74,7 +74,7 @@ import { SetRoleDialog } from "./SetRoleDialog";
 
 const filterSchema = z.object({
   search: z.string().optional(),
-  deleted: z.boolean().optional(),
+  status: z.string().optional(),
   page: z.number().optional(),
   limit: z.number().optional(),
 });
@@ -110,7 +110,7 @@ export const UserManagement = () => {
     resolver: zodResolver(filterSchema),
     defaultValues: {
       search: "",
-      deleted: false,
+      status: undefined,
       page: 1,
       limit: 10,
     },
@@ -118,19 +118,12 @@ export const UserManagement = () => {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      //   const query = new URLSearchParams({
-      //     page: page.toString(),
-      //     limit: limit.toString(),
-      //     ...(search && { search }),
-      //     ...(deleted !== undefined && { deleted: deleted.toString() }),
-      //   }).toString();
-
       const values = form.getValues();
       const response = await userService.getAllUsers({
         page: pagination.page,
         limit: values.limit,
         search: values.search,
-        deleted: values.deleted,
+        status: values.status,
       });
 
       if (response) {
@@ -309,18 +302,20 @@ export const UserManagement = () => {
                 <div className="grid gap-4 p-4">
                   <FormField
                     control={form.control}
-                    name="deleted"
+                    name="status"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
                           <div className="flex items-center space-x-2">
                             <Checkbox
-                              id="user-filter-deleted"
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
+                              id="user-filter-banned"
+                              checked={field.value === EUserStatus.BANNED}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked ? EUserStatus.BANNED : undefined);
+                              }}
                             />
                             <label
-                              htmlFor="user-filter-deleted"
+                              htmlFor="user-filter-banned"
                               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             >
                               {t("Show banned users")}
