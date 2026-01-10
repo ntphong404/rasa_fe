@@ -29,7 +29,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { userService } from "../api/service";
-import { Trash2, Plus } from "lucide-react";
+import { 
+  Trash2, 
+  Plus, 
+  Users, 
+  Loader2, 
+  AlertCircle, 
+  CheckCircle2,
+  Sparkles,
+  UserPlus
+} from "lucide-react";
 
 const bulkCreateUsersSchema = z.object({
   users: z
@@ -150,28 +159,48 @@ export function BulkCreateUsersDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-[98vw] max-w-[1800px] h-[85vh] flex flex-col gap-0 p-0 overflow-hidden">
-        {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b flex-shrink-0">
-          <DialogTitle>{t("Create Users in Bulk")}</DialogTitle>
-          <DialogDescription>
-            {t(
-              "Fill in user details below. Click 'Add User' to add more rows, then click 'Create Users' to save all at once."
-            )}
+      <DialogContent className="w-[98vw] max-w-[1800px] h-[85vh] flex flex-col gap-0 p-0 overflow-hidden bg-gradient-to-br from-slate-50 via-white to-emerald-50 border-2 border-emerald-100 shadow-2xl">
+        {/* Header with gradient background - Compact */}
+        <div className="relative bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 px-4 py-4 text-white overflow-hidden flex-shrink-0">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+          
+          <div className="relative flex items-center gap-2">
+            <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-lg">
+              <Users className="h-5 w-5 text-white" />
+            </div>
+            <DialogTitle className="text-xl font-bold text-white">
+              {t("Create Users in Bulk")}
+            </DialogTitle>
+          </div>
+          
+          <DialogDescription className="text-emerald-100 text-xs mt-1 relative flex items-center gap-1 ml-8">
+            <Sparkles className="h-3 w-3" />
+            {t("Fill in user details below. Click 'Add User' to add more rows, then click 'Create Users' to save all at once.")}
           </DialogDescription>
         </div>
 
         {/* Content Area */}
         <div className="flex-1 overflow-hidden flex flex-col px-6 py-4 gap-4">
+          {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-2 rounded text-sm flex-shrink-0">
-              {error}
+            <div className="bg-red-50 border-2 border-red-200 text-red-800 px-4 py-3 rounded-xl flex items-start gap-3 flex-shrink-0 animate-in slide-in-from-top-2 duration-300">
+              <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Error</p>
+                <p className="text-sm">{error}</p>
+              </div>
             </div>
           )}
 
+          {/* Success Message */}
           {successMessage && (
-            <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded text-sm flex-shrink-0">
-              {successMessage}
+            <div className="bg-green-50 border-2 border-green-200 text-green-800 px-4 py-3 rounded-xl flex items-start gap-3 flex-shrink-0 animate-in slide-in-from-top-2 duration-300">
+              <CheckCircle2 className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Success</p>
+                <p className="text-sm">{successMessage}</p>
+              </div>
             </div>
           )}
 
@@ -181,22 +210,41 @@ export function BulkCreateUsersDialog({
               className="flex flex-col flex-1 overflow-hidden"
             >
               {/* Header Row - Fixed */}
-              <div className="grid grid-cols-8 gap-2 pb-2 border-b font-semibold text-xs text-muted-foreground flex-shrink-0 pr-4">
-                <div>{t("Email")}</div>
-                <div>{t("First Name")}</div>
-                <div>{t("Last Name")}</div>
-                <div>{t("Phone")}</div>
-                <div>{t("DOB")}</div>
-                <div>{t("Gender")}</div>
-                <div>{t("Address")}</div>
-                <div>{t("Action")}</div>
+              <div className="grid grid-cols-8 gap-2 pb-3 border-b-2 border-emerald-200 font-semibold text-sm text-gray-700 flex-shrink-0 pr-4 bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-3 rounded-t-xl">
+                <div className="flex items-center gap-1">
+                  <span>📧</span> {t("Email")}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>👤</span> {t("First Name")}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>👤</span> {t("Last Name")}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>📱</span> {t("Phone")}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>📅</span> {t("DOB")}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>⚧</span> {t("Gender")}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>📍</span> {t("Address")}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>⚙️</span> {t("Action")}
+                </div>
               </div>
 
               {/* Data Rows - Scrollable */}
-              <div className="flex-1 overflow-y-auto border rounded-lg mt-2 bg-white">
+              <div className="flex-1 overflow-y-auto border-2 border-emerald-100 rounded-b-xl mt-2 bg-white shadow-inner">
                 <div className="p-4 space-y-3">
                   {fields.map((field, index) => (
-                    <div key={field.id} className="grid grid-cols-8 gap-2 pr-2">
+                    <div 
+                      key={field.id} 
+                      className="grid grid-cols-8 gap-2 pr-2 p-3 bg-gradient-to-r from-white to-emerald-50/30 rounded-lg border border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all duration-200"
+                    >
                       <FormField
                         control={form.control}
                         name={`users.${index}.email`}
@@ -206,7 +254,7 @@ export function BulkCreateUsersDialog({
                               <Input
                                 placeholder="user@example.com"
                                 {...field}
-                                className="h-8 text-xs"
+                                className="h-9 text-xs border-2 border-emerald-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200"
                               />
                             </FormControl>
                             <FormMessage className="text-xs" />
@@ -223,7 +271,7 @@ export function BulkCreateUsersDialog({
                               <Input
                                 placeholder="First"
                                 {...field}
-                                className="h-8 text-xs"
+                                className="h-9 text-xs border-2 border-emerald-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200"
                               />
                             </FormControl>
                             <FormMessage className="text-xs" />
@@ -240,7 +288,7 @@ export function BulkCreateUsersDialog({
                               <Input
                                 placeholder="Last"
                                 {...field}
-                                className="h-8 text-xs"
+                                className="h-9 text-xs border-2 border-emerald-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200"
                               />
                             </FormControl>
                             <FormMessage className="text-xs" />
@@ -257,7 +305,7 @@ export function BulkCreateUsersDialog({
                               <Input
                                 placeholder="Phone"
                                 {...field}
-                                className="h-8 text-xs"
+                                className="h-9 text-xs border-2 border-emerald-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200"
                               />
                             </FormControl>
                             <FormMessage className="text-xs" />
@@ -274,7 +322,7 @@ export function BulkCreateUsersDialog({
                               <Input
                                 type="date"
                                 {...field}
-                                className="h-8 text-xs"
+                                className="h-9 text-xs border-2 border-emerald-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200"
                               />
                             </FormControl>
                             <FormMessage className="text-xs" />
@@ -289,10 +337,10 @@ export function BulkCreateUsersDialog({
                           <FormItem>
                             <FormControl>
                               <Select value={field.value} onValueChange={field.onChange}>
-                                <SelectTrigger className="h-8 text-xs">
+                                <SelectTrigger className="h-9 text-xs border-2 border-emerald-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200">
                                   <SelectValue placeholder="Gender" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="border-2 border-emerald-100">
                                   <SelectItem value="MALE">Male</SelectItem>
                                   <SelectItem value="FEMALE">Female</SelectItem>
                                   <SelectItem value="OTHER">Other</SelectItem>
@@ -313,7 +361,7 @@ export function BulkCreateUsersDialog({
                               <Input
                                 placeholder="Address"
                                 {...field}
-                                className="h-8 text-xs"
+                                className="h-9 text-xs border-2 border-emerald-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200"
                               />
                             </FormControl>
                             <FormMessage className="text-xs" />
@@ -328,7 +376,7 @@ export function BulkCreateUsersDialog({
                             variant="ghost"
                             size="sm"
                             onClick={() => remove(index)}
-                            className="h-8 px-2 hover:bg-red-50"
+                            className="h-9 px-2 hover:bg-red-50 border-2 border-transparent hover:border-red-200 transition-all duration-200"
                           >
                             <Trash2 className="h-4 w-4 text-red-600" />
                           </Button>
@@ -343,7 +391,7 @@ export function BulkCreateUsersDialog({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t bg-gray-50 flex-shrink-0 flex gap-2 items-center">
+        <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-emerald-50 border-t-2 border-emerald-200 flex-shrink-0 flex gap-3 items-center">
           <Button
             type="button"
             variant="outline"
@@ -359,33 +407,53 @@ export function BulkCreateUsersDialog({
               })
             }
             size="sm"
+            className="bg-white border-2 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-500 transition-all duration-200 shadow-sm hover:shadow-md"
           >
             <Plus className="mr-2 h-4 w-4" />
             {t("Add User")}
           </Button>
-          <span className="text-sm text-muted-foreground">
-            {fields.length} {t("user(s)")}
-          </span>
+          
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-emerald-200 rounded-lg shadow-sm">
+            <UserPlus className="h-4 w-4 text-emerald-600" />
+            <span className="text-sm font-semibold text-gray-700">
+              {fields.length} {t("user(s)")}
+            </span>
+          </div>
+          
           <div className="flex-1" />
+          
           <Button
             type="button"
             variant="outline"
             onClick={() => handleOpenChange(false)}
             size="sm"
+            disabled={isLoading}
+            className="border-2 hover:bg-gray-100 transition-all duration-200"
           >
             {t("Cancel")}
           </Button>
+          
           <Button
             type="submit"
             disabled={isLoading}
             onClick={() => form.handleSubmit(handleSubmit)()}
             size="sm"
+            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
           >
-            {isLoading ? t("Creating...") : t("Create Users")}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t("Creating...")}
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                {t("Create Users")}
+              </>
+            )}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
-

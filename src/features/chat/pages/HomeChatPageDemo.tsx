@@ -2,6 +2,7 @@ import { Input } from "@/components/ui/input";
 import {
   MessageSquare,
   Mic,
+  MicOff,
   SendHorizonal,
   Lightbulb,
   Code,
@@ -23,6 +24,7 @@ import {
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useChat } from "@/hooks/useChat";
+import { useSpeechToText } from "@/hooks/useSpeechToText";
 import { MessageActions } from "@/features/chat/components/MessageActions";
 import { ConversationExport } from "@/features/chat/components/ConversationExport";
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
@@ -73,6 +75,17 @@ export function HomeChatDemo() {
   // File upload states
   const [uploadedFiles, setUploadedFiles] = useState<IngestedDocument[]>([]);
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+
+  // Speech-to-text
+  const {
+    isListening,
+    transcript,
+    error: speechError,
+    isSupported: isSpeechSupported,
+    startListening,
+    stopListening,
+    resetTranscript,
+  } = useSpeechToText('vi-VN');
   const [showFileUpload, setShowFileUpload] = useState(false);
 
   // Get chatHook from context or create default one
@@ -111,6 +124,20 @@ export function HomeChatDemo() {
       clearError();
     }
   }, [error, clearError]);
+
+  // Sync speech transcript to input
+  useEffect(() => {
+    if (transcript) {
+      setInputMessage(transcript);
+    }
+  }, [transcript]);
+
+  // Show speech error toast
+  useEffect(() => {
+    if (speechError) {
+      toast.error(speechError);
+    }
+  }, [speechError]);
 
   // Load conversation from URL if conversationId is present
   useEffect(() => {
@@ -553,25 +580,47 @@ export function HomeChatDemo() {
                 {/* Right Buttons */}
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2">
                   <button
-                    className="h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"
+                    onClick={() => {
+                      if (isListening) {
+                        stopListening();
+                      } else {
+                        resetTranscript();
+                        startListening();
+                      }
+                    }}
+                    disabled={!isSpeechSupported}
+                    title={!isSpeechSupported ? 'Trình duyệt không hỗ trợ' : isListening ? 'Dừng ghi âm' : 'Bắt đầu ghi âm'}
+                    className={`h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${isListening ? 'animate-pulse' : ''}`}
                     style={{
-                      background: "rgba(59, 130, 246, 0.1)",
+                      background: isListening 
+                        ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" 
+                        : "rgba(59, 130, 246, 0.1)",
                       backdropFilter: "blur(10px)",
-                      border: "1px solid rgba(59, 130, 246, 0.2)",
+                      border: isListening 
+                        ? "1px solid rgba(239, 68, 68, 0.5)" 
+                        : "1px solid rgba(59, 130, 246, 0.2)",
+                      boxShadow: isListening 
+                        ? "0 4px 15px rgba(239, 68, 68, 0.4)" 
+                        : "none",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(59, 130, 246, 0.15)";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 15px rgba(59, 130, 246, 0.2)";
+                      if (!isListening) {
+                        e.currentTarget.style.background = "rgba(59, 130, 246, 0.15)";
+                        e.currentTarget.style.boxShadow = "0 4px 15px rgba(59, 130, 246, 0.2)";
+                      }
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background =
-                        "rgba(59, 130, 246, 0.1)";
-                      e.currentTarget.style.boxShadow = "none";
+                      if (!isListening) {
+                        e.currentTarget.style.background = "rgba(59, 130, 246, 0.1)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }
                     }}
                   >
-                    <Mic className="h-5 w-5 text-blue-600" />
+                    {isListening ? (
+                      <MicOff className="h-5 w-5 text-white" />
+                    ) : (
+                      <Mic className="h-5 w-5 text-blue-600" />
+                    )}
                   </button>
                   <button
                     onClick={handleSendMessage}
