@@ -53,6 +53,7 @@ import {
   ConfirmHardDeleteDialog,
 } from "@/components/confirm-delete-dialog";
 import { ConfirmRestoreDialog } from "@/components/confirm-restore-dialog";
+import { useChatbotStore } from "@/store/chatbot";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -66,6 +67,7 @@ const filterSchema = z.object({
 
 export function ActionManagement() {
   const { t } = useTranslation();
+  const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
   const [rowSelection, setRowSelection] = useState({});
   const [actionsData, setActionsData] = useState<IAction[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -136,7 +138,7 @@ export function ActionManagement() {
   useEffect(() => {
     fetchActionsData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.limit]);
+  }, [pagination.page, pagination.limit, refreshTrigger]);
 
   const onSubmit = (data: z.infer<typeof filterSchema>) => {
     setPagination((prev) => ({ ...prev, page: 1 }));

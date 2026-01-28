@@ -391,7 +391,7 @@ export function RoleManagement() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative p-3">
       <Form {...form}>
         <form
           className="table-controller py-4 flex gap-4 flex-col sm:flex-row"

@@ -49,6 +49,7 @@ import { ConfirmSoftDeleteDialog, ConfirmHardDeleteDialog } from "@/components/c
 import { ConfirmRestoreDialog } from "@/components/confirm-restore-dialog";
 import { Command } from "@/components/ui/command";
 import IntentDetailsDialog from "../components/IntentDetailsDialog";
+import { useChatbotStore } from "@/store/chatbot";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -63,6 +64,7 @@ const filterSchema = z.object({
 export function IntentManagementPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
   const [rowSelection, setRowSelection] = useState({});
   const [intentsData, setIntentsData] = useState<IIntent[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -137,7 +139,7 @@ export function IntentManagementPage() {
   useEffect(() => {
     fetchIntentsData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.limit]);
+  }, [pagination.page, pagination.limit, refreshTrigger]);
 
   const onSubmit = (data: z.infer<typeof filterSchema>) => {
     setPagination((prev) => ({ ...prev, page: 1 }));

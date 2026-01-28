@@ -239,16 +239,17 @@ ${exampleLines || "    - example1"}`;
   };
 
   // Validate YAML
-  const validateYAML = (): boolean => {
+  const validateYAML = (yamlToValidate?: string): boolean => {
+    const yamlContent = yamlToValidate || yamlDefine;
     const newErrors: string[] = [];
 
-    if (!yamlDefine.trim()) {
+    if (!yamlContent.trim()) {
       newErrors.push(t("YAML definition is required"));
       setErrors(newErrors);
       return false;
     }
 
-    const lines = yamlDefine.split("\n");
+    const lines = yamlContent.split("\n");
 
     // Check if has intent declaration
     const intentLine = lines.find((line) => line.trim().startsWith("- intent:"));
@@ -275,7 +276,7 @@ ${exampleLines || "    - example1"}`;
 
     // Validate entity IDs in YAML
     const entityPattern = /\[([^\]]+)\]\(\[([^\]]+)\]\)/g;
-    const matches = [...yamlDefine.matchAll(entityPattern)];
+    const matches = [...yamlContent.matchAll(entityPattern)];
     const selectedEntityIds = new Set(selectedEntities.map((e) => e._id));
 
     matches.forEach((match) => {
@@ -325,7 +326,8 @@ ${exampleLines || "    - example1"}`;
       setYamlDefine(finalYaml);
     }
 
-    if (!validateYAML()) {
+    // Validate the final YAML
+    if (!validateYAML(finalYaml)) {
       toast.error(t("Please fix YAML errors"));
       return;
     }

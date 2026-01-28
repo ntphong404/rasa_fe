@@ -18,6 +18,14 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -46,20 +54,27 @@ import {
   SlidersHorizontal,
   Smartphone,
   Unlock,
+  Trash2,
+  Plus,
+  Upload,
+  Settings,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { UserDetailDialog } from "./UserDetailsDialog";
-import { User } from "../api/dto/User";
+import { User, EUserStatus } from "../api/dto/User";
 import { userService } from "../api/service";
 import { ConfirmBanUserDialog } from "./ConfirmBanDialog";
 import { ConfirmUnbanUserDialog } from "./ConfirmUnbanDialog";
+import { CreateUserDialog } from "./CreateUserDialog";
+import { BulkCreateUsersDialog } from "./BulkCreateUsersDialog";
+import { SetRoleDialog } from "./SetRoleDialog";
 
 const filterSchema = z.object({
   search: z.string().optional(),
-  deleted: z.boolean().optional(),
+  status: z.string().optional(),
   page: z.number().optional(),
   limit: z.number().optional(),
 });
@@ -84,12 +99,18 @@ export const UserManagement = () => {
   const [confirmUnbanOpen, setConfirmUnbanOpen] = useState(false);
   const [userToBan, setUserToBan] = useState<string | null>(null);
   const [userToUnban, setUserToUnban] = useState<string | null>(null);
+  const [createUserOpen, setCreateUserOpen] = useState(false);
+  const [bulkCreateOpen, setBulkCreateOpen] = useState(false);
+  const [setRoleOpen, setSetRoleOpen] = useState(false);
+  const [userForRole, setUserForRole] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const form = useForm<z.infer<typeof filterSchema>>({
     resolver: zodResolver(filterSchema),
     defaultValues: {
       search: "",
-      deleted: false,
+      status: undefined,
       page: 1,
       limit: 10,
     },
@@ -97,19 +118,12 @@ export const UserManagement = () => {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      //   const query = new URLSearchParams({
-      //     page: page.toString(),
-      //     limit: limit.toString(),
-      //     ...(search && { search }),
-      //     ...(deleted !== undefined && { deleted: deleted.toString() }),
-      //   }).toString();
-
       const values = form.getValues();
       const response = await userService.getAllUsers({
         page: pagination.page,
         limit: values.limit,
         search: values.search,
-        deleted: values.deleted,
+        status: values.status,
       });
 
       if (response) {
@@ -188,6 +202,29 @@ export const UserManagement = () => {
     }
   };
 
+  const handleAskDeleteUser = (id: string) => {
+    setUserToDelete(id);
+    setConfirmDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+    try {
+      await userService.deleteUser(userToDelete);
+      fetchUsers();
+    } catch (err) {
+      console.error("Error deleting user:", err);
+    } finally {
+      setUserToDelete(null);
+      setConfirmDeleteOpen(false);
+    }
+  };
+
+  const handleSetRole = (user: User) => {
+    setUserForRole(user);
+    setSetRoleOpen(true);
+  };
+
   const refreshUsers = () => {
     fetchUsers();
   };
@@ -210,7 +247,7 @@ export const UserManagement = () => {
   //   };
 
   return (
-    <div className="relative">
+    <div className="relative p-3">
       <Form {...form}>
         <form
           className="table-controller py-4 flex gap-4"
@@ -265,18 +302,20 @@ export const UserManagement = () => {
                 <div className="grid gap-4 p-4">
                   <FormField
                     control={form.control}
-                    name="deleted"
+                    name="status"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
                           <div className="flex items-center space-x-2">
                             <Checkbox
-                              id="user-filter-deleted"
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
+                              id="user-filter-banned"
+                              checked={field.value === EUserStatus.BANNED}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked ? EUserStatus.BANNED : undefined);
+                              }}
                             />
                             <label
-                              htmlFor="user-filter-deleted"
+                              htmlFor="user-filter-banned"
                               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             >
                               {t("Show banned users")}
@@ -359,24 +398,24 @@ export const UserManagement = () => {
           </Drawer>
 
           <div className="flex-1"></div>
-          {/* <DropdownMenu>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button>
+              <Button className="bg-purple-600 hover:bg-purple-700">
                 <FileCode2 className="mr-2 h-4 w-4" />
                 <span>{t("Features")}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem>
-                <Paperclip className="mr-2 h-4 w-4" />
-                {t("Import Users")}
+              <DropdownMenuItem onClick={() => setCreateUserOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t("Create User")}
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <FileDown className="mr-2 h-4 w-4" />
-                {t("Export Users")}
+              <DropdownMenuItem onClick={() => setBulkCreateOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" />
+                {t("Bulk Create Users")}
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu> */}
+          </DropdownMenu>
         </form>
       </Form>
 
@@ -479,31 +518,35 @@ export const UserManagement = () => {
                         size="sm"
                         className="bg-green-600 hover:bg-green-700"
                         onClick={() => handleViewUser(row.original)}
+                        title={t("View details")}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
 
-                      {/* Device (nếu có) */}
-                      {/* <Button
-                        variant="ghost"
+                      {/* Set Role */}
+                      <Button
                         size="sm"
-                        className="bg-yellow-600 text-white hover:bg-yellow-700"
+                        className="bg-blue-600 hover:bg-blue-700"
+                        onClick={() => handleSetRole(row.original)}
+                        title={t("Set role")}
                       >
-                        <Smartphone className="h-4 w-4" />
-                      </Button> */}
+                        <Settings className="h-4 w-4" />
+                      </Button>
 
+                      {/* Ban/Unban */}
                       <Button
                         size="sm"
                         className={
                           !isBanned
                             ? "bg-red-600 hover:bg-red-700"
-                            : "bg-green-600 hover:bg-green-700"
+                            : "bg-yellow-600 hover:bg-yellow-700"
                         }
                         onClick={() =>
                           !isBanned
                             ? handleAskBanUser(row.original._id)
                             : handleAskUnbanUser(row.original._id)
                         }
+                        title={!isBanned ? t("Ban user") : t("Unban user")}
                       >
                         {!isBanned ? (
                           <Ban className="h-4 w-4" />
@@ -511,6 +554,18 @@ export const UserManagement = () => {
                           <Unlock className="h-4 w-4" />
                         )}
                       </Button>
+
+                      {/* Delete (only for banned users) */}
+                      {isBanned && (
+                        <Button
+                          size="sm"
+                          className="bg-red-700 hover:bg-red-800"
+                          onClick={() => handleAskDeleteUser(row.original._id)}
+                          title={t("Delete banned user")}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   );
                 },
@@ -526,12 +581,6 @@ export const UserManagement = () => {
         </>
       )}
 
-      {/* Edit User Dialog */}
-      {/* <EditUserDialog
-        user={selectedUser}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-      /> */}
       <UserDetailDialog
         user={selectedUser}
         open={viewDialogOpen}
@@ -548,6 +597,55 @@ export const UserManagement = () => {
         onOpenChange={setConfirmUnbanOpen}
         onConfirm={handleUnbanUser}
       />
+
+      <CreateUserDialog
+        open={createUserOpen}
+        onOpenChange={setCreateUserOpen}
+        onSuccess={fetchUsers}
+      />
+
+      <BulkCreateUsersDialog
+        open={bulkCreateOpen}
+        onOpenChange={setBulkCreateOpen}
+        onSuccess={fetchUsers}
+      />
+
+      <SetRoleDialog
+        user={userForRole}
+        open={setRoleOpen}
+        onOpenChange={setSetRoleOpen}
+        onSuccess={fetchUsers}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      {confirmDeleteOpen && (
+        <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t("Delete User")}</DialogTitle>
+              <DialogDescription>
+                {t(
+                  "Are you sure you want to permanently delete this banned user? This action cannot be undone."
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setConfirmDeleteOpen(false)}
+              >
+                {t("Cancel")}
+              </Button>
+              <Button
+                className="bg-red-600 hover:bg-red-700"
+                onClick={handleConfirmDelete}
+              >
+                {t("Delete")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       {/* <ShowDevicesDialog
         user={selectedUser}
         open={showDeviceDialog}

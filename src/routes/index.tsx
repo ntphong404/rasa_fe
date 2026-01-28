@@ -20,7 +20,6 @@ import {
 } from "@/features/rules";
 import { CreateDataPage, ImportIntentPage } from "@/features/data-entry";
 import { ChatBotManagement } from "@/features/chatbot";
-import { ChatPage } from "@/features/chat/pages/ChatPage";
 import { HomeChatDemo } from "@/features/chat/pages/HomeChatPageDemo";
 import { PermissionManagement } from "@/features/permissions/pages/PermissionManagement";
 import { UserManagement } from "@/features/users/pages/UserManagement";
@@ -31,6 +30,20 @@ import { CreateStoryPage } from "@/features/stories/pages/CreateStoryPage";
 import DataInfoPage from "@/features/data-info/pages/DataInfoPage";
 import DataInfoDetailPage from "@/features/data-info/pages/DataInfoDetailPage";
 import { TrainingManagementPage } from "@/features/training";
+import {
+  DocumentManagementPage,
+  CreateDocumentPage,
+  EditDocumentPage,
+} from "@/features/docs";
+import { RagChatPage } from "@/features/chat/pages/RagChatPage";
+import { ContextDocumentsPage } from "@/features/context-docs";
+import {
+  UserStatisticsPage,
+  ConversationStatisticsPage,
+  ChatbotStatisticsPage,
+  NLPStatisticsPage,
+  DocumentStatisticsPage,
+} from "@/features/statistics";
 
 const router = createBrowserRouter([
   {
@@ -39,7 +52,7 @@ const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <HomeDirectorPage /> },
-      { path: "home_chat", element: <ChatPage /> },
+      { path: "home_chat", element: <HomeChatDemo /> },
       { path: "home_chat_demo", element: <HomeChatDemo /> },
       { path: "users", element: <UserManagement /> },
       { path: "profile", element: <UserProfilePage /> },
@@ -88,6 +101,26 @@ const router = createBrowserRouter([
       { path: "training", element: <TrainingManagementPage /> },
       { path: "data-info", element: <DataInfoPage /> },
       { path: "data-info/view", element: <DataInfoDetailPage /> },
+      {
+        path: "docs",
+        children: [
+          { index: true, element: <DocumentManagementPage /> },
+          { path: "new", element: <CreateDocumentPage /> },
+          { path: "edit", element: <EditDocumentPage /> },
+        ],
+      },
+      { path: "context-docs", element: <ContextDocumentsPage /> },
+      { path: "rag-chat", element: <RagChatPage /> },
+      {
+        path: "statistics",
+        children: [
+          { path: "users", element: <UserStatisticsPage /> },
+          { path: "conversations", element: <ConversationStatisticsPage /> },
+          { path: "chatbots", element: <ChatbotStatisticsPage /> },
+          { path: "nlp", element: <NLPStatisticsPage /> },
+          { path: "documents", element: <DocumentStatisticsPage /> },
+        ],
+      },
     ],
   },
   {

@@ -44,6 +44,7 @@ import { Command } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { TrainModelDialog } from "../components/TrainModelDialog";
 import { ModelDetailsDialog } from "../components/ModelDetailsDialog";
+import { useChatbotStore } from "@/store/chatbot";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -55,6 +56,7 @@ const filterSchema = z.object({
 
 export function TrainingManagementPage() {
   const { t } = useTranslation();
+  const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
   const [rowSelection, setRowSelection] = useState({});
   const [modelsData, setModelsData] = useState<IModel[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -109,7 +111,7 @@ export function TrainingManagementPage() {
       limit: 10,
       sort: "DESC",
     });
-  }, []);
+  }, [refreshTrigger]);
 
   const onSubmit = (values: z.infer<typeof filterSchema>) => {
     fetchModelsData({

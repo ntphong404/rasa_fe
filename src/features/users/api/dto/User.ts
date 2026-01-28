@@ -28,5 +28,6 @@ export interface UserQuery {
     limit?: number;
     search?: string;
     deleted?: boolean;
+    status?: string;
     sort?: string;
 }

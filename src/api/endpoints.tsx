@@ -14,8 +14,12 @@ export default {
   USER_ENDPOINTS: {
     PROFILE: "/api/v1/user/profile",
     GET_ALL_USERS: "/api/v1/user",
+    CREATE_USER: "/api/v1/user/create-user",
+    CREATE_BULK_USERS: "/api/v1/user/create-users",
     BAN_USER: (id: string) => `/api/v1/user/${id}/ban`,
     UNBAN_USER: (id: string) => `/api/v1/user/${id}/unban`,
+    DELETE_USER: (id: string) => `/api/v1/user/${id}`,
+    SET_ROLE: (id: string) => `/api/v1/user/${id}/set-role`,
   },
   ROLE_ENDPOINTS: {
     GET_ALL: "/api/v1/role/all",
@@ -138,5 +142,29 @@ export default {
     SEND_MESSAGE: (id: string) => `/api/v1/chatbot/${id}/chat`,
     GET_CONVERSATIONS: (userId: string) =>
       `/api/v1/conversation/user/${userId}`,
+    GET_CONVERSATION_BY_ID: (conversationId: string) =>
+      `/api/v1/conversation/${conversationId}`,
+    DELETE_CONVERSATION: (conversationId: string) =>
+      `/api/v1/conversation/${conversationId}`,
+  },
+
+  DOC_ENDPOINTS: {
+    GET_ALL_PAGINATED: "/api/v1/documents",
+    GET_BY_ID: (id: string) => `/api/v1/documents/${id}`,
+    CREATE: "/api/v1/documents",
+    UPDATE: (id: string) => `/api/v1/documents/${id}`,
+    HARD_DELETE: (id: string) => `/api/v1/documents/${id}/hard`,
+    SOFT_DELETE: (id: string) => `/api/v1/documents/${id}/soft`,
+    RESTORE: (id: string) => `/api/v1/documents/${id}/restore`,
+  },
+
+  STATISTIC_ENDPOINTS: {
+    OVERALL: "/api/v1/statistic/overall",
+    USERS: "/api/v1/statistic/users",
+    CONVERSATIONS: "/api/v1/statistic/conversations",
+    CHATBOTS: "/api/v1/statistic/chatbots",
+    NLP: "/api/v1/statistic/nlp",
+    DOCUMENTS: "/api/v1/statistic/documents",
+    SYSTEM: "/api/v1/statistic/system",
   },
 } as const;

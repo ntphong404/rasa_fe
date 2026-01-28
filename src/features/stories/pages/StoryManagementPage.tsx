@@ -53,6 +53,7 @@ import {
 import { ConfirmRestoreDialog } from "@/components/confirm-restore-dialog";
 import { Command } from "@/components/ui/command";
 import StoryDetailsDialog from "../components/StoryDetailsDialog";
+import { useChatbotStore } from "@/store/chatbot";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -67,6 +68,7 @@ const filterSchema = z.object({
 export function StoryManagementPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
   const [rowSelection, setRowSelection] = useState({});
   const [storiesData, setStoriesData] = useState<IStory[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -136,7 +138,7 @@ export function StoryManagementPage() {
       deleted: false,
       sort: "DESC",
     });
-  }, [fetchStoriesData]);
+  }, [fetchStoriesData, refreshTrigger]);
 
   const onSubmit = (values: z.infer<typeof filterSchema>) => {
     fetchStoriesData(values);

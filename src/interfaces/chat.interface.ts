@@ -1,6 +1,13 @@
+export interface IRasaButton {
+  title: string;
+  payload: string;
+  type?: string;
+}
+
 export interface IChatMessage {
   recipient_id: string;
   text: string;
+  buttons?: IRasaButton[];
 }
 
 export interface ISendMessageRequest {

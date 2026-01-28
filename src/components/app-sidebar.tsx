@@ -12,15 +12,41 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "./ui/sidebar";
-import { Bot, MessageCircleCode, ShieldCheck, UserCog } from "lucide-react";
+import { BookOpen, Bot, MessageCircleCode, ShieldCheck, UserCog, MessageSquare } from "lucide-react";
 import { NavMain } from "./nav-main";
+import { NavConversations } from "./nav-conversations";
 import { NavUser } from "./nav-user";
+import { ChatbotSelector } from "./chatbot-selector";
 import { useAuthStore } from "@/store/auth";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+
+  // Check if user has admin role
+  const isAdmin = React.useMemo(() => {
+    if (!user?.roles) return false;
+    return user.roles.some(role =>
+      role.name.toUpperCase() === 'ADMIN'
+    );
+  }, [user?.roles]);
+
+  // Check if user has manager role
+  const isManager = React.useMemo(() => {
+    if (!user?.roles) return false;
+    return user.roles.some(role =>
+      role.name.toUpperCase() === 'MANAGER'
+    );
+  }, [user?.roles]);
+
+  // Get user's highest role level: admin > manager > user
+  const userRoleLevel = React.useMemo(() => {
+    if (isAdmin) return 'admin';
+    if (isManager) return 'manager';
+    return 'user';
+  }, [isAdmin, isManager]);
 
   //   const infoUser = {
   //     name: user?.name || "",
@@ -29,127 +55,157 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   //   };
 
   const data = React.useMemo(() => {
-    return {
-      //   user: {
-      //     name: infoUser.name,
-      //     email: infoUser.email,
-      //     avatar: infoUser.avatar,
-      //   },
+    // Define which roles can see each menu section
+    // 'admin' = only admin, 'manager' = manager + admin, 'user' = everyone
+    const navMainFull = [
+      {
+        title: "Normal",
+        icon: Bot,
+        hidden: false,
+        allowedRoles: ['manager', 'admin'], // Manager and Admin can see
+        items: [
+          { title: "Thêm dữ liệu", url: "/add-data" },
+          { title: "Xem chi tiết", url: "/data-info" },
+        ]
+      },
+      {
+        title: "Expert",
+        url: "#",
+        icon: Bot,
+        hidden: false,
+        allowedRoles: ['admin'], // Only Admin can see
+        items: [
+          {
+            title: "Training",
+            url: "/training",
+          },
+          {
+            title: "Intents",
+            url: "/intents",
+          },
+          {
+            title: "Entities",
+            url: "/entities",
+          },
+          {
+            title: "Actions",
+            url: "/actions",
+          },
+          {
+            title: "Responses",
+            url: "/responses",
+          },
+          {
+            title: "Rules",
+            url: "/rules",
+          },
+          { title: "Stories", url: "/stories" },
+          // {
+          //   title: "Slots",
+          //   url: "/slots",
+          // },
+          {
+            title: "Chat Bot",
+            url: "/chat_bot",
+          },
+          {
+            title: "UQuestion",
+            url: "/uquestion",
+          },
+        ],
+      },
+      {
+        title: t("Documents & Forms"),
+        url: "/docs",
+        icon: BookOpen,
+        hidden: false,
+        allowedRoles: ['manager', 'admin'], // Manager and Admin can see
+        items: [
+          {
+            title: t("Documents"),
+            url: "/docs",
+          },
+          {
+            title: "Tài liệu ngữ cảnh",
+            url: "/context-docs",
+          },
+        ],
+      },
+      {
+        title: "Báo cáo thống kê",
+        icon: MessageSquare,
+        hidden: false,
+        allowedRoles: ['admin'], // Only Admin can see
+        items: [
+          {
+            title: "Người dùng",
+            url: "/statistics/users",
+          },
+          {
+            title: "Cuộc hội thoại",
+            url: "/statistics/conversations",
+          },
+          {
+            title: "Chatbot",
+            url: "/statistics/chatbots",
+          },
+          {
+            title: "NLP",
+            url: "/statistics/nlp",
+          },
+          {
+            title: "Tài liệu",
+            url: "/statistics/documents",
+          },
+        ],
+      },
+      {
+        title: "RBAC",
+        icon: ShieldCheck,
+        hidden: false,
+        allowedRoles: ['admin'], // Only Admin can see
+        items: [
+          {
+            title: t("Roles"),
+            url: "roles",
+          },
+          {
+            title: t("Permissions"),
+            url: "permissions",
+          },
+        ],
+      },
+      {
+        title: t("Users Management"),
+        icon: UserCog,
+        hidden: false,
+        allowedRoles: ['admin'], // Only Admin can see
+        items: [
+          {
+            title: t("Users"),
+            url: "users",
+          },
+        ],
+      },
+      // {
+      //   title: t("Settings"),
+      //   icon: Settings2,
+      //   hidden: false,
+      //   items: [],
+      // },
+    ];
 
-      navMain: [
-        {
-          title: "Normal",
-          icon: Bot,
-          hidden: false,
-          items: [
-            { title: "Thêm dữ liệu", url: "/add-data" },
-            { title: "Xem chi tiết", url: "/data-info" },
-          ]
-        },
-        {
-          title: "Expert",
-          url: "#",
-          icon: Bot,
-          hidden: false,
-          items: [
-            {
-              title: "Training",
-              url: "/training",
-            },
-            {
-              title: "Intents",
-              url: "/intents",
-            },
-            {
-              title: "Entities",
-              url: "/entities",
-            },
-            {
-              title: "Actions",
-              url: "/actions",
-            },
-            {
-              title: "Responses",
-              url: "/responses",
-            },
-            {
-              title: "Rules",
-              url: "/rules",
-            },
-            { title: "Stories", url: "/stories" },
-            // {
-            //   title: "Slots",
-            //   url: "/slots",
-            // },
-            {
-              title: "Chat Bot",
-              url: "/chat_bot",
-            },
-            {
-              title: "UQuestion",
-              url: "/uquestion",
-            },
-          ],
-        },
-        // {
-        //   title: t("Documents & Forms"),
-        //   url: "/docs",
-        //   icon: BookOpen,
-        //   hidden: false,
-        //   items: [
-        //     {
-        //       title: t("Categories"),
-        //       url: "/categories",
-        //     },
-        //     {
-        //       title: t("Forms"),
-        //       url: "/forms",
-        //     },
-        //     {
-        //       title: t("Documents"),
-        //       url: "/docs",
-        //     },
-        //     {
-        //       title: t("Analytics & Reports"),
-        //       url: "/doc-analytics",
-        //     },
-        //   ],
-        // },
-        {
-          title: "RBAC",
-          icon: ShieldCheck,
-          hidden: false,
-          items: [
-            {
-              title: t("Roles"),
-              url: "roles",
-            },
-            {
-              title: t("Permissions"),
-              url: "permissions",
-            },
-          ],
-        },
-        {
-          title: t("Users Management"),
-          icon: UserCog,
-          hidden: false,
-          items: [
-            {
-              title: t("Users"),
-              url: "users",
-            },
-          ],
-        },
-        // {
-        //   title: t("Settings"),
-        //   icon: Settings2,
-        //   hidden: false,
-        //   items: [],
-        // },
-      ],
-    };
-  }, [t]);
+    // Filter navMain based on user's role
+    const navMain = navMainFull.filter(item => {
+      if (userRoleLevel === 'admin') return true; // Admin sees everything
+      if (userRoleLevel === 'manager') {
+        return item.allowedRoles.includes('manager');
+      }
+      return false; // User role sees nothing in navMain
+    });
+
+    return { navMain };
+  }, [t, userRoleLevel]);
   console.log("Sidebar data:", data.navMain);
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -190,7 +246,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
-        {isAuthenticated && <NavMain items={data.navMain} />}
+        
+        {isAuthenticated && (isAdmin || isManager) && <NavMain items={data.navMain} />}
+        {isAuthenticated && <NavConversations />}
         {/* 'Thêm dữ liệu' is now inside Models (NavMain) */}
       </SidebarContent>
       <SidebarFooter>
