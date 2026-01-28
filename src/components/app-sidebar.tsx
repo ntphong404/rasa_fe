@@ -16,6 +16,7 @@ import { BookOpen, Bot, MessageCircleCode, ShieldCheck, UserCog, MessageSquare }
 import { NavMain } from "./nav-main";
 import { NavConversations } from "./nav-conversations";
 import { NavUser } from "./nav-user";
+import { ChatbotSelector } from "./chatbot-selector";
 import { useAuthStore } from "@/store/auth";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -245,6 +246,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
+        
         {isAuthenticated && (isAdmin || isManager) && <NavMain items={data.navMain} />}
         {isAuthenticated && <NavConversations />}
         {/* 'Thêm dữ liệu' is now inside Models (NavMain) */}

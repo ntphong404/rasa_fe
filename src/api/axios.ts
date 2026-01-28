@@ -1,6 +1,7 @@
 import axios, { type InternalAxiosRequestConfig, type AxiosRequestHeaders } from "axios";
 import ENDPOINTS from "@/api/endpoints";
 import { useAuthStore } from "@/store/auth";
+import { useChatbotStore } from "@/store/chatbot";
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -40,6 +41,42 @@ axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
       config.headers = ({ Authorization: `Bearer ${token}` } as unknown) as AxiosRequestHeaders;
     }
   }
+
+  // Add botId to query params if it exists and not already present
+  const selectedBotId = useChatbotStore.getState().selectedBotId;
+  if (selectedBotId) {
+    // Initialize params if it doesn't exist
+    if (!config.params) {
+      config.params = {};
+    }
+    // Only add botId if it's not already present (to allow override)
+    if (!config.params.botId) {
+      config.params.botId = selectedBotId;
+    }
+
+    // Add botId to request body for POST, PUT, PATCH, DELETE methods
+    const methodsWithBody = ['post', 'put', 'patch', 'delete'];
+    if (config.method && methodsWithBody.includes(config.method.toLowerCase())) {
+      // Only add if there's already a body or initialize it
+      if (config.data) {
+        // Handle FormData separately
+        if (config.data instanceof FormData) {
+          if (!config.data.has('botId')) {
+            config.data.append('botId', selectedBotId);
+          }
+        } else if (typeof config.data === 'object') {
+          // For regular objects, add botId if not present
+          if (!config.data.botId) {
+            config.data.botId = selectedBotId;
+          }
+        }
+      } else {
+        // Initialize data with botId if no body exists
+        config.data = { botId: selectedBotId };
+      }
+    }
+  }
+  
   return config;
 });
 

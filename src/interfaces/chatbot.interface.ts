@@ -2,6 +2,7 @@ import { IRole } from "./role.interface";
 
 export interface IChatbot {
   _id: string;
+  botId: string; // Custom bot ID (e.g., "pccc_namdinh")
   name: string;
   ip: string;
   rasaPort: number;

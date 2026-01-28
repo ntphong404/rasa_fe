@@ -54,6 +54,7 @@ import ResponseDetailsDialog from "../components/ResponseDetailsDialog";
 import createMyReponseQuery from "../api/dto/MyReponseQuery";
 import CreateResponseDialog from "../components/CreateResponseDialog";
 import EditResponseDialog from "../components/EditResponseDialog";
+import { useChatbotStore } from "@/store/chatbot";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -67,6 +68,7 @@ const filterSchema = z.object({
 
 export function ResponseManagement() {
   const { t } = useTranslation();
+  const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
   const [rowSelection, setRowSelection] = useState({});
   const [responsesData, setResponsesData] = useState<IMyResponse[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -144,7 +146,7 @@ export function ResponseManagement() {
   useEffect(() => {
     fetchResponsesData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.limit]);
+  }, [pagination.page, pagination.limit, refreshTrigger]);
 
   const onSubmit = (data: z.infer<typeof filterSchema>) => {
     setPagination((prev) => ({ ...prev, page: 1 }));

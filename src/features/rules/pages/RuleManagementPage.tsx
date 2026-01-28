@@ -38,7 +38,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -53,6 +53,7 @@ import {
 import { ConfirmRestoreDialog } from "@/components/confirm-restore-dialog";
 import { Command } from "@/components/ui/command";
 import RuleDetailsDialog from "../components/RuleDetailsDialog";
+import { useChatbotStore } from "@/store/chatbot";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -67,6 +68,7 @@ const filterSchema = z.object({
 export function RuleManagementPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
   const [rowSelection, setRowSelection] = useState({});
   const [rulesData, setRulesData] = useState<IRule[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -78,6 +80,7 @@ export function RuleManagementPage() {
   const [confirmRestoreOpen, setConfirmRestoreOpen] = useState(false);
   const [ruleToDelete, setRuleToDelete] = useState<IRule | null>(null);
   const [ruleToRestore, setRuleToRestore] = useState<IRule | null>(null);
+  const isInitialMount = useRef(true);
 
   const [pagination, setPagination] = useState({
     total: 0,
@@ -156,46 +159,57 @@ export function RuleManagementPage() {
     }
   };
 
+  // Initial fetch + pagination changes
   useEffect(() => {
-    fetchRulesData();
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      fetchRulesData();
+    } else {
+      fetchRulesData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.limit]);
+  }, [pagination.page, pagination.limit, refreshTrigger]);
 
   // Auto-filter when non-search form values change (immediate)
   useEffect(() => {
-    if (watchedValues) {
-      const { page, search, ...otherFilters } = watchedValues;
-      // Reset to page 1 when filters change
-      setPagination((prev) => ({ ...prev, page: 1 }));
-      fetchRulesData({
-        page: 1,
-        limit: watchedValues.limit || pagination.limit,
-        search: debouncedSearchValue, // Use debounced search
-        ...otherFilters,
-      });
+    // Skip initial render to avoid duplicate call
+    if (isInitialMount.current || (!watchedValues.deleted && !watchedValues.startDate && !watchedValues.endDate)) {
+      return;
     }
+    
+    const { page, search, ...otherFilters } = watchedValues;
+    // Reset to page 1 when filters change
+    setPagination((prev) => ({ ...prev, page: 1 }));
+    fetchRulesData({
+      page: 1,
+      limit: watchedValues.limit || pagination.limit,
+      search: debouncedSearchValue, // Use debounced search
+      ...otherFilters,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     watchedValues.deleted,
     watchedValues.sort,
     watchedValues.startDate,
     watchedValues.endDate,
-    watchedValues.limit,
   ]);
 
   // Auto-filter when debounced search value changes
   useEffect(() => {
-    if (watchedValues) {
-      const { page, search, ...otherFilters } = watchedValues;
-      // Reset to page 1 when search changes
-      setPagination((prev) => ({ ...prev, page: 1 }));
-      fetchRulesData({
-        page: 1,
-        limit: watchedValues.limit || pagination.limit,
-        search: debouncedSearchValue,
-        ...otherFilters,
-      });
+    // Skip if search is empty on initial render or is initial mount
+    if (isInitialMount.current || !debouncedSearchValue) {
+      return;
     }
+    
+    const { page, search, ...otherFilters } = watchedValues;
+    // Reset to page 1 when search changes
+    setPagination((prev) => ({ ...prev, page: 1 }));
+    fetchRulesData({
+      page: 1,
+      limit: watchedValues.limit || pagination.limit,
+      search: debouncedSearchValue,
+      ...otherFilters,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchValue]);
 
