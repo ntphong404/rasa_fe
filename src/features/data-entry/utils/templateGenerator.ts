@@ -98,6 +98,58 @@ export async function generateXLSXTemplate(): Promise<void> {
 }
 
 /**
+ * Generate YAML template for Rasa NLU format
+ */
+export function generateYAMLTemplate(): void {
+    const yaml = `version: "3.1"
+nlu:
+  - intent: ask_program
+    examples: |
+      - KMA có chương trình đào tạo nào?
+      - Các ngành học tại KMA là gì?
+      - KMA cơ các chương trình cử nhân và thạc sĩ không?
+      - Chương trình học của KMA bao gồm những gì?
+
+  - intent: ask_admission
+    examples: |
+      - Làm thế nào để đăng ký vào KMA?
+      - KMA yêu cầu gì khi nộp hồ sơ?
+      - Tôi cần làm gì để đăng ký tuyển sinh KMA?
+      - Khi nào tôi có thể đăng ký?
+
+  - intent: ask_criteria
+    examples: |
+      - KMA có yêu cầu gì về điểm số để nhập học không?
+      - Điều kiện xét tuyển vào KMA là gì?
+      - Có cần thi đầu vào không?
+      - KMA yêu cầu trình độ học vấn như thế nào?
+
+  - intent: ask_deadline
+    examples: |
+      - Hạn cuối để nộp hồ sơ là khi nào?
+      - Khi nào là ngày cuối cùng để nộp đơn?
+      - KMA có hạn nộp hồ sơ không?
+
+  - intent: greet
+    examples: |
+      - Xin chào
+      - Chào bạn
+      - Hi
+      - Chào
+
+  - intent: goodbye
+    examples: |
+      - Tạm biệt
+      - Hẹn gặp lại
+      - Chào nhé
+      - See you
+`;
+
+    const blob = new Blob([yaml], { type: "text/yaml;charset=utf-8;" });
+    downloadFile(blob, "nlu_template.yaml");
+}
+
+/**
  * Generate CSV template as fallback
  * Simpler format without styling
  */
@@ -137,14 +189,23 @@ export function generateCSVTemplate(): void {
 }
 
 /**
- * Generate template file - tries XLSX first, falls back to CSV
+ * Generate template file - tries XLSX first, falls back to CSV or YAML
+ * Can generate different formats based on parameter
  */
-export async function generateTemplate(): Promise<void> {
+export async function generateTemplate(format: 'xlsx' | 'csv' | 'yaml' = 'xlsx'): Promise<void> {
     try {
-        await generateXLSXTemplate();
+        if (format === 'xlsx') {
+            await generateXLSXTemplate();
+        } else if (format === 'yaml') {
+            generateYAMLTemplate();
+        } else {
+            generateCSVTemplate();
+        }
     } catch (err) {
-        console.error('XLSX generation failed, falling back to CSV', err);
-        generateCSVTemplate();
+        console.error(`${format} generation failed`, err);
+        if (format === 'xlsx') {
+            generateCSVTemplate();
+        }
     }
 }
 

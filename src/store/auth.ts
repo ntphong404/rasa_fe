@@ -8,8 +8,11 @@ interface AuthState {
   //User data
   user: IUser | null;
   clientId: string | null;
+  //Pre-access state for email verification
+  isPreAccess: boolean;
+  preAccessType?: string | null;
   //Actions
-  setAuth: (isAuthenticated: boolean, clientId: string | null) => void;
+  setAuth: (isAuthenticated: boolean, clientId: string | null, isPreAccess?: boolean, preAccessType?: string | null) => void;
   logout: () => void;
   updateUser: (user: Partial<IUser>) => void;
 }
@@ -20,13 +23,15 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       user: null,
       clientId: null,
+      isPreAccess: false,
+      preAccessType: null,
 
-      setAuth: (isAuthenticated: boolean, clientId: string | null) => {
-        set({ isAuthenticated, clientId });
+      setAuth: (isAuthenticated: boolean, clientId: string | null, isPreAccess: boolean = false, preAccessType: string | null = null) => {
+        set({ isAuthenticated, clientId, isPreAccess, preAccessType });
       },
 
       logout: () => {
-        set({ isAuthenticated: false, user: null, clientId: null });
+        set({ isAuthenticated: false, user: null, clientId: null, isPreAccess: false, preAccessType: null });
 
         // Xóa localStorage
         localStorage.removeItem('authToken');
@@ -56,6 +61,8 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,
         user: state.user,
+        isPreAccess: state.isPreAccess,
+        preAccessType: state.preAccessType,
       }),
     }
   )

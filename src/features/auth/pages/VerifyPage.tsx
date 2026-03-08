@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { useVerify } from "@/hooks/useVerify";
 import { authService } from "@/features/auth/api/service";
+import { useAuthStore } from "@/store/auth";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -24,6 +25,26 @@ export function VerifyPage({
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(300); // 5 minutes = 300 seconds
+  const [hasResendOnMount, setHasResendOnMount] = useState(false);
+
+  // Auto-resend OTP when logging in with unverified account
+  useEffect(() => {
+    if (type === "login" && email && !hasResendOnMount) {
+      setHasResendOnMount(true);
+      const autoResend = async () => {
+        try {
+          console.log("📧 Auto-resending OTP for login...");
+          await authService.resendVerifyEmail();
+          console.log("✅ Auto-resend successful");
+          setCountdown(300);
+          toast.success("Mã xác thực mới đã được gửi!");
+        } catch (error) {
+          console.error("❌ Auto-resend failed:", error);
+        }
+      };
+      autoResend();
+    }
+  }, [type, email, hasResendOnMount]);
 
   // Countdown timer
   useEffect(() => {
@@ -70,6 +91,10 @@ export function VerifyPage({
 
       if (type === "register") {
         navigate("/auth");
+      } else if (type === "login") {
+        // After verify from login, clear pre-access state and redirect to login with email pre-filled
+        useAuthStore.getState().setAuth(false, null, false, null);
+        navigate("/auth", { state: { verifiedEmail: email } });
       } else if (type === "forgot") {
         navigate("/auth/reset-password", { state: { otp } });
       } else {
@@ -86,10 +111,29 @@ export function VerifyPage({
     }
   };
 
-  const handleResendCode = () => {
-    // TODO: Implement resend logic
-    setCountdown(300); // Reset to 5 minutes
-    toast.success("Đã gửi lại mã xác thực!");
+  const handleResendCode = async () => {
+    try {
+      setLoading(true);
+      console.log("🔄 Gửi lại mã xác thực...");
+      const result = await authService.resendVerifyEmail();
+      console.log("✅ Resend response:", result);
+      if (result?.success === false) {
+        toast.error(result?.message || "Gửi lại mã xác thực thất bại!");
+        return;
+      }
+      setCountdown(300); // Reset to 5 minutes
+      setOtp(""); // Clear the input
+      toast.success("Đã gửi lại mã xác thực!");
+    } catch (error: unknown) {
+      console.error("❌ Resend error:", error);
+      let message = "Gửi lại mã xác thực thất bại!";
+      if (error instanceof Error) {
+        message = error.message;
+      }
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -113,7 +157,7 @@ export function VerifyPage({
         <CardContent>
           <div className="mx-auto mb-0 w-32 h-32 p-0 items-center">
             <AspectRatio ratio={1}>
-              <img src="/logo.png" alt="Logo" className="rounded-md object-cover" />
+              <img src="/logo2.png" alt="Logo" className="rounded-md object-cover" />
             </AspectRatio>
           </div>
 
@@ -167,7 +211,7 @@ export function VerifyPage({
                 onClick={handleResendCode}
                 disabled={loading || isLoading || countdown > 0}
               >
-                {countdown > 0 ? `Gửi lại sau ${formatTime(countdown)}` : "Gửi lại mã xác thực"}
+                {loading || isLoading ? "Đang gửi..." : countdown > 0 ? `Gửi lại sau ${formatTime(countdown)}` : "Gửi lại mã xác thực"}
               </Button>
 
               <Button

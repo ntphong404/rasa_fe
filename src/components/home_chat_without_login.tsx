@@ -21,6 +21,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { ragService } from "@/features/chat/api/ragService";
 import { IngestedDocument } from "@/interfaces/rag.interface";
+import { useChatbots } from "@/hooks/useChatbots";
 
 const RASA_URL = import.meta.env.VITE_RASA_URL || 'http://localhost:5005';
 
@@ -48,8 +49,12 @@ export function HomeChatDemoWithoutLogin() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedChatbot, setSelectedChatbot] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Fetch chatbots using existing useChatbots hook
+  const { chatbots, loading: loadingChatbots, selectedBotId, setSelectedBotId } = useChatbots();
+  const selectedChatbot = selectedBotId || "";
+  const setSelectedChatbot = setSelectedBotId;
   
   // Chat mode states
   const [chatMode, setChatMode] = useState<'normal' | 'rag'>('normal');
@@ -310,11 +315,26 @@ export function HomeChatDemoWithoutLogin() {
 
           <Select value={selectedChatbot} onValueChange={setSelectedChatbot}>
             <SelectTrigger className="h-8 text-sm mb-4">
-              <SelectValue placeholder="Select a chatbot" />
+              <SelectValue 
+                placeholder={
+                  loadingChatbots 
+                    ? "Loading chatbots..." 
+                    : "Select a chatbot"
+                } 
+              />
             </SelectTrigger>
             <SelectContent className="text-sm">
-              <SelectItem value="bot1">Chatbot 1</SelectItem>
-              <SelectItem value="bot2">Chatbot 2</SelectItem>
+              {loadingChatbots ? (
+                <div className="px-2 py-1 text-xs text-muted-foreground">⏳ Loading...</div>
+              ) : chatbots.length === 0 ? (
+                <div className="px-2 py-1 text-xs text-muted-foreground">No chatbots available</div>
+              ) : (
+                chatbots.map((bot) => (
+                  <SelectItem key={bot._id} value={bot._id}>
+                    {bot.name}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
 

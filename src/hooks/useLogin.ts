@@ -11,16 +11,13 @@ export const useLogin = () => {
         try {
             const payload = await authService.login(data);
 
-            // payload contains `clientId` per backend JSON
+            // payload contains `clientId` and pre-access info per backend JSON
             const clientId = payload?.clientId ?? null;
+            const isPreAccess = payload?.isPreAcesss ?? false;
+            const preAccessType = payload?.preAccessType ?? null;
 
             // mark authenticated and save clientId in zustand
-            if (clientId) {
-                useAuthStore.getState().setAuth(true, clientId);
-            } else {
-                // still mark as authenticated (clientId may be provided later)
-                useAuthStore.getState().setAuth(true, null);
-            }
+            useAuthStore.getState().setAuth(true, clientId, isPreAccess, preAccessType);
 
             return payload;
         } catch (err: any) {

@@ -1,5 +1,6 @@
 export interface ChatBot {
   _id: string;
+  botId: string;
   name: string;
   ip: string;
   rasaPort: number;

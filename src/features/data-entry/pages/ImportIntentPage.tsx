@@ -3,8 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Pencil, Save, X, Sparkles, ChevronDown, ChevronRight, Upload, Database, FileUp } from "lucide-react";
+import { ArrowLeft, Pencil, Save, X, Sparkles, ChevronDown, ChevronRight, Upload, Database, FileUp, FileText, File } from "lucide-react";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { intentService } from "@/features/intents/api/service";
 import { responseService } from "@/features/reponses/api/service";
 import { storyService } from "@/features/stories/api/service";
@@ -479,9 +485,15 @@ export function ImportIntentPage() {
         await handleImport();
     };
 
-    const downloadTemplate = async () => {
+    const downloadTemplate = async (type: 'xlsx' | 'yaml') => {
         try {
-            await generateTemplate();
+            if (type === 'xlsx') {
+                await generateTemplate('xlsx');
+                toast.success("Đã tải file mẫu Excel. Hãy fill data và upload lên.");
+            } else if (type === 'yaml') {
+                await generateTemplate('yaml');
+                toast.success("Đã tải file mẫu YAML. Hãy adjust dữ liệu và upload lên.");
+            }
         } catch (err) {
             console.error("Failed to generate template", err);
             toast.error("Lỗi khi tạo file mẫu");
@@ -507,10 +519,27 @@ export function ImportIntentPage() {
                                 </div>
                             </div>
                             <div className="ml-auto">
-                                <Button variant="outline" size="sm" onClick={downloadTemplate} className="gap-2">
-                                    <Upload className="h-4 w-4" />
-                                    Tải file mẫu
-                                </Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" size="sm" className="gap-2">
+                                            <Upload className="h-4 w-4" />
+                                            Tải file mẫu
+                                            <ChevronDown className="h-3 w-3" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => downloadTemplate('xlsx')} className="gap-2 cursor-pointer">
+                                            <FileText className="h-4 w-4 text-orange-500" />
+                                            <span>Mẫu Excel</span>
+                                            <span className="text-xs text-gray-500 ml-auto">(.xlsx)</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => downloadTemplate('yaml')} className="gap-2 cursor-pointer">
+                                            <File className="h-4 w-4 text-purple-500" />
+                                            <span>Mẫu YAML</span>
+                                            <span className="text-xs text-gray-500 ml-auto">(.yaml)</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </div>
                     </div>
@@ -532,7 +561,7 @@ export function ImportIntentPage() {
                                 <input
                                     ref={inputRef}
                                     type="file"
-                                    accept=".csv,.tsv,.txt,.xls,.xlsx"
+                                    accept=".csv,.tsv,.txt,.xls,.xlsx,.yaml,.yml"
                                     className="hidden"
                                     onChange={handleFileChange}
                                 />
@@ -543,7 +572,11 @@ export function ImportIntentPage() {
                                 </div>
                                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-indigo-200">
                                     <Database className="h-4 w-4 text-indigo-600" />
-                                    <span className="text-sm font-medium text-slate-700">Hỗ trợ: Excel (XLSX, XLS), CSV</span>
+                                    <span className="text-sm font-medium text-slate-700">Hỗ trợ: Excel (XLSX), CSV, YAML</span>
+                                </div>
+                                <div className="text-xs text-slate-500 mt-2">
+                                    <p>📊 <strong>Excel:</strong> Download template và fill data thủ công</p>
+                                    <p>📋 <strong>YAML:</strong> Upload file từ Rasa hoặc bên ngoài</p>
                                 </div>
                             </div>
                         </div>

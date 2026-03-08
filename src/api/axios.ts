@@ -31,6 +31,7 @@ const axiosInstance = axios.create({
 // Cấu hình interceptor cho request
 axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem('authToken');
+  console.log("🔐 Request to:", config.url, "Token exists:", !!token);
   if (token) {
     const headers = config.headers as AxiosRequestHeaders | undefined;
     if (headers && typeof headers === 'object') {
@@ -40,6 +41,7 @@ axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
       // create a headers object with correct typing
       config.headers = ({ Authorization: `Bearer ${token}` } as unknown) as AxiosRequestHeaders;
     }
+    console.log("✅ Token attached to header");
   }
 
   // Add botId to query params if it exists and not already present

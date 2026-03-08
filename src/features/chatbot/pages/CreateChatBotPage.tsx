@@ -24,6 +24,7 @@ import {
 import { chatBotService } from "../api/service";
 
 const createChatBotSchema = z.object({
+  botId: z.string().min(1, { message: "Bot ID is required" }),
   name: z.string().min(1, { message: "Name is required" }),
   ip: z.string().min(1, { message: "IP address is required" }),
   rasaPort: z.number().min(1, { message: "Rasa port is required" }),
@@ -47,6 +48,7 @@ export function CreateChatBotDialog({
   const form = useForm<z.infer<typeof createChatBotSchema>>({
     resolver: zodResolver(createChatBotSchema),
     defaultValues: {
+      botId: "",
       name: "",
       ip: "",
       rasaPort: 5005,
@@ -90,13 +92,13 @@ export function CreateChatBotDialog({
                 </h3>
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="botId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("ChatBot Name")}</FormLabel>
+                      <FormLabel>{t("Bot ID")} *</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t("Enter chatbot name")}
+                          placeholder="Nhập ID bot (ví dụ: pccc_namdinh)"
                           {...field}
                           className="w-full"
                         />
@@ -105,6 +107,25 @@ export function CreateChatBotDialog({
                     </FormItem>
                   )}
                 />
+                <div className="mt-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("ChatBot Name")}</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={t("Enter chatbot name")}
+                            {...field}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
               {/* Network Configuration Card */}

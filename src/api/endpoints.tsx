@@ -5,6 +5,7 @@ export default {
     LOGOUT: "/api/v1/auth/logout",
     REGISTER: "/api/v1/auth/register",
     VERIFY: "/api/v1/auth/verify-email",
+    RESEND_VERIFY_EMAIL: "/api/v1/auth/resend-ve",
     FORGOT_PASSWORD: "/api/v1/auth/forgot-password",
     VERIFY_RESET_OTP: "/api/v1/auth/verify-reset-otp",
     RESET_PASSWORD: "/api/v1/auth/reset-password",
@@ -93,6 +94,7 @@ export default {
   },
   CHATBOT_ENDPOINTS: {
     GET_ALL_PAGINATED: "/api/v1/chatbot",
+    GET_PUBLIC_LIST: "/api/v1/chatbot/public/list",
     GET_BY_ID: (id: string) => `/api/v1/chatbot/${id}`,
     CREATE: "/api/v1/chatbot",
     UPDATE: (id: string) => `/api/v1/chatbot/${id}`,

@@ -9,6 +9,7 @@ export interface ChatBotQuery {
 }
 
 export interface CreateChatBotRequest {
+  botId: string;
   name: string;
   ip: string;
   rasaPort: number;
@@ -18,6 +19,7 @@ export interface CreateChatBotRequest {
 
 export interface UpdateChatBotRequest {
   _id: string;
+  botId: string;
   name: string;
   ip: string;
   rasaPort: number;

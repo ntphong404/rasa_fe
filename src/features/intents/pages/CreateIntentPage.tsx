@@ -725,7 +725,7 @@ ${exampleLines || "    - example1"}`;
               ref={textareaRef}
               value={yamlDefine}
               onChange={(e) => setYamlDefine(e.target.value)}
-              onBlur={validateYAML}
+              onBlur={() => validateYAML()}
               placeholder={t("Enter YAML definition or generate template")}
               className="font-mono text-sm min-h-[300px]"
             />

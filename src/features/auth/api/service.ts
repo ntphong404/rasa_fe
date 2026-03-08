@@ -36,6 +36,10 @@ export const authService = {
     const response = await axiosInstance.post(ENDPOINTS.AUTH_ENDPOINTS.VERIFY, payload);
     return response.data;
   },
+  resendVerifyEmail: async (): Promise<{ success: boolean; message?: string }> => {
+    const response = await axiosInstance.post(ENDPOINTS.AUTH_ENDPOINTS.RESEND_VERIFY_EMAIL);
+    return response.data?.data ?? response.data;
+  },
   forgotPassword: async (data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
     const response = await axiosInstance.post(ENDPOINTS.AUTH_ENDPOINTS.FORGOT_PASSWORD, data);
     const payload = response.data?.data ?? response.data;

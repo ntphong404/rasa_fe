@@ -27,6 +27,7 @@ import { chatBotService } from "../api/service";
 import { ChatBot } from "../api/dto/ChatBotResponse";
 
 const editChatBotSchema = z.object({
+  botId: z.string().min(1, { message: "Bot ID is required" }),
   name: z.string().min(1, { message: "Name is required" }),
   ip: z.string().min(1, { message: "IP address is required" }),
   rasaPort: z.number().min(1, { message: "Rasa port is required" }),
@@ -52,6 +53,7 @@ export function EditChatBotDialog({
   const form = useForm<z.infer<typeof editChatBotSchema>>({
     resolver: zodResolver(editChatBotSchema),
     defaultValues: {
+      botId: "",
       name: "",
       ip: "",
       rasaPort: 5005,
@@ -63,6 +65,7 @@ export function EditChatBotDialog({
   useEffect(() => {
     if (chatBot) {
       form.reset({
+        botId: chatBot.botId || "",
         name: chatBot.name || "",
         ip: chatBot.ip || "",
         rasaPort: chatBot.rasaPort || 5005,
@@ -112,13 +115,13 @@ export function EditChatBotDialog({
                 </h3>
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="botId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("ChatBot Name")}</FormLabel>
+                      <FormLabel>{t("Bot ID")} *</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t("Enter chatbot name")}
+                          placeholder="Nhập ID bot (ví dụ: pccc_namdinh)"
                           {...field}
                           className="w-full"
                         />
@@ -127,6 +130,25 @@ export function EditChatBotDialog({
                     </FormItem>
                   )}
                 />
+                <div className="mt-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("ChatBot Name")}</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={t("Enter chatbot name")}
+                            {...field}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
               {/* Network Configuration Card */}

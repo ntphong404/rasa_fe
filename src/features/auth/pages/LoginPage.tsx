@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/components/ui/button";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -11,7 +11,7 @@ import {
 import { AspectRatio } from "@radix-ui/react-aspect-ratio";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
 import toast from "react-hot-toast";
@@ -28,6 +28,7 @@ export function LoginPage({
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verifyMessage, setVerifyMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{
     email?: string;
     password?: string;
@@ -37,6 +38,17 @@ export function LoginPage({
   const { getMe } = useMe();
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Auto pre-fill email after successful verification
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.verifiedEmail) {
+      setEmail(state.verifiedEmail);
+      setVerifyMessage("✓ Xác thực email thành công! Vui lòng đăng nhập.");
+      toast.success("Xác thực email thành công!");
+    }
+  }, [location.state]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -63,7 +75,15 @@ export function LoginPage({
     }
 
     try {
-      await login({ email, password });
+      const result = await login({ email, password });
+      
+      // Check if account is not verified yet
+      if (result?.isPreAcesss) {
+        toast.success("Vui lòng xác thực email của bạn");
+        navigate("/auth/verify", { state: { email: email.trim(), type: "login" } });
+        return;
+      }
+
       toast.success("Đăng nhập thành công");
       const me = await getMe();
       useAuthStore.setState({
@@ -109,12 +129,16 @@ export function LoginPage({
         <CardContent>
           <div className="mx-auto mb-0 w-32 h-32 p-0 items-center">
             <AspectRatio ratio={1}>
-              <img src="/logo.png" alt="Logo" className="rounded-md object-cover" />
+              <img src="/logo2.png" alt="Logo" className="rounded-md object-cover" />
             </AspectRatio>
           </div>
 
           <div className="mb-1 h-8">
-            {error ? (
+            {verifyMessage ? (
+              <div className="text-sm text-green-600 bg-green-50 border border-green-200 rounded-md px-3 py-1">
+                {verifyMessage}
+              </div>
+            ) : error ? (
               <div className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-md px-3 py-1">
                 {error}
               </div>

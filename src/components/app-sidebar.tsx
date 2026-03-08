@@ -217,7 +217,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       >
         <div className="flex items-center gap-4">
           <img
-            src="/logo.png"
+            src="/logo2.png"
             alt="@logo"
             className="h-10 w-10 rounded-full shadow-lg"
           />

@@ -77,6 +77,106 @@ export async function parseCSV(text: string): Promise<ParsedRow[]> {
 }
 
 /**
+ * Parse YAML file format
+ * Expects Rasa NLU YAML format with version and nlu section:
+ * 
+ * version: "3.1"
+ * nlu:
+ *   - intent: intent_name
+ *     examples: |
+ *       - example 1
+ *       - example 2
+ */
+export async function parseYAML(text: string): Promise<ParsedRow[]> {
+    const lines = text.split(/\r?\n/);
+    const out: ParsedRow[] = [];
+
+    let currentIntent: string | null = null;
+    let currentExamples: string[] = [];
+    let inNluSection = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        // Skip empty lines and comments
+        if (!trimmed || trimmed.startsWith('#')) {
+            continue;
+        }
+
+        // Check if we're entering the nlu section
+        if (trimmed === 'nlu:' || trimmed === 'nlu:' ) {
+            inNluSection = true;
+            continue;
+        }
+
+        // Skip if not in nlu section and we haven't started yet
+        if (!inNluSection && !trimmed.startsWith('version:')) {
+            continue;
+        }
+
+        // Match "- intent: intent_name" (can be indented)
+        const intentMatch = trimmed.match(/^-\s+intent:\s*(.+)$/);
+        if (intentMatch) {
+            // Save previous intent if exists
+            if (currentIntent && currentExamples.length > 0) {
+                out.push({
+                    rawName: currentIntent,
+                    name: formatIntentName(currentIntent),
+                    examples: currentExamples,
+                });
+            }
+            currentIntent = intentMatch[1].trim();
+            currentExamples = [];
+            continue;
+        }
+
+        // Match "examples: |" or "examples: |-"
+        if (trimmed.startsWith('examples:')) {
+            // Just mark that examples are coming, examples will be on next lines
+            continue;
+        }
+
+        // Match example lines "- example text" (can be indented)
+        if (currentIntent && trimmed.startsWith('- ') && !trimmed.startsWith('- intent:')) {
+            const exampleText = trimmed.substring(2).trim();
+            if (exampleText) {
+                currentExamples.push(exampleText);
+            }
+            continue;
+        }
+
+        // If we hit another intent or response section, save current
+        if (trimmed.startsWith('- intent:') || trimmed.startsWith('responses:') || trimmed.startsWith('rules:') || trimmed.startsWith('stories:')) {
+            if (currentIntent && currentExamples.length > 0) {
+                out.push({
+                    rawName: currentIntent,
+                    name: formatIntentName(currentIntent),
+                    examples: currentExamples,
+                });
+                currentIntent = null;
+                currentExamples = [];
+            }
+        }
+    }
+
+    // Save last intent
+    if (currentIntent && currentExamples.length > 0) {
+        out.push({
+            rawName: currentIntent,
+            name: formatIntentName(currentIntent),
+            examples: currentExamples,
+        });
+    }
+
+    if (out.length === 0) {
+        throw new Error("Không tìm thấy intent nào trong file YAML. Vui lòng kiểm tra định dạng file. Cần có cấu trúc: nlu: -> intent: -> examples:");
+    }
+
+    return out;
+}
+
+/**
  * Parse XLSX/XLS file using ExcelJS
  * Skips first 2 rows (title and header)
  * Expects format: STT | Câu hỏi | Câu trả lời
@@ -121,6 +221,9 @@ export async function parseFile(file: File): Promise<ParsedRow[]> {
 
     if (fileName.endsWith(".xls") || fileName.endsWith(".xlsx")) {
         return await parseXLSX(file);
+    } else if (fileName.endsWith(".yaml") || fileName.endsWith(".yml")) {
+        const text = await file.text();
+        return await parseYAML(text);
     } else {
         // Treat as CSV/TSV/TXT
         const text = await file.text();
