@@ -8,9 +8,14 @@ export type ParsedRow = {
     name: string;
     examples: string[];
     response?: string;
+    responseContent?: string;
     status?: 'pending' | 'success' | 'error';
     error?: string;
     validationError?: string;
+};
+
+export type ResponseMap = {
+    [utteranceName: string]: string;
 };
 
 /**
@@ -77,9 +82,71 @@ export async function parseCSV(text: string): Promise<ParsedRow[]> {
 }
 
 /**
- * Parse YAML file format
- * Expects Rasa NLU YAML format with version and nlu section:
+ * Parse response/utterances YAML file
+ * Expects Rasa response format:
  * 
+ * version: "3.1"
+ * responses:
+ *   utter_ask_program:
+ *     - text: "KMA có các chương trình..."
+ *   utter_ask_admission:
+ *     - text: "Để đăng ký vào KMA..."
+ */
+export async function parseResponseYAML(text: string): Promise<ResponseMap> {
+    const lines = text.split(/\r?\n/);
+    const responseMap: ResponseMap = {};
+
+    let currentUtter: string | null = null;
+    let inResponsesSection = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        // Skip empty lines and comments
+        if (!trimmed || trimmed.startsWith('#')) {
+            continue;
+        }
+
+        // Check if we're entering the responses section
+        if (trimmed === 'responses:') {
+            inResponsesSection = true;
+            continue;
+        }
+
+        if (!inResponsesSection) continue;
+
+        // Match utterance names (e.g., "utter_ask_program:")
+        if (trimmed.match(/^[a-z_]+:$/) && trimmed.startsWith('utter_')) {
+            currentUtter = trimmed.slice(0, -1);
+            continue;
+        }
+
+        // Match text content (e.g., "- text: "...")
+        if (currentUtter && trimmed.startsWith('- text:')) {
+            const textMatch = trimmed.match(/^-\s+text:\s*["']?(.+?)["']?\s*$/);
+            if (textMatch) {
+                responseMap[currentUtter] = textMatch[1].trim();
+            } else {
+                // Multi-line text handling
+                const simpleText = trimmed.substring(7).trim().replace(/^["']|["']$/g, '');
+                if (simpleText) {
+                    responseMap[currentUtter] = simpleText;
+                }
+            }
+        }
+    }
+
+    if (Object.keys(responseMap).length === 0) {
+        throw new Error("Không tìm thấy response nào trong file. Vui lòng kiểm tra định dạng file responses.");
+    }
+
+    return responseMap;
+}
+
+/**
+ * Parse NLU YAML file content
+ * Expects Rasa NLU format:
  * version: "3.1"
  * nlu:
  *   - intent: intent_name
@@ -174,6 +241,22 @@ export async function parseYAML(text: string): Promise<ParsedRow[]> {
     }
 
     return out;
+}
+
+/**
+ * Merge NLU data with Response data
+ * Matches intent names with utter_<intent_name> in responses
+ */
+export function mergeNLUWithResponses(nlus: ParsedRow[], responses: ResponseMap): ParsedRow[] {
+    return nlus.map((intent) => {
+        const utterName = `utter_${intent.name}`;
+        const responseContent = responses[utterName] || '';
+        
+        return {
+            ...intent,
+            responseContent: responseContent,
+        };
+    });
 }
 
 /**

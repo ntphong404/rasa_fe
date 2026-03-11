@@ -14,14 +14,17 @@ import {
 import { intentService } from "@/features/intents/api/service";
 import { responseService } from "@/features/reponses/api/service";
 import { storyService } from "@/features/stories/api/service";
-import { parseFile, formatIntentName, type ParsedRow } from "../utils/fileParser";
+import { parseFile, formatIntentName, type ParsedRow, parseYAML, parseResponseYAML, mergeNLUWithResponses, type ResponseMap } from "../utils/fileParser";
 import { generateTemplate } from "../utils/templateGenerator";
 
 type Row = ParsedRow;
 
 export function ImportIntentPage() {
     const navigate = useNavigate();
+    const [importMode, setImportMode] = useState<'excel' | 'yaml'>('excel'); // Track import mode
     const [file, setFile] = useState<File | null>(null);
+    const [nluFile, setNluFile] = useState<File | null>(null); // For YAML mode
+    const [domainFile, setDomainFile] = useState<File | null>(null); // For YAML mode
     const [isParsing, setIsParsing] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [rows, setRows] = useState<Row[]>([]);
@@ -37,9 +40,50 @@ export function ImportIntentPage() {
     const [generatingRowIdx, setGeneratingRowIdx] = useState<number | null>(null);
     const [hasImported, setHasImported] = useState(false);
     const inputRef = useRef<HTMLInputElement | null>(null);
+    const nluInputRef = useRef<HTMLInputElement | null>(null);
+    const domainInputRef = useRef<HTMLInputElement | null>(null);
 
     // Back should return to the Create Data page
     const handleCancel = () => navigate("/add-data");
+
+    const handleParseYAMLDualFile = async (nlu: File, domain: File) => {
+        setNluFile(nlu);
+        setDomainFile(domain);
+        setIsParsing(true);
+        try {
+            // Read and parse both files
+            const nluText = await nlu.text();
+            const domainText = await domain.text();
+
+            const parsedNLU = await parseYAML(nluText);
+            const parsedResponses = await parseResponseYAML(domainText);
+
+            // Merge NLU with responses
+            const merged = mergeNLUWithResponses(parsedNLU, parsedResponses);
+
+            // Update response field from responseContent
+            const merged2 = merged.map(m => ({
+                ...m,
+                response: m.responseContent || (m.response || ""),
+            }));
+
+            setRows(merged2);
+            // mark all selected by default
+            const sel: Record<number, boolean> = {};
+            merged2.forEach((_, i) => (sel[i] = true));
+            setSelected(sel);
+            setHasImported(false);
+            toast.success(`Đã đọc thành công ${merged2.length} intents từ ${nlu.name} + ${domain.name}`);
+        } catch (err) {
+            console.error(err);
+            const errorMessage = err instanceof Error ? err.message : "Không thể đọc file";
+            toast.error(`Lỗi khi đọc file YAML: ${errorMessage}`);
+            setNluFile(null);
+            setDomainFile(null);
+        } finally {
+            setIsParsing(false);
+        }
+    };
 
     function buildStoryDefine(storyName: string, steps: Array<{ intentId?: string; actionId?: string }>) {
         const lines: string[] = [];
@@ -89,9 +133,34 @@ export function ImportIntentPage() {
         inputRef.current?.click();
     };
 
+    const handleClickChooseNLU = () => {
+        nluInputRef.current?.click();
+    };
+
+    const handleClickChooseDomain = () => {
+        domainInputRef.current?.click();
+    };
+
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const f = e.target.files?.[0];
         if (f) await handleParseFile(f);
+    };
+
+    const handleNLUFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const f = e.target.files?.[0];
+        if (f) setNluFile(f);
+    };
+
+    const handleDomainFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const f = e.target.files?.[0];
+        if (f) setDomainFile(f);
+    };
+
+    const handleParseYAMLFiles = async () => {
+        if (!nluFile || !domainFile) {
+            return toast.error("Vui lòng chọn cả 2 file NLU và Domain");
+        }
+        await handleParseYAMLDualFile(nluFile, domainFile);
     };
 
     const handleToggle = (index: number) => {
@@ -547,13 +616,44 @@ export function ImportIntentPage() {
 
                 <div className="px-3 pt-2 pr-6" style={{ height: 'calc(100vh - 120px)' }}>
 
-                    {/* Only show upload area if no rows loaded */}
+                    {/* Mode Selection - Show when no rows loaded */}
                     {rows.length === 0 && (
+                        <div className="max-w-3xl mx-auto mb-4">
+                            <div className="flex gap-2 mb-4">
+                                <Button
+                                    variant={importMode === 'excel' ? 'default' : 'outline'}
+                                    onClick={() => {
+                                        setImportMode('excel');
+                                        setNluFile(null);
+                                        setDomainFile(null);
+                                    }}
+                                    className="flex-1 gap-2"
+                                >
+                                    <FileText className="h-4 w-4" />
+                                    Nhập từ Excel
+                                </Button>
+                                <Button
+                                    variant={importMode === 'yaml' ? 'default' : 'outline'}
+                                    onClick={() => {
+                                        setImportMode('yaml');
+                                        setFile(null);
+                                    }}
+                                    className="flex-1 gap-2"
+                                >
+                                    <File className="h-4 w-4" />
+                                    Nhập từ YAML (2 files)
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Excel Upload Area */}
+                    {rows.length === 0 && importMode === 'excel' && (
                         <div className="max-w-3xl mx-auto">
                             <div
                                 onDrop={handleDrop}
                                 onDragOver={(e) => e.preventDefault()}
-                                className="border-2 border-dashed border-indigo-300 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-10 text-center cursor-pointer shadow-sm hover:shadow-lg hover:border-indigo-400 transition-all"
+                                className="border-2 border-dashed border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg p-10 text-center cursor-pointer shadow-sm hover:shadow-lg hover:border-orange-400 transition-all"
                                 onClick={handleClickChoose}
                                 role="button"
                                 aria-label="Drop files here or click to select"
@@ -561,22 +661,89 @@ export function ImportIntentPage() {
                                 <input
                                     ref={inputRef}
                                     type="file"
-                                    accept=".csv,.tsv,.txt,.xls,.xlsx,.yaml,.yml"
+                                    accept=".csv,.tsv,.txt,.xls,.xlsx"
                                     className="hidden"
                                     onChange={handleFileChange}
                                 />
-                                <Upload className="h-12 w-12 text-indigo-400 mx-auto mb-3" />
-                                <div className="text-xl font-bold text-indigo-900 mb-2">Kéo thả file vào đây để nhập</div>
+                                <Upload className="h-12 w-12 text-orange-400 mx-auto mb-3" />
+                                <div className="text-xl font-bold text-orange-900 mb-2">Kéo thả file Excel vào đây để nhập</div>
                                 <div className="text-base text-slate-600 mb-3">
-                                    Hoặc <button onClick={(e) => { e.stopPropagation(); handleClickChoose(); }} className="text-indigo-600 font-semibold underline hover:text-indigo-700">chọn file từ máy tính</button>
+                                    Hoặc <button onClick={(e) => { e.stopPropagation(); handleClickChoose(); }} className="text-orange-600 font-semibold underline hover:text-orange-700">chọn file từ máy tính</button>
                                 </div>
-                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-indigo-200">
-                                    <Database className="h-4 w-4 text-indigo-600" />
-                                    <span className="text-sm font-medium text-slate-700">Hỗ trợ: Excel (XLSX), CSV, YAML</span>
+                                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-orange-200">
+                                    <Database className="h-4 w-4 text-orange-600" />
+                                    <span className="text-sm font-medium text-slate-700">Hỗ trợ: XLSX, CSV, TSV</span>
                                 </div>
                                 <div className="text-xs text-slate-500 mt-2">
                                     <p>📊 <strong>Excel:</strong> Download template và fill data thủ công</p>
-                                    <p>📋 <strong>YAML:</strong> Upload file từ Rasa hoặc bên ngoài</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* YAML Dual File Upload Area */}
+                    {rows.length === 0 && importMode === 'yaml' && (
+                        <div className="max-w-3xl mx-auto">
+                            <div className="space-y-3">
+                                {/* NLU File Upload */}
+                                <div
+                                    onClick={handleClickChooseNLU}
+                                    className="border-2 border-dashed border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-6 text-center cursor-pointer shadow-sm hover:shadow-lg hover:border-purple-400 transition-all"
+                                    role="button"
+                                >
+                                    <input
+                                        ref={nluInputRef}
+                                        type="file"
+                                        accept=".yaml,.yml"
+                                        className="hidden"
+                                        onChange={handleNLUFileChange}
+                                    />
+                                    <Upload className="h-8 w-8 text-purple-400 mx-auto mb-2" />
+                                    <div className="font-semibold text-purple-900">
+                                        {nluFile ? `✓ ${nluFile.name}` : 'Chọn file NLU (.yaml)'}
+                                    </div>
+                                    <div className="text-xs text-slate-600 mt-1">
+                                        Chứa intent definitions và examples
+                                    </div>
+                                </div>
+
+                                {/* Domain File Upload */}
+                                <div
+                                    onClick={handleClickChooseDomain}
+                                    className="border-2 border-dashed border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-6 text-center cursor-pointer shadow-sm hover:shadow-lg hover:border-purple-400 transition-all"
+                                    role="button"
+                                >
+                                    <input
+                                        ref={domainInputRef}
+                                        type="file"
+                                        accept=".yaml,.yml"
+                                        className="hidden"
+                                        onChange={handleDomainFileChange}
+                                    />
+                                    <Upload className="h-8 w-8 text-purple-400 mx-auto mb-2" />
+                                    <div className="font-semibold text-purple-900">
+                                        {domainFile ? `✓ ${domainFile.name}` : 'Chọn file Domain/Response (.yaml)'}
+                                    </div>
+                                    <div className="text-xs text-slate-600 mt-1">
+                                        Chứa response definitions (utterances)
+                                    </div>
+                                </div>
+
+                                {/* Parse Button */}
+                                {nluFile && domainFile && (
+                                    <Button
+                                        onClick={handleParseYAMLFiles}
+                                        disabled={isParsing}
+                                        className="w-full gap-2 bg-purple-600 hover:bg-purple-700"
+                                    >
+                                        <Database className="h-4 w-4" />
+                                        Xử lý 2 file và xem trước
+                                    </Button>
+                                )}
+
+                                <div className="text-xs text-slate-500 bg-purple-50 p-3 rounded">
+                                    <p>📋 <strong>NLU File:</strong> Cấu trúc intent với examples</p>
+                                    <p>📋 <strong>Domain File:</strong> Cấu trúc responses/utterances</p>
                                 </div>
                             </div>
                         </div>
