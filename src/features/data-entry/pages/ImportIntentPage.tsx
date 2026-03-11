@@ -630,7 +630,7 @@ export function ImportIntentPage() {
                                     className="flex-1 gap-2"
                                 >
                                     <FileText className="h-4 w-4" />
-                                    Nhập từ Excel
+                                    Nhập từ File
                                 </Button>
                                 <Button
                                     variant={importMode === 'yaml' ? 'default' : 'outline'}

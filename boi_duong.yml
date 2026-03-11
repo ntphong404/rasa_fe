@@ -1,0 +1,195 @@
+version: "3.1"
+
+nlu:
+- intent: boi_duong_1
+  examples: |
+    - Thời gian bồi dưỡng nghiệp vụ phòng cháy, chữa cháy cho đội PCCC cơ sở?
+    - Đội phòng cháy chữa cháy cơ sở được bồi dưỡng nghiệp vụ trong bao lâu?
+    - Thời lượng bồi dưỡng nghiệp vụ PCCC cho đội phòng cháy chữa cháy cơ sở là bao nhiêu?
+    - Quy định thời gian bồi dưỡng nghiệp vụ chữa cháy cho đội PCCC cơ sở là bao nhiêu giờ?
+    - Cho tôi biết thời gian bồi dưỡng nghiệp vụ PCCC dành cho đội phòng cháy cơ sở?
+    - Xin hỏi đội PCCC cơ sở phải tham gia bồi dưỡng nghiệp vụ phòng cháy trong thời gian bao lâu?
+    - Theo quy định, thời gian bồi dưỡng nghiệp vụ phòng cháy chữa cháy cho đội PCCC cơ sở là bao nhiêu?
+    - Đơn vị tôi có đội PCCC cơ sở, thời gian bồi dưỡng nghiệp vụ phòng cháy cho họ là bao lâu?
+    - Chúng tôi cần biết thời gian bồi dưỡng nghiệp vụ phòng cháy chữa cháy cho đội cơ sở theo quy định?
+    - Thời gian tối thiểu bồi dưỡng nghiệp vụ PCCC cho đội phòng cháy chữa cháy cơ sở là bao nhiêu giờ?
+    - Quy định về số giờ bồi dưỡng nghiệp vụ phòng cháy chữa cháy cho đội PCCC cơ sở?
+    - Đội phòng cháy chữa cháy cơ sở học bồi dưỡng nghiệp vụ PCCC bao nhiêu tiếng?
+    - Cơ sở tôi muốn biết thời lượng bồi dưỡng nghiệp vụ PCCC bắt buộc cho đội cơ sở là bao lâu?
+    - thoi gian boi duong nghiep vu pccc cho doi phong chay chua chay co so la bao nhieu?
+    - doi pccc co so duoc boi duong nghiep vu phong chay chua chay trong bao lau theo quy dinh?
+    - so gio boi duong nghiep vu pccc cho doi co so la bao nhieu?
+    - quy dinh thoi gian boi duong nghiep vu chua chay cho doi pccc co so?
+    - Cho hỏi quy định thời gian bồi dưỡng nghiệp vụ PCCC cho đội phòng cháy chữa cháy cơ sở?
+    - Pháp luật quy định thời gian bồi dưỡng nghiệp vụ phòng cháy chữa cháy cho đội PCCC cơ sở là bao nhiêu?
+    - Mỗi đợt bồi dưỡng nghiệp vụ PCCC cho đội phòng cháy chữa cháy cơ sở kéo dài bao lâu?
+    - Thời gian bồi dưỡng nghiệp vụ PCCC dành cho đội cơ sở theo quy định hiện hành là bao nhiêu giờ?
+    - Đội PCCC cơ sở phải hoàn thành chương trình bồi dưỡng nghiệp vụ trong thời gian bao lâu?
+
+- intent: boi_duong_2
+  examples: |
+    - Thời gian bồi dưỡng nghiệp vụ phòng cháy, chữa cháy, cứu nạn, cứu hộ cho người được phân công thực hiện kiểm tra về phòng cháy, chữa cháy tại cơ sở?
+    - Người được phân công kiểm tra PCCC tại cơ sở phải bồi dưỡng nghiệp vụ trong bao lâu?
+    - Thời lượng bồi dưỡng nghiệp vụ PCCC CNCH cho người thực hiện kiểm tra phòng cháy chữa cháy cơ sở là bao nhiêu?
+    - Quy định thời gian bồi dưỡng nghiệp vụ PCCC cho người phụ trách kiểm tra phòng cháy chữa cháy tại cơ sở?
+    - Cho tôi biết thời gian bồi dưỡng nghiệp vụ PCCC CNCH cho người được phân công kiểm tra PCCC tại cơ sở?
+    - Xin hỏi người được giao kiểm tra PCCC tại cơ sở phải tham gia bồi dưỡng nghiệp vụ trong thời gian bao lâu?
+    - Theo quy định, thời gian bồi dưỡng nghiệp vụ phòng cháy chữa cháy cho người kiểm tra PCCC tại cơ sở là bao nhiêu?
+    - Đơn vị tôi phân công người kiểm tra PCCC, họ cần bồi dưỡng nghiệp vụ trong bao lâu theo quy định?
+    - Người được phân công kiểm tra phòng cháy chữa cháy tại cơ sở học bồi dưỡng nghiệp vụ bao nhiêu giờ?
+    - Thời gian tối thiểu bồi dưỡng nghiệp vụ PCCC CNCH cho người thực hiện kiểm tra PCCC cơ sở là bao lâu?
+    - Quy định số giờ bồi dưỡng nghiệp vụ phòng cháy chữa cháy cho người được phân công kiểm tra PCCC?
+    - Cán bộ kiểm tra PCCC tại cơ sở cần bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ trong bao lâu?
+    - Người phụ trách kiểm tra phòng cháy chữa cháy ở cơ sở phải tham gia bồi dưỡng nghiệp vụ bao nhiêu tiếng?
+    - thoi gian boi duong nghiep vu pccc cho nguoi duoc phan cong kiem tra phong chay chua chay tai co so?
+    - nguoi thuc hien kiem tra pccc tai co so phai boi duong nghiep vu trong bao lau?
+    - so gio boi duong nghiep vu pccc cnch cho nguoi phan cong kiem tra phong chay chua chay co so?
+    - nguoi duoc giao kiem tra pccc co so hoc boi duong nghiep vu bao nhieu gio theo quy dinh?
+    - Cho hỏi quy định thời gian bồi dưỡng nghiệp vụ PCCC CNCH dành cho người được phân công kiểm tra phòng cháy chữa cháy tại cơ sở?
+    - Pháp luật quy định thời gian bồi dưỡng nghiệp vụ PCCC cho người được giao nhiệm vụ kiểm tra phòng cháy chữa cháy tại cơ sở là bao nhiêu?
+    - Mỗi đợt bồi dưỡng nghiệp vụ PCCC CNCH cho người kiểm tra phòng cháy tại cơ sở kéo dài bao lâu?
+    - Thời gian bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ cho người được phân công kiểm tra PCCC cơ sở theo quy định hiện hành?
+
+- intent: boi_duong_3
+  examples: |
+    - Bồi dưỡng nghiệp vụ phòng cháy, chữa cháy, cứu nạn, cứu hộ được thực hiện định kỳ bao lâu 1 lần?
+    - Chu kỳ bồi dưỡng nghiệp vụ PCCC CNCH định kỳ là bao lâu một lần?
+    - Bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ định kỳ mấy năm một lần?
+    - Quy định tần suất bồi dưỡng nghiệp vụ PCCC CNCH định kỳ là bao nhiêu năm?
+    - Cho tôi biết chu kỳ định kỳ tổ chức bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ?
+    - Xin hỏi bao lâu thì phải tổ chức bồi dưỡng nghiệp vụ PCCC CNCH định kỳ một lần?
+    - Theo quy định, bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ định kỳ bao lâu một lần?
+    - Đơn vị tôi cần tổ chức bồi dưỡng nghiệp vụ PCCC CNCH định kỳ theo chu kỳ bao nhiêu năm?
+    - Chúng tôi cần biết bồi dưỡng nghiệp vụ PCCC CNCH định kỳ thực hiện mấy lần trong một năm?
+    - Tần suất bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ định kỳ theo quy định là bao nhiêu?
+    - Cơ sở phải tổ chức bồi dưỡng nghiệp vụ PCCC CNCH định kỳ với chu kỳ như thế nào?
+    - Bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ được tổ chức định kỳ theo chu kỳ nào?
+    - Quy định về chu kỳ bồi dưỡng nghiệp vụ PCCC CNCH định kỳ theo pháp luật hiện hành?
+    - boi duong nghiep vu pccc cnch dinh ky bao lau mot lan theo quy dinh?
+    - chu ky boi duong nghiep vu phong chay chua chay cuu nan cuu ho la bao nhieu nam?
+    - tan suat to chuc boi duong nghiep vu pccc cnch dinh ky la bao nhieu?
+    - bao lau thi phai to chuc boi duong nghiep vu pccc cnch dinh ky mot lan?
+    - Cho hỏi quy định tần suất bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ định kỳ là bao lâu?
+    - Pháp luật quy định chu kỳ tổ chức bồi dưỡng nghiệp vụ PCCC CNCH định kỳ là bao nhiêu năm?
+    - Bồi dưỡng nghiệp vụ PCCC CNCH được tổ chức mấy năm một lần theo quy định hiện hành?
+    - Định kỳ mấy năm một lần phải tổ chức bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ?
+    - Theo quy định, chu kỳ bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ định kỳ là bao lâu?
+
+- intent: boi_duong_4
+  examples: |
+    - Thời gian bồi dưỡng nghiệp vụ phòng cháy, chữa cháy, cứu nạn, cứu hộ cho Trưởng thôn?
+    - Trưởng thôn phải tham gia bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ trong bao lâu?
+    - Thời lượng bồi dưỡng nghiệp vụ PCCC CNCH dành cho Trưởng thôn là bao nhiêu giờ?
+    - Quy định thời gian bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ cho Trưởng thôn là gì?
+    - Cho tôi biết thời gian bồi dưỡng nghiệp vụ PCCC CNCH bắt buộc dành cho Trưởng thôn theo quy định?
+    - Xin hỏi Trưởng thôn cần học bồi dưỡng nghiệp vụ phòng cháy chữa cháy trong bao lâu theo quy định?
+    - Theo quy định, thời gian bồi dưỡng nghiệp vụ PCCC CNCH dành cho Trưởng thôn là bao nhiêu?
+    - Trưởng thôn tham gia bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ bao nhiêu tiếng?
+    - Thời gian tối thiểu Trưởng thôn cần bồi dưỡng nghiệp vụ PCCC CNCH theo quy định là bao lâu?
+    - Pháp luật quy định thời gian bồi dưỡng nghiệp vụ phòng cháy chữa cháy cho Trưởng thôn là bao nhiêu giờ?
+    - Quy định số giờ bồi dưỡng nghiệp vụ PCCC CNCH cho Trưởng thôn theo pháp luật hiện hành?
+    - Mỗi đợt bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ cho Trưởng thôn kéo dài bao lâu?
+    - Trưởng thôn học bồi dưỡng nghiệp vụ PCCC CNCH theo chương trình có thời lượng như thế nào?
+    - thoi gian boi duong nghiep vu pccc cnch cho truong thon la bao nhieu?
+    - truong thon phai tham gia boi duong nghiep vu phong chay chua chay trong bao lau?
+    - so gio boi duong nghiep vu pccc cnch danh cho truong thon theo quy dinh?
+    - quy dinh thoi gian boi duong nghiep vu phong chay chua chay cuu nan cuu ho cho truong thon?
+    - Cho hỏi quy định thời gian bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ cho Trưởng thôn?
+    - Thời lượng chương trình bồi dưỡng nghiệp vụ PCCC CNCH bắt buộc cho Trưởng thôn theo quy định là bao nhiêu?
+    - Trưởng thôn phải hoàn thành bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ trong thời gian bao lâu?
+    - Theo quy định hiện hành, thời gian bồi dưỡng nghiệp vụ PCCC CNCH cho Trưởng thôn là bao nhiêu giờ?
+
+- intent: boi_duong_5
+  examples: |
+    - Có quy định cụ thể về thời gian tham gia bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ của thành viên Đội PCCC CNCH cơ sở không?
+    - Thành viên Đội PCCC CNCH cơ sở có quy định thời gian bồi dưỡng nghiệp vụ cụ thể không?
+    - Pháp luật có quy định thời gian bồi dưỡng nghiệp vụ cho thành viên Đội PCCC CNCH cơ sở không?
+    - Có văn bản pháp luật nào quy định thời gian bồi dưỡng nghiệp vụ PCCC CNCH cho thành viên đội cơ sở không?
+    - Liệu có quy định rõ thời lượng bồi dưỡng nghiệp vụ cho thành viên Đội PCCC CNCH cơ sở không?
+    - Pháp luật PCCC có quy định cụ thể thời lượng bồi dưỡng nghiệp vụ cho thành viên đội cơ sở không?
+    - Xin hỏi pháp luật có quy định thời gian bồi dưỡng nghiệp vụ cho thành viên Đội PCCC CNCH cơ sở không?
+    - Đơn vị tôi muốn biết có văn bản nào quy định cụ thể thời gian bồi dưỡng nghiệp vụ PCCC CNCH cho thành viên đội cơ sở không?
+    - Có hướng dẫn pháp luật nào xác định rõ thời gian bồi dưỡng nghiệp vụ PCCC CNCH cho thành viên đội cơ sở không?
+    - Quy định pháp luật có đưa ra con số cụ thể về thời gian bồi dưỡng nghiệp vụ PCCC CNCH cho thành viên Đội cơ sở không?
+    - co quy dinh cu the ve thoi gian boi duong nghiep vu pccc cnch cho thanh vien doi co so khong?
+    - phap luat co quy dinh thoi gian boi duong nghiep vu cho thanh vien doi pccc cnch co so khong?
+    - co van ban nao quy dinh ro thoi luong boi duong nghiep vu pccc cnch cho thanh vien doi co so khong?
+    - lieu co quy dinh cu the thoi gian boi duong nghiep vu cho thanh vien doi pccc cnch co so khong?
+    - Cho hỏi có quy định cụ thể về thời gian bồi dưỡng nghiệp vụ PCCC CNCH cho thành viên Đội phòng cháy chữa cháy và cứu nạn cứu hộ cơ sở không?
+    - Pháp luật có văn bản nào quy định rõ thời gian tham gia bồi dưỡng nghiệp vụ PCCC CNCH của thành viên Đội cơ sở không?
+    - Quy định pháp luật hiện hành có nêu rõ số giờ bồi dưỡng nghiệp vụ PCCC CNCH của thành viên Đội PCCC cơ sở không?
+    - Một thành viên Đội PCCC CNCH cơ sở có bị ràng buộc bởi quy định thời gian bồi dưỡng nghiệp vụ không?
+
+- intent: boi_duong_6
+  examples: |
+    - Quy định thời gian bồi dưỡng nghiệp vụ phòng cháy, chữa cháy, cứu nạn, cứu hộ cho thành viên Đội phòng cháy, chữa cháy và cứu nạn, cứu hộ chuyên ngành?
+    - Thành viên Đội PCCC CNCH chuyên ngành phải tham gia bồi dưỡng nghiệp vụ trong bao lâu?
+    - Thời lượng bồi dưỡng nghiệp vụ PCCC CNCH cho thành viên đội phòng cháy chữa cháy chuyên ngành là bao nhiêu?
+    - Cho tôi biết thời gian bồi dưỡng nghiệp vụ PCCC CNCH dành cho thành viên đội chuyên ngành theo quy định?
+    - Xin hỏi thành viên Đội PCCC CNCH chuyên ngành học bồi dưỡng nghiệp vụ phòng cháy chữa cháy bao nhiêu giờ?
+    - Theo quy định, thành viên đội phòng cháy chữa cháy cứu nạn cứu hộ chuyên ngành được bồi dưỡng trong bao lâu?
+    - Đơn vị tôi có đội PCCC CNCH chuyên ngành, thời gian bồi dưỡng nghiệp vụ cho họ là bao nhiêu theo quy định?
+    - Quy định số giờ bồi dưỡng nghiệp vụ PCCC CNCH cho thành viên Đội phòng cháy chữa cháy chuyên ngành?
+    - Thành viên Đội phòng cháy chữa cháy và cứu nạn cứu hộ chuyên ngành phải bồi dưỡng nghiệp vụ bao nhiêu tiếng?
+    - Pháp luật quy định thời gian bồi dưỡng nghiệp vụ PCCC CNCH cho thành viên đội chuyên ngành là bao nhiêu?
+    - Chương trình bồi dưỡng nghiệp vụ PCCC CNCH cho thành viên đội chuyên ngành có thời lượng bao lâu?
+    - Thời gian tối thiểu bồi dưỡng nghiệp vụ phòng cháy chữa cháy cho thành viên đội PCCC chuyên ngành?
+    - Mỗi đợt bồi dưỡng nghiệp vụ PCCC CNCH cho thành viên đội chuyên ngành kéo dài bao lâu theo quy định?
+    - thoi gian boi duong nghiep vu pccc cnch cho thanh vien doi chuyen nganh la bao nhieu?
+    - thanh vien doi pccc cnch chuyen nganh phai boi duong nghiep vu trong bao lau?
+    - so gio boi duong nghiep vu cho thanh vien doi phong chay chua chay cuu nan cuu ho chuyen nganh?
+    - quy dinh thoi luong boi duong nghiep vu pccc cnch danh cho doi chuyen nganh la gi?
+    - Cho hỏi quy định thời gian bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ cho thành viên Đội PCCC CNCH chuyên ngành?
+    - Thời gian bồi dưỡng nghiệp vụ PCCC CNCH bắt buộc cho thành viên đội phòng cháy chữa cháy chuyên ngành theo quy định hiện hành?
+    - Quy định pháp luật về thời gian bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ cho thành viên Đội PCCC CNCH chuyên ngành là bao nhiêu giờ?
+    - Thành viên Đội phòng cháy chữa cháy và cứu nạn cứu hộ chuyên ngành hoàn thành bồi dưỡng nghiệp vụ trong thời gian bao lâu?
+
+- intent: boi_duong_7
+  examples: |
+    - Bao lâu sẽ có đợt bồi dưỡng nghiệp vụ phòng cháy, chữa cháy, cứu nạn, cứu hộ?
+    - Định kỳ bao lâu có một đợt bồi dưỡng nghiệp vụ PCCC CNCH?
+    - Mấy năm một lần tổ chức đợt bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ?
+    - Chu kỳ tổ chức đợt bồi dưỡng nghiệp vụ PCCC CNCH theo quy định là bao lâu?
+    - Cho tôi biết bao lâu có một đợt bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ?
+    - Xin hỏi đợt bồi dưỡng nghiệp vụ PCCC CNCH được tổ chức bao lâu một lần?
+    - Theo quy định, các đợt bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ diễn ra bao lâu một lần?
+    - Đơn vị tôi cần biết bao lâu phải tổ chức một đợt bồi dưỡng nghiệp vụ PCCC CNCH?
+    - Chúng tôi muốn biết tần suất tổ chức các đợt bồi dưỡng nghiệp vụ phòng cháy chữa cháy là bao lâu?
+    - Các đợt bồi dưỡng nghiệp vụ PCCC CNCH theo quy định được tổ chức với chu kỳ như thế nào?
+    - Tần suất tổ chức đợt bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ theo quy định?
+    - Quy định về chu kỳ tổ chức đợt bồi dưỡng nghiệp vụ PCCC CNCH hiện nay là bao nhiêu năm?
+    - Cơ sở phải tổ chức đợt bồi dưỡng nghiệp vụ phòng cháy chữa cháy định kỳ bao lâu một lần?
+    - bao lau co mot dot boi duong nghiep vu pccc cnch theo quy dinh?
+    - dinh ky bao lau to chuc dot boi duong nghiep vu phong chay chua chay cuu nan cuu ho?
+    - chu ky to chuc dot boi duong nghiep vu pccc cnch la bao nhieu nam?
+    - may nam mot lan thi co dot boi duong nghiep vu phong chay chua chay?
+    - Cho hỏi bao lâu có một đợt bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ theo quy định?
+    - Pháp luật quy định bao lâu tổ chức một đợt bồi dưỡng nghiệp vụ PCCC CNCH?
+    - Đợt bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ được tổ chức theo chu kỳ bao lâu một lần?
+    - Theo quy định hiện hành, tần suất tổ chức các đợt bồi dưỡng nghiệp vụ PCCC CNCH là bao lâu?
+    - Cứ bao nhiêu năm thì tổ chức một đợt bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ?
+
+- intent: boi_duong_8
+  examples: |
+    - Tổ chức bồi dưỡng nghiệp vụ phòng cháy, chữa cháy, cứu nạn, cứu hộ 2 năm một lần đúng không?
+    - Bồi dưỡng nghiệp vụ PCCC CNCH có phải tổ chức 2 năm một lần không?
+    - Có đúng là bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ định kỳ 2 năm một lần không?
+    - Chu kỳ bồi dưỡng nghiệp vụ PCCC CNCH có phải là 2 năm không?
+    - Cho tôi biết bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ có được tổ chức 2 năm một lần không?
+    - Xin hỏi quy định bồi dưỡng nghiệp vụ PCCC CNCH 2 năm một lần có đúng không?
+    - Theo quy định, bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ có chu kỳ 2 năm một lần phải không?
+    - Đơn vị tôi nghe nói bồi dưỡng nghiệp vụ PCCC CNCH 2 năm một lần, điều đó có đúng không?
+    - Chúng tôi muốn xác nhận bồi dưỡng nghiệp vụ PCCC CNCH có phải định kỳ 2 năm không?
+    - Phải chăng bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ tổ chức 2 năm một lần?
+    - Bồi dưỡng nghiệp vụ PCCC CNCH định kỳ 2 năm một lần có đúng với quy định pháp luật không?
+    - Quy định bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ có phải chu kỳ 2 năm không?
+    - Tôi muốn xác nhận chu kỳ bồi dưỡng nghiệp vụ PCCC CNCH là 2 năm một lần có đúng không?
+    - to chuc boi duong nghiep vu pccc cnch 2 nam mot lan dung khong?
+    - boi duong nghiep vu phong chay chua chay cuu nan cuu ho co phai dinh ky 2 nam khong?
+    - chu ky boi duong nghiep vu pccc cnch co phai la 2 nam mot lan khong?
+    - quy dinh boi duong nghiep vu pccc cnch 2 nam mot lan co chinh xac khong?
+    - Cho hỏi bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ có tổ chức 2 năm một lần theo quy định không?
+    - Pháp luật có quy định bồi dưỡng nghiệp vụ PCCC CNCH định kỳ 2 năm một lần không?
+    - Có phải theo quy định bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ được tổ chức 2 năm một lần?
+    - Xác nhận giúp tôi: bồi dưỡng nghiệp vụ PCCC CNCH có chu kỳ 2 năm một lần đúng không?
+    - Bồi dưỡng nghiệp vụ phòng cháy chữa cháy cứu nạn cứu hộ theo quy định hiện hành có phải 2 năm một lần không?

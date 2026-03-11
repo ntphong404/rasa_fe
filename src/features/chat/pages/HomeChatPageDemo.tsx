@@ -85,10 +85,12 @@ export function HomeChatDemo() {
     currentConversationId,
     startNewConversation,
     loadConversationHistory,
+    addMessage,
+    updateLastMessage,
   } = chatHook;
 
-  // Khi đã có tin nhắn, muốn khung chat lớn hơn và cố định chiều cao
-  const chatHeightClass = messages && messages.length > 0 ? 'h-[400px] md:h-[465px]' : 'h-[200px] md:h-[300px]';
+  // Fill entire screen with flex
+  const chatHeightClass = 'flex-1';
 
   // Fetch uploaded documents on mount
   useEffect(() => {
@@ -165,7 +167,41 @@ export function HomeChatDemo() {
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || loading) return;
 
-    // Normal Rasa chat only
+    console.log("📝 handleSendMessage called with:", inputMessage.trim());
+    
+    // Check for test mode
+    if (inputMessage.trim().toLowerCase() === "/test") {
+      console.log("✅ /test mode detected!");
+      // Add user message
+      addMessage({
+        recipient_id: userId,
+        text: inputMessage.trim(),
+      });
+
+      setInputMessage("");
+
+      // Add empty bot response first
+      addMessage({
+        recipient_id: "bot",
+        text: "",
+      });
+
+      // Stream bot response with typing effect
+      const testResponse = "🧪 Test Mode Active\n\nĐây là một tin nhắn test để kiểm tra giao diện chat. Bạn có thể sử dụng lệnh /test mà không cần kết nối đến Rasa server.\n\n✅ Streaming effect đang hoạt động!\n✅ Các tin nhắn đang hiển thị từng chữ một\n✅ Không gửi đến Rasa chatbot server";
+
+      let displayedText = "";
+      for (let i = 0; i < testResponse.length; i++) {
+        displayedText += testResponse[i];
+        updateLastMessage(displayedText);
+        await new Promise((resolve) => setTimeout(resolve, 30)); // 30ms delay per character
+      }
+
+      return;
+    }
+
+    console.log("❌ NOT test mode, calling sendMessage for:", inputMessage.trim());
+
+    // Normal Rasa chat
     const messageData = {
       message: inputMessage.trim(),
       userId: userId,
@@ -243,13 +279,13 @@ export function HomeChatDemo() {
       </div>
 
       {/* Main Content */}
-      <main className="relative flex flex-col items-center justify-center p-3 md:p-4 max-h-screen overflow-hidden">
-        <div className="max-w-4xl w-full flex flex-col gap-3 min-h-0 justify-center py-2">
+      <main className="relative flex flex-col w-full h-screen p-3 md:p-4 overflow-hidden">
+        <div className="w-full flex flex-col gap-3 min-h-0 flex-1">
           {/* Header removed as requested */}
 
           {/* Chat Area */}
           <div
-            className={`rounded-3xl flex flex-col ${chatHeightClass} relative flex-shrink overflow-hidden`}
+            className={`rounded-3xl flex flex-col ${chatHeightClass} relative overflow-hidden`}
             style={{
               background: "rgba(255, 255, 255, 0.8)",
               backdropFilter: "blur(15px)",

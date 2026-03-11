@@ -295,7 +295,7 @@ export function CreateDataPage() {
                         <p className="text-sm text-muted-foreground">Tạo nhóm câu hỏi, câu trả lời và liên kết chúng với nhau</p>
                     </div>
                     <div className="ml-auto flex items-center gap-4">
-                        <Button variant="outline" size="sm" onClick={() => navigate('/add-data/import')}>Nhập từ Excel</Button>
+                        <Button variant="outline" size="sm" onClick={() => navigate('/add-data/import')}>Nhập từ File</Button>
                     </div>
                 </div>
 

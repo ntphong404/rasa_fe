@@ -13,6 +13,8 @@ export type UseChatReturn = {
   clearError: () => void;
   loadConversationHistory: (conversation: IConversation) => void;
   startNewConversation: () => void;
+  addMessage: (message: IChatMessage) => void;
+  updateLastMessage: (text: string) => void;
 };
 
 export const useChat = (chatbotId: string): UseChatReturn => {
@@ -121,6 +123,22 @@ export const useChat = (chatbotId: string): UseChatReturn => {
     setError(null);
   }, []);
 
+  const addMessage = useCallback((message: IChatMessage) => {
+    setMessages(prev => [...prev, message]);
+  }, []);
+
+  const updateLastMessage = useCallback((text: string) => {
+    setMessages(prev => {
+      if (prev.length === 0) return prev;
+      const updated = [...prev];
+      updated[updated.length - 1] = {
+        ...updated[updated.length - 1],
+        text
+      };
+      return updated;
+    });
+  }, []);
+
   return {
     messages,
     loading,
@@ -131,5 +149,7 @@ export const useChat = (chatbotId: string): UseChatReturn => {
     clearError,
     loadConversationHistory,
     startNewConversation,
+    addMessage,
+    updateLastMessage,
   };
 };

@@ -116,8 +116,9 @@ export async function parseResponseYAML(text: string): Promise<ResponseMap> {
 
         if (!inResponsesSection) continue;
 
-        // Match utterance names (e.g., "utter_ask_program:")
-        if (trimmed.match(/^[a-z_]+:$/) && trimmed.startsWith('utter_')) {
+        // Match utterance names (e.g., "utter_ask_program:", "utter_boi_duong_1:")
+        // Accept lowercase letters, digits (0-9), and underscores
+        if (trimmed.match(/^[a-z0-9_]+:$/) && trimmed.startsWith('utter_')) {
             currentUtter = trimmed.slice(0, -1);
             continue;
         }
