@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -26,9 +26,12 @@ import { ChevronRight, MessageSquare, Loader2, MoreHorizontal, Share2, Edit, Pin
 import { chatService } from "@/features/chat/api/service";
 import { useAuthStore } from "@/store/auth";
 import { IConversation } from "@/interfaces/chat.interface";
+import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
 
 export function NavConversations() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const currentConversationId = searchParams.get("conversationId");
   const user = useAuthStore((state) => state.user);
   const [conversations, setConversations] = useState<IConversation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -38,6 +41,8 @@ export function NavConversations() {
   const [isOpen, setIsOpen] = useState(false);
   const isLoadingRef = useRef(false);
   const [hoveredConversationId, setHoveredConversationId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
 
   // Load conversations
   const loadConversations = useCallback(async (pageNum: number = 1, shouldAppend: boolean = false) => {
@@ -113,24 +118,33 @@ export function NavConversations() {
     navigate(`/?conversationId=${conversationId}`);
   };
 
-  const handleDeleteConversation = async (conversationId: string, e: React.MouseEvent) => {
+  const handleDeleteClick = (conversationId: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent navigation
-    
-    if (!window.confirm("Bạn có chắc chắn muốn xóa cuộc hội thoại này?")) {
-      return;
-    }
+    setConversationToDelete(conversationId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!conversationToDelete) return;
 
     try {
       // Optimistic update - remove from UI immediately
-      setConversations(prev => prev.filter(c => c._id !== conversationId));
+      setConversations(prev => prev.filter(c => c._id !== conversationToDelete));
       
       // Call API to delete
-      await chatService.deleteConversation(conversationId);
+      await chatService.deleteConversation(conversationToDelete);
       console.log("Conversation deleted successfully");
+      
+      // If user is viewing this conversation, navigate to home
+      if (currentConversationId && conversationToDelete === currentConversationId) {
+        console.log("Deleted current conversation, navigating to home");
+        navigate("/");
+      }
     } catch (error) {
       console.error("Failed to delete conversation:", error);
       // Reload conversations on error
       loadConversations(1, false);
+      throw error;
     }
   };
 
@@ -150,7 +164,13 @@ export function NavConversations() {
   if (!user?._id) return null;
 
   return (
-    <SidebarGroup>
+    <>
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+      />
+      <SidebarGroup>
       <SidebarGroupLabel>Lịch sử</SidebarGroupLabel>
       <SidebarMenu>
         <Collapsible 
@@ -230,7 +250,7 @@ export function NavConversations() {
                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
                                 variant="destructive"
-                                onClick={(e) => handleDeleteConversation(conversation._id, e)}
+                                onClick={(e) => handleDeleteClick(conversation._id, e)}
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 <span>Xóa</span>
@@ -268,5 +288,6 @@ export function NavConversations() {
         </Collapsible>
       </SidebarMenu>
     </SidebarGroup>
+    </>
   );
 }

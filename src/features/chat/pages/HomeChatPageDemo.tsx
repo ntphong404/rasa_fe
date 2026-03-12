@@ -143,6 +143,14 @@ export function HomeChatDemo() {
     loadConversationFromUrl();
   }, [conversationIdFromUrl, userId, loadConversationHistory]);
 
+  // Clear messages when navigating away from a conversation
+  useEffect(() => {
+    if (!conversationIdFromUrl && messages.length > 0) {
+      console.log("No conversationId in URL, clearing messages");
+      startNewConversation();
+    }
+  }, [conversationIdFromUrl]);
+
   // Khởi tạo conversation mới khi component mount và chưa có conversationId
   useEffect(() => {
     if (contextChat.isNewChat && !contextChat.conversationId && !currentConversationId && !conversationIdFromUrl) {
