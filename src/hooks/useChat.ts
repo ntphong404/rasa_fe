@@ -3,6 +3,8 @@ import { chatService } from "@/features/chat/api/service";
 import { IChatMessage, ISendMessageRequest, IConversation, IChatHistoryMessage } from "@/interfaces/chat.interface";
 import { generateConversationId } from "@/lib/uuid";
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export type UseChatReturn = {
   messages: IChatMessage[];
   loading: boolean;
@@ -91,13 +93,39 @@ export const useChat = (chatbotId: string): UseChatReturn => {
       const response = await chatService.sendMessage(chatbotId, completeMessageData);
       
       if (response.success && response.data) {
-        // Thêm tin nhắn phản hồi từ bot - sửa recipient_id để phân biệt với user
-        const botMessages = response.data.map(msg => ({
-          ...msg,
-          recipient_id: "bot" // Đảm bảo bot message có recipient_id = "bot"
-        }));
-        
-        setMessages(prev => [...prev, ...botMessages]);
+        // Stop loading indicator once first response is available, then render bot text progressively.
+        setLoading(false);
+
+        for (const msg of response.data) {
+          const botMessageBase: IChatMessage = {
+            ...msg,
+            recipient_id: "bot",
+            text: "",
+          };
+
+          setMessages((prev) => [...prev, botMessageBase]);
+
+          const fullText = msg.text || "";
+          if (!fullText) continue;
+
+          // Keep per-character typing feel while making long messages reasonably fast.
+          const delay = fullText.length > 600 ? 4 : fullText.length > 300 ? 8 : 14;
+          let displayed = "";
+          for (let i = 0; i < fullText.length; i++) {
+            displayed += fullText[i];
+            setMessages((prev) => {
+              if (prev.length === 0) return prev;
+              const updated = [...prev];
+              const lastIndex = updated.length - 1;
+              updated[lastIndex] = {
+                ...updated[lastIndex],
+                text: displayed,
+              };
+              return updated;
+            });
+            await sleep(delay);
+          }
+        }
       }
       
       return response;
