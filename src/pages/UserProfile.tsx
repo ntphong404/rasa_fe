@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -13,7 +14,20 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon, Eye, EyeOff } from "lucide-react";
+import {
+  AppWindow,
+  Archive,
+  Bell,
+  CalendarIcon,
+  Eye,
+  EyeOff,
+  RotateCcw,
+  Settings,
+  Shield,
+  SlidersHorizontal,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -32,6 +46,8 @@ import { cn } from "@/lib/utils";
 import { useMe } from "@/hooks/useMe";
 import { useAuthStore } from "@/store/auth";
 import { Calendar } from "@/components/ui/calendar";
+import { chatService } from "@/features/chat/api/service";
+import { IConversation } from "@/interfaces/chat.interface";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "Tên không được để trống"),
@@ -45,6 +61,7 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export const UserProfilePage = () => {
+  const { t } = useTranslation();
   //   const {
   //     getProfile,
   //     updateProfile,
@@ -54,7 +71,6 @@ export const UserProfilePage = () => {
 
   //   const user = useUserStore((state) => state.user);
   //   const setUser = useUserStore((state) => state.setUser);
-  const setUser = useAuthStore((state) => state.updateUser);
   const user = useAuthStore((state) => state.user);
 
   const { getMe, updateMe } = useMe();
@@ -74,6 +90,18 @@ export const UserProfilePage = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError] = useState("");
+  const [archivedConversations, setArchivedConversations] = useState<IConversation[]>([]);
+  const [loadingArchived, setLoadingArchived] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
+  const [busyConversationId, setBusyConversationId] = useState<string | null>(null);
+  const [clearingAll, setClearingAll] = useState(false);
+  const [openDataControlDialog, setOpenDataControlDialog] = useState(false);
+  const [dataControlTab, setDataControlTab] = useState<
+    "general" | "notice" | "personal" | "apps" | "data" | "security" | "account"
+  >("data");
+  const [unarchiveDialogOpen, setUnarchiveDialogOpen] = useState(false);
+  const [deleteArchivedDialogOpen, setDeleteArchivedDialogOpen] = useState(false);
+  const [selectedArchivedConversation, setSelectedArchivedConversation] = useState<IConversation | null>(null);
   const navigate = useNavigate();
 
   const {
@@ -92,7 +120,6 @@ export const UserProfilePage = () => {
       try {
         const userProfile = await getMe();
         if (!userProfile) return;
-        setUser(userProfile);
         reset({
           firstName: userProfile.firstName,
           phoneNumber: userProfile.phoneNumber,
@@ -106,13 +133,115 @@ export const UserProfilePage = () => {
     };
 
     fetchUserProfile();
-  }, [getMe, reset, setUser]);
+  }, [getMe, reset]);
+
+  const fetchArchivedConversations = async () => {
+    if (!user?._id) return;
+    setLoadingArchived(true);
+    try {
+      const response = await chatService.getArchivedConversations(user._id, {
+        page: 1,
+        limit: 50,
+        sort: "updatedAt,DESC",
+      });
+      if (response.success) {
+        setArchivedConversations(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to load archived conversations", error);
+      toast.error(t("Unable to load archived chats"));
+    } finally {
+      setLoadingArchived(false);
+    }
+  };
+
+  const getConversationTitle = (conversation: IConversation): string => {
+    if (conversation.title && conversation.title.trim()) return conversation.title.trim();
+    const firstUserMessage = conversation.chat.find((msg) => msg.role === "user");
+    if (firstUserMessage && typeof firstUserMessage.message === "string") {
+      return firstUserMessage.message.length > 48
+        ? `${firstUserMessage.message.substring(0, 48)}...`
+        : firstUserMessage.message;
+    }
+    return new Date(conversation.createdAt).toLocaleDateString("vi-VN");
+  };
+
+  const handleUnarchive = async (conversationId: string) => {
+    setBusyConversationId(conversationId);
+    try {
+      await chatService.archiveConversation(conversationId, false);
+      setArchivedConversations((prev) => prev.filter((item) => item._id !== conversationId));
+      toast.success(t("Conversation unarchived successfully"));
+    } catch (error) {
+      console.error("Failed to unarchive conversation", error);
+      toast.error(t("Unable to unarchive conversation"));
+    } finally {
+      setBusyConversationId(null);
+    }
+  };
+
+  const handleDeleteArchivedConversation = async (conversationId: string) => {
+    setBusyConversationId(conversationId);
+    try {
+      await chatService.deleteConversation(conversationId);
+      setArchivedConversations((prev) => prev.filter((item) => item._id !== conversationId));
+      toast.success(t("Conversation deleted successfully"));
+    } catch (error) {
+      console.error("Failed to delete archived conversation", error);
+      toast.error(t("Unable to delete conversation"));
+    } finally {
+      setBusyConversationId(null);
+    }
+  };
+
+  const openUnarchiveDialog = (conversation: IConversation) => {
+    setSelectedArchivedConversation(conversation);
+    setUnarchiveDialogOpen(true);
+  };
+
+  const openDeleteArchivedDialog = (conversation: IConversation) => {
+    setSelectedArchivedConversation(conversation);
+    setDeleteArchivedDialogOpen(true);
+  };
+
+  const confirmUnarchiveConversation = async () => {
+    if (!selectedArchivedConversation) return;
+    await handleUnarchive(selectedArchivedConversation._id);
+    setUnarchiveDialogOpen(false);
+    setSelectedArchivedConversation(null);
+  };
+
+  const confirmDeleteArchivedConversation = async () => {
+    if (!selectedArchivedConversation) return;
+    await handleDeleteArchivedConversation(selectedArchivedConversation._id);
+    setDeleteArchivedDialogOpen(false);
+    setSelectedArchivedConversation(null);
+  };
+
+  const handleClearAllHistory = async () => {
+    if (!user?._id) return;
+    const confirmed = window.confirm(
+      t("Are you sure you want to delete all chat history? This action cannot be undone.")
+    );
+    if (!confirmed) return;
+
+    setClearingAll(true);
+    try {
+      const response = await chatService.clearAllConversations(user._id);
+      toast.success(t("Deleted {{count}} conversations", { count: response.data.deletedCount }));
+      setArchivedConversations([]);
+    } catch (error) {
+      console.error("Failed to clear all conversation history", error);
+      toast.error(t("Unable to clear all chat history"));
+    } finally {
+      setClearingAll(false);
+    }
+  };
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
       const updatedUser = await updateMe(data);
       if (!updatedUser) return;
-      setUser(updatedUser);
       toast.success("Cập nhật thông tin thành công");
       setIsEditing(false);
       window.location.reload();
@@ -335,6 +464,193 @@ export const UserProfilePage = () => {
         </div>
       </div>
 
+      <div className="bg-white rounded-xl shadow p-6 transition-all duration-300 dark:bg-gray-800 dark:text-white">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base md:text-lg font-semibold">Lịch sử chat đã lưu trữ</h3>
+            <p className="text-sm text-muted-foreground">
+              {t("Manage your conversation data in one place")}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setOpenDataControlDialog(true)}>
+              <Archive className="h-4 w-4 mr-2" />
+              {t("Open data controls")}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <Dialog
+        open={openDataControlDialog}
+        onOpenChange={(open) => {
+          setOpenDataControlDialog(open);
+          if (!open) {
+            setShowArchived(false);
+            setDataControlTab("data");
+          }
+        }}
+      >
+        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-card text-card-foreground">
+          <div className="grid grid-cols-[240px_1fr] min-h-[560px]">
+            <aside className="border-r bg-muted/40 p-4">
+              <div className="space-y-1">
+                {[
+                  { key: "general", label: t("General"), icon: Settings },
+                  { key: "notice", label: t("Notifications"), icon: Bell },
+                  { key: "personal", label: t("Personalization"), icon: SlidersHorizontal },
+                  { key: "apps", label: t("Apps"), icon: AppWindow },
+                  { key: "data", label: t("Data controls"), icon: Archive },
+                  { key: "security", label: t("Security"), icon: Shield },
+                  { key: "account", label: t("Account"), icon: UserRound },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  const active = dataControlTab === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => setDataControlTab(item.key as typeof dataControlTab)}
+                      className={cn(
+                        "w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-left",
+                        active
+                          ? "bg-background shadow-sm font-medium"
+                          : "text-muted-foreground hover:bg-background/60"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </aside>
+
+            <section className="p-6">
+              <h3 className="text-2xl font-semibold mb-4">
+                {dataControlTab === "data"
+                  ? t("Data controls")
+                  : [
+                      { key: "general", title: t("General") },
+                      { key: "notice", title: t("Notifications") },
+                      { key: "personal", title: t("Personalization") },
+                      { key: "apps", title: t("Apps") },
+                      { key: "security", title: t("Security") },
+                      { key: "account", title: t("Account") },
+                    ].find((item) => item.key === dataControlTab)?.title}
+              </h3>
+
+              {dataControlTab !== "data" ? (
+                <div className="border rounded-lg p-6">
+                  <p className="text-sm text-muted-foreground">
+                    {t("This section is under development.")}
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y border rounded-lg">
+                <div className="flex items-center justify-between px-4 py-4">
+                  <div>
+                    <p className="font-medium">{t("Shared links")}</p>
+                    <p className="text-sm text-muted-foreground">{t("Manage links you have shared")}</p>
+                  </div>
+                  <Button variant="outline" onClick={() => toast.info(t("This feature is coming soon"))}>{t("Manage")}</Button>
+                </div>
+
+                <div className="px-4 py-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{t("Archived chats")}</p>
+                      <p className="text-sm text-muted-foreground">{t("View, unarchive, or delete archived conversations")}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        const next = !showArchived;
+                        setShowArchived(next);
+                        if (next) {
+                          await fetchArchivedConversations();
+                        }
+                      }}
+                    >
+                      {showArchived ? t("Hide") : t("Manage")}
+                    </Button>
+                  </div>
+
+                  {showArchived && (
+                    <div className="border rounded-lg divide-y max-h-[260px] overflow-auto">
+                      {loadingArchived ? (
+                        <div className="p-4 text-sm text-muted-foreground">{t("Loading archived chats...")}</div>
+                      ) : archivedConversations.length === 0 ? (
+                        <div className="p-4 text-sm text-muted-foreground">{t("No archived conversations.")}</div>
+                      ) : (
+                        archivedConversations.map((conversation) => (
+                          <div key={conversation._id} className="p-3 flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">{getConversationTitle(conversation)}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {t("Updated")}: {new Date(conversation.updatedAt).toLocaleString("vi-VN")}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openUnarchiveDialog(conversation)}
+                                disabled={busyConversationId === conversation._id}
+                              >
+                                <RotateCcw className="h-4 w-4 mr-1" />
+                                {t("Unarchive")}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => openDeleteArchivedDialog(conversation)}
+                                disabled={busyConversationId === conversation._id}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                {t("Delete")}
+                              </Button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between px-4 py-4">
+                  <div>
+                    <p className="font-medium">{t("Archive all chats")}</p>
+                    <p className="text-sm text-muted-foreground">{t("Bulk archive is not available yet")}</p>
+                  </div>
+                  <Button variant="outline" disabled>{t("Archive all")}</Button>
+                </div>
+
+                <div className="flex items-center justify-between px-4 py-4">
+                  <div>
+                    <p className="font-medium">{t("Delete all chats")}</p>
+                    <p className="text-sm text-muted-foreground">{t("Reset your conversation data")}</p>
+                  </div>
+                  <Button variant="destructive" onClick={handleClearAllHistory} disabled={clearingAll}>
+                    {clearingAll ? t("Deleting...") : t("Delete all")}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between px-4 py-4">
+                  <div>
+                    <p className="font-medium">{t("Export data")}</p>
+                    <p className="text-sm text-muted-foreground">{t("Download your conversation data")}</p>
+                  </div>
+                  <Button variant="outline" onClick={() => toast.info(t("This feature is coming soon"))}>{t("Export")}</Button>
+                </div>
+              </div>
+              )}
+            </section>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog Change Password */}
       <Dialog open={openPasswordDialog} onOpenChange={setOpenPasswordDialog}>
         <DialogContent className="bg-card text-card-foreground">
@@ -446,6 +762,62 @@ export const UserProfilePage = () => {
             // }}
             >
               Lưu
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={unarchiveDialogOpen}
+        onOpenChange={(open) => {
+          setUnarchiveDialogOpen(open);
+          if (!open) setSelectedArchivedConversation(null);
+        }}
+      >
+        <DialogContent className="bg-card text-card-foreground">
+          <DialogHeader>
+            <DialogTitle>Bỏ lưu trữ cuộc hội thoại</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Bạn có muốn bỏ lưu trữ cuộc hội thoại này để đưa lại vào danh sách lịch sử chính không?
+          </p>
+          {selectedArchivedConversation && (
+            <p className="text-sm font-medium truncate">{getConversationTitle(selectedArchivedConversation)}</p>
+          )}
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setUnarchiveDialogOpen(false)}>
+              Hủy
+            </Button>
+            <Button onClick={() => void confirmUnarchiveConversation()}>
+              Xác nhận bỏ lưu trữ
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={deleteArchivedDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteArchivedDialogOpen(open);
+          if (!open) setSelectedArchivedConversation(null);
+        }}
+      >
+        <DialogContent className="bg-card text-card-foreground">
+          <DialogHeader>
+            <DialogTitle>Xóa cuộc hội thoại đã lưu trữ</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Hành động này sẽ xóa vĩnh viễn cuộc hội thoại đã lưu trữ. Bạn có chắc chắn muốn tiếp tục?
+          </p>
+          {selectedArchivedConversation && (
+            <p className="text-sm font-medium truncate">{getConversationTitle(selectedArchivedConversation)}</p>
+          )}
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeleteArchivedDialogOpen(false)}>
+              Hủy
+            </Button>
+            <Button variant="destructive" onClick={() => void confirmDeleteArchivedConversation()}>
+              Xóa vĩnh viễn
             </Button>
           </DialogFooter>
         </DialogContent>

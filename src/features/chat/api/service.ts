@@ -39,6 +39,24 @@ export const chatService = {
     return response.data;
   },
 
+  getArchivedConversations: async (
+    userId: string,
+    params?: {
+      page?: number;
+      limit?: number;
+      sort?: string;
+    }
+  ): Promise<IConversationsResponse> => {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.sort) queryParams.append('sort', params.sort);
+
+    const url = `${ENDPOINTS.CHAT_ENDPOINTS.GET_ARCHIVED_CONVERSATIONS(userId)}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await axiosInstance.get(url);
+    return response.data;
+  },
+
   getConversationById: async (
     conversationId: string
   ): Promise<{ success: boolean; data: IConversation; message: string }> => {
@@ -53,6 +71,15 @@ export const chatService = {
   ): Promise<{ success: boolean; message: string }> => {
     const response = await axiosInstance.delete(
       ENDPOINTS.CHAT_ENDPOINTS.DELETE_CONVERSATION(conversationId)
+    );
+    return response.data;
+  },
+
+  clearAllConversations: async (
+    userId: string
+  ): Promise<{ success: boolean; message: string; data: { deletedCount: number } }> => {
+    const response = await axiosInstance.delete(
+      ENDPOINTS.CHAT_ENDPOINTS.CLEAR_ALL_CONVERSATIONS(userId)
     );
     return response.data;
   },

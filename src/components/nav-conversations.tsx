@@ -303,6 +303,10 @@ export function NavConversations() {
                               {getConversationTitle(conversation)}
                             </span>
                           </SidebarMenuSubButton>
+
+                          {conversation.pinned && (
+                            <Pin className="h-3.5 w-3.5 text-amber-500 shrink-0 rotate-45" />
+                          )}
                           
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>

@@ -2,25 +2,22 @@
 import { UpdateMeRequest } from "@/features/auth/api/dto/UpdateMeRequest";
 import { authService } from "@/features/auth/api/service";
 import { useAuthStore } from "@/store/auth";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 export const useMe = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    // const [user, setUser] = useState<IUser | null>(null);
-    const {updateUser} = useAuthStore();
+    const updateUser = useAuthStore((state) => state.updateUser);
     const user = useAuthStore((state) => state.user);
 
     // Lấy thông tin user hiện tại
-    const getMe = async () => {
+    const getMe = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
             const response = await authService.getMe();
             updateUser(response);
-            console.log("check info user", user);
-            
             return response;
         }
         catch (err: any) {
@@ -33,9 +30,9 @@ export const useMe = () => {
         finally {
             setIsLoading(false);
         }
-    };
+    }, [updateUser]);
 
-    const updateMe = async (data: UpdateMeRequest) => {
+    const updateMe = useCallback(async (data: UpdateMeRequest) => {
         setIsLoading(true);
         try {
             const response = await authService.updateMe(data);
@@ -51,7 +48,7 @@ export const useMe = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [updateUser]);
 
     return { isLoading, error, user, getMe, updateMe };
 }

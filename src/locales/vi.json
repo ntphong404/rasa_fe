@@ -54,7 +54,7 @@
   "More settings coming soon": "Sẽ sớm có thêm cài đặt",
   "Additional preferences will be added here in next updates": "Các tùy chọn khác sẽ được bổ sung tại đây ở các bản cập nhật tới",
   "Rules": "Rules",
-  "Actions": "Actions",
+  "Actions": "Thao tác",
   "Add to data": "Thêm vào dữ liệu",
   "Operations": "Thao tác",
   "Create Rule": "Tạo Luật",
@@ -288,7 +288,6 @@
   "No chatbot selected": "Chưa chọn chatbot nào",
   "on": "vào lúc",
   "Search documents": "Tìm kiếm văn bản",
-  "Filter Documents": "Lọc Văn bản",
   "Show deleted documents": "Hiển thị văn bản đã xóa",
   "Create Document": "Tạo Văn bản",
   "Document Name": "Tên Văn bản",
@@ -332,7 +331,6 @@
   "e.g. contract, invoice": "ví dụ: hợp đồng, hóa đơn",
   "intents / page": "intent / trang",
   "Other - Enter custom tag": "Khác - Nhập thẻ tùy chỉnh",
-  "Preview": "Xem trước",
   "Details": "Chi tiết",
   "No preview available": "Không có bản xem trước",
   "Invalid file type. Only PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX are allowed": "Loại file không hợp lệ. Chỉ chấp nhận PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX",
@@ -342,7 +340,6 @@
   "Type your message... (Shift+Enter for new line)": "Nhập tin nhắn... (Shift+Enter để xuống dòng)",
   "Use Document Context": "Sử dụng ngữ cảnh tài liệu",
   "Filter Documents": "Lọc tài liệu",
-  "All documents": "Tất cả tài liệu",
   "Sources": "Nguồn",
   "Score": "Điểm",
   "Page": "Trang",
@@ -428,6 +425,40 @@
   "Are you sure you want to delete this conversation? This action cannot be undone.": "Bạn có chắc muốn xóa cuộc hội thoại này không? Hành động này không thể hoàn tác.",
   "Conversation deleted successfully": "Đã xóa cuộc hội thoại thành công",
   "Failed to delete conversation": "Không thể xóa cuộc hội thoại",
+  "Manage your conversation data in one place": "Quản lý dữ liệu hội thoại trong một nơi",
+  "Open data controls": "Mở kiểm soát dữ liệu",
+  "Notifications": "Thông báo",
+  "Personalization": "Cá nhân hóa",
+  "Apps": "Ứng dụng",
+  "Data controls": "Kiểm soát dữ liệu",
+  "Security": "Bảo mật",
+  "This section is under development.": "Mục này đang được phát triển.",
+  "Shared links": "Liên kết được chia sẻ",
+  "Manage links you have shared": "Quản lý các liên kết bạn đã chia sẻ",
+  "Manage": "Quản lý",
+  "Archived chats": "Đoạn chat đã lưu trữ",
+  "View, unarchive, or delete archived conversations": "Xem, bỏ lưu trữ hoặc xóa các cuộc hội thoại đã lưu trữ",
+  "Hide": "Ẩn",
+  "Loading archived chats...": "Đang tải danh sách đã lưu trữ...",
+  "No archived conversations.": "Chưa có cuộc hội thoại nào đã lưu trữ.",
+  "Unarchive": "Bỏ lưu trữ",
+  "Archive all chats": "Lưu trữ tất cả đoạn chat",
+  "Bulk archive is not available yet": "Tạm thời chưa bật tính năng lưu trữ hàng loạt",
+  "Archive all": "Lưu trữ tất cả",
+  "Delete all chats": "Xóa tất cả đoạn chat",
+  "Reset your conversation data": "Đặt lại dữ liệu hội thoại của bạn",
+  "Deleting...": "Đang xóa...",
+  "Delete all": "Xóa tất cả",
+  "Export data": "Xuất dữ liệu",
+  "Download your conversation data": "Tải dữ liệu hội thoại về máy",
+  "This feature is coming soon": "Tính năng này sẽ bổ sung sau",
+  "Unable to load archived chats": "Không thể tải lịch sử đã lưu trữ",
+  "Conversation unarchived successfully": "Đã bỏ lưu trữ cuộc hội thoại",
+  "Unable to unarchive conversation": "Không thể bỏ lưu trữ cuộc hội thoại",
+  "Unable to delete conversation": "Không thể xóa cuộc hội thoại",
+  "Are you sure you want to delete all chat history? This action cannot be undone.": "Bạn có chắc muốn xóa toàn bộ lịch sử chat? Hành động này không thể hoàn tác.",
+  "Deleted {{count}} conversations": "Đã xóa {{count}} cuộc hội thoại",
+  "Unable to clear all chat history": "Không thể xóa toàn bộ lịch sử chat",
   "Are you sure you want to delete this item? This action cannot be undone.": "Bạn có chắc muốn xóa mục này không? Hành động này không thể hoàn tác.",
   "Moved to trash successfully": "Đã chuyển vào thùng rác thành công",
   "Move to trash failed. Please try again.": "Chuyển vào thùng rác thất bại. Vui lòng thử lại.",
@@ -523,7 +554,6 @@
   ,"Supported: XLSX, CSV, TSV": "Hỗ trợ: XLSX, CSV, TSV"
   ,"Drop files here or click to select": "Thả file vào đây hoặc bấm để chọn"
   ,"Excel guide: Download template and fill data manually": "Excel: Tải file mẫu và điền dữ liệu thủ công"
-  ,"Selected": "Đã chọn"
   ,"Choose NLU file (.yaml)": "Chọn file NLU (.yaml)"
   ,"Contains intent definitions and examples": "Chứa định nghĩa intent và ví dụ"
   ,"Choose Domain/Response file (.yaml)": "Chọn file Domain/Response (.yaml)"
@@ -538,7 +568,6 @@
   ,"Generating...": "Đang tạo..."
   ,"Generate more question groups": "Tạo thêm nhóm câu hỏi"
   ,"Select": "Chọn"
-  ,"Actions": "Thao tác"
   ,"Answer": "Câu trả lời"
   ,"question_group_name": "ten_nhom_cau_hoi"
   ,"Enter answer...": "Nhập câu trả lời..."
@@ -564,7 +593,6 @@
   ,"Saving...": "Đang lưu..."
   ,"Generate questions automatically": "Tạo câu hỏi tự động"
   ,"Clear all questions": "Xóa tất cả câu hỏi"
-  ,"Help": "Trợ giúp"
   ,"Usage guide": "Hướng dẫn sử dụng"
   ,"What is a question group?": "Nhóm câu hỏi là gì?"
   ,"A question group represents a user intent (what users may ask). Similar questions help the system recognize that group.": "Nhóm câu hỏi đại diện cho ý định người dùng (những gì họ có thể hỏi). Các câu hỏi tương tự giúp hệ thống nhận diện nhóm này."
@@ -580,13 +608,11 @@
   ,"Select chatbot...": "Chọn chatbot..."
   ,"General": "Thường"
   ,"Add data": "Thêm dữ liệu"
-  ,"View details": "Xem chi tiết"
   ,"Expert": "Chuyên gia"
   ,"Training": "Huấn luyện"
   ,"Context documents": "Tài liệu ngữ cảnh"
   ,"Statistics reports": "Báo cáo thống kê"
   ,"Conversations": "Cuộc hội thoại"
-  ,"System": "Hệ thống"
   ,"Unable to send message. Please try again.": "Không thể gửi tin nhắn. Vui lòng thử lại."
   ,"Sorry, I cannot respond right now. Please try again later.": "Xin lỗi, tôi không thể phản hồi lúc này. Vui lòng thử lại sau."
   ,"Switched to normal chat mode": "Đã chuyển sang chế độ Chat thường"
@@ -609,7 +635,6 @@
   ,"Chat with Rasa bot for general questions and standard support": "Chat với Rasa bot để trả lời câu hỏi chung và hỗ trợ thông thường"
   ,"Chat with AI based on uploaded documents for specific questions": "Chat với AI dựa trên tài liệu đã upload để trả lời câu hỏi cụ thể"
   ,"Select documents (optional)": "Chọn tài liệu (tùy chọn)"
-  ,"All documents": "Tất cả tài liệu"
   ,"No documents yet. Please upload documents before using RAG Chat.": "Chưa có tài liệu nào. Vui lòng upload tài liệu trước khi sử dụng RAG Chat."
   ,"Start": "Bắt đầu"
   ,"More": "Thêm"

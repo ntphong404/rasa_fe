@@ -145,10 +145,14 @@ export default {
     SEND_MESSAGE: (id: string) => `/api/v1/chatbot/${id}/chat`,
     GET_CONVERSATIONS: (userId: string) =>
       `/api/v1/conversation/user/${userId}`,
+    GET_ARCHIVED_CONVERSATIONS: (userId: string) =>
+      `/api/v1/conversation/user/${userId}/archived`,
     GET_CONVERSATION_BY_ID: (conversationId: string) =>
       `/api/v1/conversation/${conversationId}`,
     DELETE_CONVERSATION: (conversationId: string) =>
       `/api/v1/conversation/${conversationId}`,
+    CLEAR_ALL_CONVERSATIONS: (userId: string) =>
+      `/api/v1/conversation/user/${userId}/clear`,
     RENAME_CONVERSATION: (conversationId: string) =>
       `/api/v1/conversation/${conversationId}/rename`,
     PIN_CONVERSATION: (conversationId: string) =>
