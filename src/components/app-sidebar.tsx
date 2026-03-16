@@ -167,11 +167,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           {
             title: t("Roles"),
-            url: "roles",
+            url: "/roles",
           },
           {
             title: t("Permissions"),
-            url: "permissions",
+            url: "/permissions",
           },
         ],
       },
@@ -183,7 +183,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           {
             title: t("Users"),
-            url: "users",
+            url: "/users",
           },
         ],
       },

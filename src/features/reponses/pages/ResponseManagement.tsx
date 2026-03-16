@@ -38,7 +38,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { IMyResponse } from "@/interfaces/response.interface";
@@ -82,8 +82,6 @@ export function ResponseManagement() {
   const [responseToDelete, setResponseToDelete] = useState<IMyResponse | null>(null);
   const [responseToRestore, setResponseToRestore] = useState<IMyResponse | null>(null);
   const [selectedResponse, setSelectedResponse] = useState<IMyResponse | null>(null);
-  const [feedbackSortMode, setFeedbackSortMode] = useState<"none" | "likes" | "dislikes">("none");
-
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -241,33 +239,6 @@ export function ResponseManagement() {
       endDate: form.getValues("endDate"),
     });
   };
-
-  const handleCycleFeedbackSort = () => {
-    setFeedbackSortMode((prev) =>
-      prev === "none" ? "likes" : prev === "likes" ? "dislikes" : "none"
-    );
-  };
-
-  const sortedResponsesData = useMemo(() => {
-    if (feedbackSortMode === "none") return responsesData;
-
-    const data = [...responsesData];
-    if (feedbackSortMode === "likes") {
-      data.sort(
-        (a, b) =>
-          (b.likeCount || 0) - (a.likeCount || 0) ||
-          (a.dislikeCount || 0) - (b.dislikeCount || 0)
-      );
-      return data;
-    }
-
-    data.sort(
-      (a, b) =>
-        (b.dislikeCount || 0) - (a.dislikeCount || 0) ||
-        (a.likeCount || 0) - (b.likeCount || 0)
-    );
-    return data;
-  }, [responsesData, feedbackSortMode]);
 
   return (
     <div className="admin-page">
@@ -628,33 +599,6 @@ export function ResponseManagement() {
               },
             },
             {
-              id: "feedbackSummary",
-              size: 120,
-              maxSize: 140,
-              header: () => (
-                <Button
-                  variant="ghost"
-                  onClick={handleCycleFeedbackSort}
-                  className="w-full justify-center px-1"
-                >
-                  {t("Like/Dislike")}
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              ),
-              cell: ({ row }) => {
-                const response = row.original;
-                const likes = Number(response.likeCount || 0);
-                const dislikes = Number(response.dislikeCount || 0);
-                return (
-                  <div className="w-full text-center text-sm font-semibold tabular-nums">
-                    <span className="text-emerald-700 dark:text-emerald-300">{likes}</span>
-                    <span className="mx-1 text-muted-foreground">/</span>
-                    <span className="text-rose-700 dark:text-rose-300">{dislikes}</span>
-                  </div>
-                );
-              },
-            },
-            {
               accessorKey: "define",
               header: t("Definition"),
               cell: ({ row }) => {
@@ -769,7 +713,7 @@ export function ResponseManagement() {
               },
             },
           ]}
-          data={sortedResponsesData}
+          data={responsesData}
           meta={pagination}
           onChangePage={handlePageChange}
           isLoading={isDataLoading}

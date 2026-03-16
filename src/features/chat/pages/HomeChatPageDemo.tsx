@@ -290,10 +290,31 @@ export function HomeChatDemo() {
 
   const handleCopyMessage = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(text);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const copied = document.execCommand("copy");
+        document.body.removeChild(textArea);
+        if (!copied) {
+          throw new Error("execCommand copy failed");
+        }
+      }
       toast.success("Đã sao chép nội dung");
     } catch (err) {
-      toast.error("Không thể sao chép nội dung");
+      const manual = window.prompt("Trình duyệt chặn sao chép tự động. Hãy sao chép thủ công nội dung bên dưới:", text);
+      if (manual !== null) {
+        toast.success("Đã mở chế độ sao chép thủ công");
+      } else {
+        toast.error("Không thể sao chép nội dung");
+      }
     }
   };
 
@@ -423,7 +444,10 @@ export function HomeChatDemo() {
       return next;
     });
 
-    if (!message.responseId) return;
+    if (!message.responseId) {
+      toast.error("Phản hồi này chưa có responseId nên chưa gửi được đánh giá");
+      return;
+    }
 
     try {
       await responseService.submitResponseFeedback(message.responseId, next ?? null);
@@ -486,6 +510,7 @@ export function HomeChatDemo() {
                   )}
                   {messages.slice(visibleStartIndex).map((message, index) => {
                     const isUser = message.recipient_id === userId;
+                    const canVote = !!message.responseId;
                     const absoluteIndex = visibleStartIndex + index;
                     const feedbackKey = getFeedbackKey(absoluteIndex);
                     const feedback = messageFeedback[feedbackKey];
@@ -528,7 +553,7 @@ export function HomeChatDemo() {
                                 ))}
                               </div>
                             )}
-                            <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                            {!message.isStreaming && <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                               <span>
                                 {new Date().toLocaleTimeString("vi-VN", {
                                   hour: "2-digit",
@@ -547,17 +572,19 @@ export function HomeChatDemo() {
                                   <>
                                     <button
                                       onClick={() => void toggleMessageFeedback(feedbackKey, message, "like")}
+                                      disabled={!canVote}
                                       aria-pressed={feedback === "like"}
-                                      className={`rounded px-2 py-1 transition-colors ${feedback === "like" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"}`}
-                                      title={t("Like response")}
+                                      className={`rounded px-2 py-1 transition-colors ${feedback === "like" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"} ${!canVote ? "cursor-not-allowed opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
+                                      title={canVote ? t("Like response") : "Tin nhắn này chưa hỗ trợ đánh giá"}
                                     >
                                       <ThumbsUp className="h-3.5 w-3.5" />
                                     </button>
                                     <button
                                       onClick={() => void toggleMessageFeedback(feedbackKey, message, "dislike")}
+                                      disabled={!canVote}
                                       aria-pressed={feedback === "dislike"}
-                                      className={`rounded px-2 py-1 transition-colors ${feedback === "dislike" ? "bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-500/15 dark:text-rose-300" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"}`}
-                                      title={t("Dislike response")}
+                                      className={`rounded px-2 py-1 transition-colors ${feedback === "dislike" ? "bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-500/15 dark:text-rose-300" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"} ${!canVote ? "cursor-not-allowed opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
+                                      title={canVote ? t("Dislike response") : "Tin nhắn này chưa hỗ trợ đánh giá"}
                                     >
                                       <ThumbsDown className="h-3.5 w-3.5" />
                                     </button>
@@ -583,7 +610,7 @@ export function HomeChatDemo() {
                                   </>
                                 )}
                               </div>
-                            </div>
+                            </div>}
                           </div>
                         </div>
                       </div>

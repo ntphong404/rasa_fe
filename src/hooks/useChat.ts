@@ -101,12 +101,22 @@ export const useChat = (chatbotId: string): UseChatReturn => {
             ...msg,
             recipient_id: "bot",
             text: "",
+            isStreaming: true,
           };
 
           setMessages((prev) => [...prev, botMessageBase]);
 
           const fullText = msg.text || "";
-          if (!fullText) continue;
+          if (!fullText) {
+            setMessages((prev) => {
+              if (prev.length === 0) return prev;
+              const updated = [...prev];
+              const lastIndex = updated.length - 1;
+              updated[lastIndex] = { ...updated[lastIndex], isStreaming: false };
+              return updated;
+            });
+            continue;
+          }
 
           // Keep per-character typing feel while making long messages reasonably fast.
           const delay = fullText.length > 600 ? 4 : fullText.length > 300 ? 8 : 14;
@@ -125,6 +135,15 @@ export const useChat = (chatbotId: string): UseChatReturn => {
             });
             await sleep(delay);
           }
+
+          // Mark streaming done so action buttons appear
+          setMessages((prev) => {
+            if (prev.length === 0) return prev;
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            updated[lastIndex] = { ...updated[lastIndex], isStreaming: false };
+            return updated;
+          });
         }
       }
       

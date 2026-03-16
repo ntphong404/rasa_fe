@@ -10,6 +10,7 @@ export interface IChatMessage {
   buttons?: IRasaButton[];
   responseId?: string;
   responseName?: string;
+  isStreaming?: boolean;
 }
 
 export interface ISendMessageRequest {
@@ -43,6 +44,26 @@ export interface IConversation {
   userId: IUser;
   title?: string;
   pinned?: boolean;
+  archived?: boolean;
+  chat: IChatHistoryMessage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IConversationMutationResponse {
+  success: boolean;
+  data: IConversation;
+  message: string;
+}
+
+export interface IShareConversationResponse {
+  success: boolean;
+  data: {
+    conversationId: string;
+    sharePath: string;
+  };
+  message: string;
+d?: boolean;
   archived?: boolean;
   chat: IChatHistoryMessage[];
   createdAt: string;
