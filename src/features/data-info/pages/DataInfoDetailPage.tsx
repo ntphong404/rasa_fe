@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Loader2,
   ArrowLeft,
@@ -241,12 +242,12 @@ export default function DataInfoDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <div className="px-3 py-3 pr-6 max-w-6xl mx-auto">
           <div className="flex items-center justify-center h-64">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-              <span className="text-gray-600 font-medium">
+              <span className="font-medium text-muted-foreground">
                 {t("Loading story...")}
               </span>
             </div>
@@ -258,20 +259,20 @@ export default function DataInfoDetailPage() {
 
   if (loadError || !story) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <div className="px-3 py-3 pr-6 max-w-6xl mx-auto">
           <div className="mb-3">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate(-1)}
-              className="gap-2 hover:bg-white"
+              className="gap-2 hover:bg-white/80 dark:hover:bg-slate-900"
             >
               <ArrowLeft className="h-4 w-4" />
               {t("Back")}
             </Button>
           </div>
-          <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+          <div className="surface-card text-center py-12">
             <p className="text-red-500 mb-4 text-lg">
               {loadError || t("Story not found")}
             </p>
@@ -288,9 +289,9 @@ export default function DataInfoDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Header */}
-      <div className="bg-gradient-to-r from-violet-50 to-fuchsia-50 border-b shadow-sm">
+      <div className="border-b bg-gradient-to-r from-violet-50 to-fuchsia-50 shadow-sm dark:border-white/10 dark:from-slate-900 dark:to-slate-900">
         <div className="px-3 py-4">
           <div className="flex items-center gap-3">
             <Button
@@ -305,55 +306,70 @@ export default function DataInfoDetailPage() {
             <div className="flex items-center gap-2 flex-1">
               <BookOpen className="h-6 w-6 text-violet-600" />
               <div className="flex-1">
-                <h1 className="text-xl font-bold text-violet-900">{story.name}</h1>
+                <h1 className="text-xl font-bold text-violet-900 dark:text-violet-200">{story.name}</h1>
                 {editingDescription ? (
                   <div className="flex items-center gap-2 mt-1">
                     <input
                       type="text"
-                      className="flex-1 text-xs px-2 py-1 border border-violet-300 rounded focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white"
+                      className="flex-1 rounded border border-violet-300 bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-violet-400 dark:border-violet-500/60 dark:bg-slate-900"
                       value={descriptionText}
                       onChange={(e) => setDescriptionText(e.target.value)}
                       placeholder="Nhập mô tả..."
                       autoFocus
                     />
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setEditingDescription(false);
-                        setDescriptionText("");
-                      }}
-                      className="h-6 px-2"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={handleSaveDescription}
-                      disabled={savingDescription}
-                      className="h-6 px-2 bg-violet-600 hover:bg-violet-700"
-                    >
-                      {savingDescription ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Check className="h-3 w-3" />
-                      )}
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditingDescription(false);
+                            setDescriptionText("");
+                          }}
+                          className="h-6 px-2"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Hủy chỉnh sửa mô tả</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveDescription}
+                          disabled={savingDescription}
+                          className="h-6 px-2 bg-violet-600 hover:bg-violet-700"
+                        >
+                          {savingDescription ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Check className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Lưu mô tả</TooltipContent>
+                    </Tooltip>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 mt-0.5">
-                    <p className="text-xs text-violet-600">{story.description || t("No description provided")}</p>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setEditingDescription(true);
-                        setDescriptionText(story.description || "");
-                      }}
-                      className="h-5 px-1 hover:bg-violet-100"
-                    >
-                      <Edit2 className="h-3 w-3 text-violet-600" />
-                    </Button>
+                    <p className="text-xs text-violet-600 dark:text-violet-300">{story.description || t("No description provided")}</p>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditingDescription(true);
+                            setDescriptionText(story.description || "");
+                          }}
+                          className="h-5 px-1 hover:bg-violet-100 dark:hover:bg-slate-800"
+                        >
+                          <Edit2 className="h-3 w-3 text-violet-600" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Sửa mô tả</TooltipContent>
+                    </Tooltip>
                   </div>
                 )}
               </div>
@@ -365,18 +381,18 @@ export default function DataInfoDetailPage() {
       <div className="px-3 py-3 pr-6 max-w-6xl mx-auto">
         {/* Story Info Card */}
         <div className="mb-3">
-          <div className="bg-white rounded-lg shadow-sm border border-violet-100 p-3">
+          <div className="surface-card p-3">
             <div className="flex items-center gap-3">
               <div className="text-xs font-semibold text-violet-600 uppercase tracking-wide">
                 {t("Story Details")}
               </div>
               <div className="flex gap-2">
-                <div className="px-3 py-1 bg-indigo-50 rounded-full border border-indigo-200">
-                  <span className="text-xs text-gray-600">Intents: </span>
+                <div className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 dark:border-indigo-500/40 dark:bg-indigo-950/30">
+                  <span className="text-xs text-muted-foreground">Intents: </span>
                   <span className="text-xs font-bold text-indigo-600">{intents.length}</span>
                 </div>
-                <div className="px-3 py-1 bg-green-50 rounded-full border border-green-200">
-                  <span className="text-xs text-gray-600">Responses: </span>
+                <div className="rounded-full border border-green-200 bg-green-50 px-3 py-1 dark:border-green-500/40 dark:bg-green-950/30">
+                  <span className="text-xs text-muted-foreground">Responses: </span>
                   <span className="text-xs font-bold text-green-600">{responses.length}</span>
                 </div>
               </div>
@@ -388,7 +404,7 @@ export default function DataInfoDetailPage() {
         <div className="space-y-3">
           <div className="flex items-center gap-2 mb-3">
             <MessageSquare className="h-5 w-5 text-violet-600" />
-            <h2 className="text-lg font-bold text-gray-800">{t("Q&A")}</h2>
+            <h2 className="text-lg font-bold text-foreground">{t("Q&A")}</h2>
           </div>
 
           <div className="space-y-3">
@@ -518,9 +534,9 @@ export default function DataInfoDetailPage() {
 
               if (filteredPairs.length === 0) {
                 return (
-                  <div className="bg-white rounded-lg shadow-sm p-6 text-center border border-gray-200">
-                    <MessageSquare className="h-10 w-10 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-500 text-sm">{t("No Q&A found")}</p>
+                  <div className="surface-card p-6 text-center">
+                    <MessageSquare className="mx-auto mb-2 h-10 w-10 text-gray-300 dark:text-gray-500" />
+                    <p className="text-sm text-muted-foreground">{t("No Q&A found")}</p>
                   </div>
                 );
               }
@@ -537,10 +553,10 @@ export default function DataInfoDetailPage() {
                 return (
                   <div
                     key={idx}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                    className="surface-card overflow-hidden transition-shadow hover:shadow-md"
                   >
                     {/* Question Section */}
-                    <div className="bg-indigo-50 p-3 border-b border-indigo-100">
+                    <div className="border-b border-indigo-100 bg-indigo-50 p-3 dark:border-indigo-500/40 dark:bg-indigo-950/25">
                       <div className="flex items-start justify-between gap-4 mb-4">
                         <div className="flex items-center gap-2 text-indigo-700 font-semibold text-sm uppercase tracking-wide">
                           <MessageSquare className="h-5 w-5" />
@@ -549,81 +565,96 @@ export default function DataInfoDetailPage() {
                         {p.intent &&
                           (editingIntentId === String(p.intent._id) ? (
                             <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setEditingIntentId(null);
-                                  setEditingIntentText("");
-                                }}
-                                className="gap-1 bg-white"
-                              >
-                                <X className="h-3 w-3" />
-                                {t("Cancel")}
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  const lines = editingIntentText
-                                    .split(/\r?\n/)
-                                    .map((l) => l.trim())
-                                    .filter(Boolean);
-                                  const newDefine = `- intent: ${
-                                    (p.intent as any).name
-                                  }\n  examples: |\n    - ${lines.join(
-                                    "\n    - "
-                                  )}`;
-                                  setIntents((prev) =>
-                                    prev.map((it) =>
-                                      String(it._id) === String(p.intent._id)
-                                        ? { ...it, define: newDefine }
-                                        : it
-                                    )
-                                  );
-                                  setEditingIntentId(null);
-                                  setEditingIntentText("");
-                                  handleSaveIntent(String(p.intent._id));
-                                }}
-                                className="gap-1 bg-indigo-600 hover:bg-indigo-700"
-                              >
-                                {savingIntentId === String(p.intent._id) ? (
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                ) : (
-                                  <Save className="h-3 w-3" />
-                                )}
-                                {t("Save")}
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setEditingIntentId(null);
+                                      setEditingIntentText("");
+                                    }}
+                                    className="gap-1 bg-white dark:bg-slate-900"
+                                  >
+                                    <X className="h-3 w-3" />
+                                    {t("Cancel")}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">Hủy sửa câu hỏi</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => {
+                                      const lines = editingIntentText
+                                        .split(/\r?\n/)
+                                        .map((l) => l.trim())
+                                        .filter(Boolean);
+                                      const newDefine = `- intent: ${
+                                        (p.intent as any).name
+                                      }\n  examples: |\n    - ${lines.join(
+                                        "\n    - "
+                                      )}`;
+                                      setIntents((prev) =>
+                                        prev.map((it) =>
+                                          String(it._id) === String(p.intent._id)
+                                            ? { ...it, define: newDefine }
+                                            : it
+                                        )
+                                      );
+                                      setEditingIntentId(null);
+                                      setEditingIntentText("");
+                                      handleSaveIntent(String(p.intent._id));
+                                    }}
+                                    className="gap-1 bg-indigo-600 hover:bg-indigo-700"
+                                  >
+                                    {savingIntentId === String(p.intent._id) ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <Save className="h-3 w-3" />
+                                    )}
+                                    {t("Save")}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">Lưu câu hỏi</TooltipContent>
+                              </Tooltip>
                             </div>
                           ) : (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                const combined = [primary, ...similar]
-                                  .filter(Boolean)
-                                  .join("\n");
-                                setEditingIntentId(
-                                  String((p.intent as any)._id)
-                                );
-                                setEditingIntentText(combined);
-                              }}
-                              className="gap-1 hover:bg-white/50"
-                            >
-                              <Edit2 className="h-3 w-3" />
-                              {t("Sửa")}
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    const combined = [primary, ...similar]
+                                      .filter(Boolean)
+                                      .join("\n");
+                                    setEditingIntentId(
+                                      String((p.intent as any)._id)
+                                    );
+                                    setEditingIntentText(combined);
+                                  }}
+                                  className="gap-1 hover:bg-white/50 dark:hover:bg-slate-800/70"
+                                >
+                                  <Edit2 className="h-3 w-3" />
+                                  {t("Sửa")}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">Sửa câu hỏi</TooltipContent>
+                            </Tooltip>
                           ))}
                       </div>
                       {editingIntentId === String(p.intent?._id) ? (
                         <textarea
-                          className="w-full border-2 border-indigo-200 rounded-lg p-3 mt-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white text-base"
+                          className="mt-2 w-full rounded-lg border-2 border-indigo-200 bg-white p-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:border-indigo-500/60 dark:bg-slate-900"
                           rows={3}
                           value={editingIntentText}
                           onChange={(e) => setEditingIntentText(e.target.value)}
                           placeholder="Nhập câu hỏi..."
                         />
                       ) : (
-                        <div className="text-lg font-medium text-gray-800 leading-relaxed">
+                        <div className="text-lg font-medium leading-relaxed text-foreground">
                           {primary}
                         </div>
                       )}
@@ -631,8 +662,8 @@ export default function DataInfoDetailPage() {
 
                     {/* Similar Questions */}
                     {similar.length > 0 && (
-                      <div className="bg-gray-50 px-3 py-3 border-b border-gray-200">
-                        <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3 flex items-center gap-2">
+                      <div className="border-b border-slate-200 bg-gray-50 px-3 py-3 dark:border-white/10 dark:bg-slate-900/70">
+                        <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
                           <div className="w-1 h-4 bg-indigo-400 rounded-full"></div>
                           Các câu hỏi tương tự ({similar.length})
                         </div>
@@ -640,10 +671,10 @@ export default function DataInfoDetailPage() {
                           {similar.map((s, i) => (
                             <div
                               key={i}
-                              className="flex items-start gap-3 bg-white px-4 py-3 rounded-lg border border-gray-200 hover:border-indigo-300 transition-colors"
+                              className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-indigo-300 dark:border-white/15 dark:bg-slate-900"
                             >
                               <div className="mt-1 w-1.5 h-1.5 bg-indigo-400 rounded-full flex-shrink-0"></div>
-                              <span className="text-sm text-gray-700 flex-1">
+                              <span className="flex-1 text-sm text-gray-700 dark:text-gray-200">
                                 {s}
                               </span>
                             </div>
@@ -662,70 +693,85 @@ export default function DataInfoDetailPage() {
                         {p.nextData &&
                           (editingResponseId === String(p.nextData._id) ? (
                             <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setEditingResponseId(null);
-                                  setEditingResponseText("");
-                                }}
-                                className="gap-1"
-                              >
-                                <X className="h-3 w-3" />
-                                {t("Cancel")}
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  const text = editingResponseText;
-                                  const newDefine = `${
-                                    (p.nextData as any).name
-                                  }:\n  - text: |\n      ${text.replace(
-                                    /\n/g,
-                                    "\n      "
-                                  )}`;
-                                  setResponses((prev) =>
-                                    prev.map((r) =>
-                                      String(r._id) === String(p.nextData._id)
-                                        ? { ...r, define: newDefine }
-                                        : r
-                                    )
-                                  );
-                                  setEditingResponseId(null);
-                                  setEditingResponseText("");
-                                  handleSaveResponse(String(p.nextData._id));
-                                }}
-                                className="gap-1 bg-green-600 hover:bg-green-700"
-                              >
-                                {savingResponseId === String(p.nextData._id) ? (
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                ) : (
-                                  <Save className="h-3 w-3" />
-                                )}
-                                {t("Save")}
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setEditingResponseId(null);
+                                      setEditingResponseText("");
+                                    }}
+                                    className="gap-1"
+                                  >
+                                    <X className="h-3 w-3" />
+                                    {t("Cancel")}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">Hủy sửa câu trả lời</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => {
+                                      const text = editingResponseText;
+                                      const newDefine = `${
+                                        (p.nextData as any).name
+                                      }:\n  - text: |\n      ${text.replace(
+                                        /\n/g,
+                                        "\n      "
+                                      )}`;
+                                      setResponses((prev) =>
+                                        prev.map((r) =>
+                                          String(r._id) === String(p.nextData._id)
+                                            ? { ...r, define: newDefine }
+                                            : r
+                                        )
+                                      );
+                                      setEditingResponseId(null);
+                                      setEditingResponseText("");
+                                      handleSaveResponse(String(p.nextData._id));
+                                    }}
+                                    className="gap-1 bg-green-600 hover:bg-green-700"
+                                  >
+                                    {savingResponseId === String(p.nextData._id) ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <Save className="h-3 w-3" />
+                                    )}
+                                    {t("Save")}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">Lưu câu trả lời</TooltipContent>
+                              </Tooltip>
                             </div>
                           ) : (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                setEditingResponseId(
-                                  String((p.nextData as any)?._id)
-                                );
-                                setEditingResponseText(answer);
-                              }}
-                              className="gap-1"
-                            >
-                              <Edit2 className="h-3 w-3" />
-                              {t("Sửa")}
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setEditingResponseId(
+                                      String((p.nextData as any)?._id)
+                                    );
+                                    setEditingResponseText(answer);
+                                  }}
+                                  className="gap-1"
+                                >
+                                  <Edit2 className="h-3 w-3" />
+                                  {t("Sửa")}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">Sửa câu trả lời</TooltipContent>
+                            </Tooltip>
                           ))}
                       </div>
 
                       {editingResponseId === String(p.nextData?._id) ? (
                         <textarea
-                          className="w-full border-2 border-green-200 rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-base leading-relaxed"
+                          className="w-full rounded-lg border-2 border-green-200 bg-white p-4 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-green-400 dark:border-green-500/60 dark:bg-slate-900"
                           rows={4}
                           value={editingResponseText}
                           onChange={(e) =>
@@ -734,8 +780,8 @@ export default function DataInfoDetailPage() {
                           placeholder="Nhập câu trả lời..."
                         />
                       ) : (
-                        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                          <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+                        <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-500/40 dark:bg-green-950/30">
+                          <div className="whitespace-pre-wrap leading-relaxed text-gray-700 dark:text-gray-200">
                             {answer}
                           </div>
                         </div>

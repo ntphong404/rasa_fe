@@ -7,12 +7,8 @@ import {
   Check,
   Loader2,
 } from "lucide-react";
-import {
-  copyToClipboard,
-  exportMessageToPDF,
-  exportMessageToWord,
-} from "../../../lib/exportUtils";
-import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 interface MessageActionsProps {
   message: string;
@@ -25,39 +21,65 @@ export function MessageActions({
   isBot = false,
   className = "",
 }: MessageActionsProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState<"pdf" | "word" | null>(null);
   const [showActions, setShowActions] = useState(false);
+
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const result = document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return result;
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+      return false;
+    }
+  };
 
   const handleCopy = async () => {
     try {
       const success = await copyToClipboard(message);
       if (success) {
         setCopied(true);
-        toast.success("Đã sao chép vào clipboard!");
+        toast.success(t("Copied to clipboard"));
         setTimeout(() => setCopied(false), 2000);
       } else {
-        toast.error("Không thể sao chép văn bản");
+        toast.error(t("Failed to copy text"));
       }
     } catch (error) {
       console.error("Copy failed:", error);
-      toast.error("Có lỗi xảy ra khi sao chép");
+      toast.error(t("An error occurred while copying"));
     }
   };
 
   const handleExportPDF = async () => {
     setLoading("pdf");
     try {
+      const { exportMessageToPDF } = await import("../../../lib/exportUtils");
       const exportMessage = {
         role: (isBot ? "bot" : "user") as "user" | "bot",
         text: message,
         timestamp: new Date().toLocaleString("vi-VN"),
       };
       await exportMessageToPDF(exportMessage);
-      toast.success("Đã xuất file PDF thành công!");
+      toast.success(t("PDF exported successfully"));
     } catch (error) {
       console.error("PDF export failed:", error);
-      toast.error("Không thể xuất file PDF");
+      toast.error(t("Failed to export PDF"));
     } finally {
       setLoading(null);
     }
@@ -66,16 +88,17 @@ export function MessageActions({
   const handleExportWord = async () => {
     setLoading("word");
     try {
+      const { exportMessageToWord } = await import("../../../lib/exportUtils");
       const exportMessage = {
         role: (isBot ? "bot" : "user") as "user" | "bot",
         text: message,
         timestamp: new Date().toLocaleString("vi-VN"),
       };
       await exportMessageToWord(exportMessage);
-      toast.success("Đã xuất file Word thành công!");
+      toast.success(t("Word exported successfully"));
     } catch (error) {
       console.error("Word export failed:", error);
-      toast.error("Không thể xuất file Word");
+      toast.error(t("Failed to export Word"));
     } finally {
       setLoading(null);
     }
@@ -92,7 +115,7 @@ export function MessageActions({
         className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 ${
           showActions ? "opacity-100" : ""
         }`}
-        title="Tùy chọn"
+        title={t("Options")}
       >
         <MoreHorizontal className="h-4 w-4 text-gray-500" />
       </button>
@@ -109,12 +132,12 @@ export function MessageActions({
               {copied ? (
                 <>
                   <Check className="h-4 w-4 text-green-500" />
-                  <span>Đã sao chép</span>
+                  <span>{t("Copied")}</span>
                 </>
               ) : (
                 <>
                   <Copy className="h-4 w-4" />
-                  <span>Sao chép</span>
+                  <span>{t("Copy")}</span>
                 </>
               )}
             </button>
@@ -130,7 +153,7 @@ export function MessageActions({
               ) : (
                 <FileText className="h-4 w-4" />
               )}
-              <span>Xuất PDF</span>
+              <span>{t("Export PDF")}</span>
             </button>
 
             {/* Word export button */}
@@ -144,7 +167,7 @@ export function MessageActions({
               ) : (
                 <File className="h-4 w-4" />
               )}
-              <span>Xuất Word</span>
+              <span>{t("Export Word")}</span>
             </button>
           </div>
         </div>

@@ -15,6 +15,7 @@ import {
 } from "./ui/collapsible";
 import { ChevronRight, LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export function NavMain({
   items,
@@ -30,9 +31,11 @@ export function NavMain({
     }[];
   }[];
 }) {
+  const { t } = useTranslation();
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Management</SidebarGroupLabel>
+      <SidebarGroupLabel>{t("Administration")}</SidebarGroupLabel>
       <SidebarMenu>
         {items
           .filter((item) => !item.hidden)

@@ -71,12 +71,12 @@ export function CreateChatBotDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-        <DialogHeader className="px-3 py-3 border-b bg-gradient-to-r from-cyan-50 to-blue-50">
+        <DialogHeader className="px-3 py-3 border-b bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 dark:border-white/10">
           <DialogTitle className="flex items-center gap-2 text-2xl">
             <Bot className="h-6 w-6 text-cyan-600" />
             {t("Create ChatBot")}
           </DialogTitle>
-          <DialogDescription className="text-gray-600">
+          <DialogDescription className="text-gray-600 dark:text-slate-400">
             {t("Enter details for the new chatbot.")}
           </DialogDescription>
         </DialogHeader>
@@ -85,8 +85,8 @@ export function CreateChatBotDialog({
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto px-6 py-4">
             <div className="space-y-4">
               {/* Basic Info Card */}
-              <div className="bg-white border rounded-lg p-4">
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-4">
+              <div className="surface-card p-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground mb-4">
                   <Bot className="h-4 w-4 text-cyan-600" />
                   {t("Basic Information")}
                 </h3>
@@ -129,8 +129,8 @@ export function CreateChatBotDialog({
               </div>
 
               {/* Network Configuration Card */}
-              <div className="bg-white border rounded-lg p-4">
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-4">
+              <div className="surface-card p-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground mb-4">
                   <Network className="h-4 w-4 text-blue-600" />
                   {t("Network Configuration")}
                 </h3>

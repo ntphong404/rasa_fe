@@ -11,15 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { useTranslation } from "react-i18next";
-import { FileCode, FileText, Edit, Eye, EyeOff, HelpCircle } from "lucide-react";
+import { FileCode, FileText, Edit, Eye, EyeOff } from "lucide-react";
 import { responseService } from "../api/service";
 import { IMyResponse } from "@/interfaces/response.interface";
+import { ModuleHelpPopover } from "@/components/module-help-popover";
+import { toast } from "sonner";
 
 interface EditResponseDialogProps {
   response: IMyResponse | null;
@@ -215,7 +212,7 @@ export default function EditResponseDialog({
       onOpenChange(false);
     } catch (error) {
       console.error("Error updating response:", error);
-      alert(t("Failed to update response"));
+      toast.error(t("Failed to update response"));
     } finally {
       setIsSubmitting(false);
     }
@@ -230,28 +227,11 @@ export default function EditResponseDialog({
           <DialogTitle className="text-2xl flex items-center gap-2">
             <Edit className="h-6 w-6" />
             {t("Edit Response")}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="ml-auto">
-                  <HelpCircle className="h-5 w-5 text-muted-foreground" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80" align="end">
-                <div className="space-y-2">
-                  <h4 className="font-medium">{t("What is a Response?")}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {t("Responses are predefined messages that the bot sends to users. Each response must have a name starting with 'utter_' prefix.")}
-                  </p>
-                  <div className="text-sm text-muted-foreground">
-                    <strong>{t("Format:")}</strong>
-                    <pre className="mt-2 p-2 bg-muted rounded text-xs">
-{`  utter_default:
-    - text: "Your message"`}
-                    </pre>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <ModuleHelpPopover
+              title={t("What is a Response?")}
+              description={t("Responses are predefined messages that the bot sends to users. Each response must have a name starting with 'utter_' prefix.")}
+              iconClassName="text-muted-foreground"
+            />
           </DialogTitle>
         </DialogHeader>
 

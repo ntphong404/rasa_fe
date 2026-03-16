@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { date, z } from "zod";
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -73,7 +73,7 @@ export const UserProfilePage = () => {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [passwordError] = useState("");
   const navigate = useNavigate();
 
   const {
@@ -106,14 +106,14 @@ export const UserProfilePage = () => {
     };
 
     fetchUserProfile();
-  }, [reset]);
+  }, [getMe, reset, setUser]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
       const updatedUser = await updateMe(data);
       if (!updatedUser) return;
       setUser(updatedUser);
-      toast.success("Cập nhật thông tin thành công!");
+      toast.success("Cập nhật thông tin thành công");
       setIsEditing(false);
       window.location.reload();
     } catch (error) {
@@ -121,7 +121,7 @@ export const UserProfilePage = () => {
     }
   };
 
-  if (!user) return <div>Loading...</div>;
+  if (!user) return <div>Đang tải...</div>;
 
   const genderValue = watch("gender", user.gender);
 
@@ -184,7 +184,7 @@ export const UserProfilePage = () => {
               if (isEditing) reset(user); // reset khi bấm Cancel
             }}
           >
-            {isEditing ? "Cancel" : "Edit"}
+            {isEditing ? "Hủy" : "Chỉnh sửa"}
           </Button>
         </div>
       </div>
@@ -194,11 +194,11 @@ export const UserProfilePage = () => {
         className="bg-card text-card-foreground rounded-xl shadow p-6 grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300 dark:bg-gray-800 dark:text-white"
       >
         <div>
-          <label className="text-sm md:text-base font-medium">Full Name</label>
+          <label className="text-sm md:text-base font-medium">Họ và tên</label>
           {isEditing ? (
             <Input
               {...register("firstName")} // name="firstName"
-              placeholder="Your First Name"
+              placeholder="Nhập tên của bạn"
               className="text-sm mt-1 md:text-base dark:bg-gray-700 dark:text-white"
             />
           ) : (
@@ -211,7 +211,7 @@ export const UserProfilePage = () => {
 
         <div>
           <label className="text-sm md:text-base font-medium">
-            Date of Birth
+            Ngày sinh
           </label>
           {isEditing ? (
             <Popover>
@@ -265,7 +265,7 @@ export const UserProfilePage = () => {
         </div>
 
         <div>
-          <label className="text-sm md:text-base font-medium">Gender</label>
+          <label className="text-sm md:text-base font-medium">Giới tính</label>
           {isEditing ? (
             <Select
               onValueChange={(val) =>
@@ -274,7 +274,7 @@ export const UserProfilePage = () => {
               value={genderValue}
             >
               <SelectTrigger className="w-full text-sm mt-1 md:text-base dark:bg-gray-700 dark:text-white">
-                <SelectValue placeholder="Select Gender" />
+                <SelectValue placeholder="Chọn giới tính" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="MALE">Nam</SelectItem>
@@ -287,11 +287,11 @@ export const UserProfilePage = () => {
         </div>
 
         <div>
-          <label className="text-sm md:text-base font-medium">Address</label>
+          <label className="text-sm md:text-base font-medium">Địa chỉ</label>
           {isEditing ? (
             <Input
               {...register("address")}
-              placeholder="Your Address"
+              placeholder="Nhập địa chỉ của bạn"
               className="text-sm mt-1 md:text-base dark:bg-gray-700 dark:text-white"
             />
           ) : (
@@ -300,11 +300,11 @@ export const UserProfilePage = () => {
         </div>
 
         <div>
-          <label className="text-sm md:text-base font-medium">Phone</label>
+          <label className="text-sm md:text-base font-medium">Số điện thoại</label>
           {isEditing ? (
             <Input
               {...register("phoneNumber")}
-              placeholder="Your Phone"
+              placeholder="Nhập số điện thoại"
               className="text-sm mt-1 md:text-base dark:bg-gray-700 dark:text-white"
             />
           ) : (

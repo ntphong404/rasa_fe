@@ -7,6 +7,7 @@ import {
   ChatbotStatistics,
   NLPStatistics,
   DocumentStatistics,
+  ResponseFeedbackStatistics,
   SystemStatistics,
   StatisticsResponse,
 } from "@/interfaces/statistic.interface";
@@ -45,6 +46,17 @@ export const statisticService = {
 
   getDocumentStatistics: async (): Promise<StatisticsResponse<DocumentStatistics>> => {
     const response = await axiosInstance.get(ENDPOINTS.STATISTIC_ENDPOINTS.DOCUMENTS);
+    return response.data;
+  },
+
+  getResponseFeedbackStatistics: async (params?: {
+    limit?: number;
+    botId?: string;
+  }): Promise<StatisticsResponse<ResponseFeedbackStatistics>> => {
+    const response = await axiosInstance.get(
+      ENDPOINTS.STATISTIC_ENDPOINTS.RESPONSES_FEEDBACK,
+      { params }
+    );
     return response.data;
   },
 

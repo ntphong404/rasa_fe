@@ -121,11 +121,11 @@ export function RagChatPage() {
     try {
       setIsUploading(true);
       await ragService.ingestFile(file);
-      toast.success(`Đã tải lên tài liệu "${file.name}" thành công!`);
+      toast.success(t("Document uploaded successfully", { fileName: file.name }));
       await fetchDocuments(); // Refresh document list
     } catch (error) {
       console.error("Error uploading file:", error);
-      toast.error("Không thể tải lên tài liệu. Vui lòng thử lại.");
+      toast.error(t("Failed to upload document. Please try again."));
     } finally {
       setIsUploading(false);
     }
@@ -175,7 +175,7 @@ export function RagChatPage() {
 
     try {
       await ragService.deleteDocument(documentToDelete.id);
-      toast.success(`Đã xóa tài liệu "${documentToDelete.name}" thành công!`);
+      toast.success(t("Document deleted successfully", { fileName: documentToDelete.name }));
       await fetchDocuments(); // Refresh list
       // Clear selection if deleted doc was selected
       if (selectedDocs.includes(documentToDelete.id)) {
@@ -183,7 +183,8 @@ export function RagChatPage() {
       }
     } catch (error) {
       console.error("Error deleting document:", error);
-      toast.error("Không thể xóa tài liệu. Vui lòng thử lại.");
+      toast.error(t("Failed to delete document. Please try again."));
+      throw error;
     } finally {
       setDeleteDialogOpen(false);
       setDocumentToDelete(null);
@@ -191,7 +192,7 @@ export function RagChatPage() {
   };
 
   const handleBackToNormalChat = () => {
-    navigate('/home_chat_demo');
+    navigate('/home_chat');
   };
 
   return (
@@ -216,7 +217,7 @@ export function RagChatPage() {
             className={`border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-colors ${
               isDragging
                 ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
-                : "border-gray-300 hover:border-gray-400"
+                : "border-gray-300 hover:border-gray-400 dark:border-slate-600 dark:hover:border-slate-400"
             }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -387,6 +388,12 @@ export function RagChatPage() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={confirmDelete}
+        title={t("Delete document")}
+        description={t("Are you sure you want to delete this document? This action cannot be undone.")}
+        confirmLabel={t("Delete")}
+        cancelLabel={t("Cancel")}
+        successMessage={t("Document deleted successfully", { fileName: documentToDelete?.name || "" })}
+        errorMessage={t("Failed to delete document. Please try again.")}
       />
     </div>
   );

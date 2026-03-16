@@ -6,6 +6,7 @@ import { generateConversationId } from "@/lib/uuid";
 export type UseChatReturn = {
   messages: IChatMessage[];
   loading: boolean;
+  loadingHistory: boolean;
   error: string | null;
   currentConversationId: string | null;
   sendMessage: (messageData: Omit<ISendMessageRequest, 'conversationId'>) => Promise<any>;
@@ -20,41 +21,37 @@ export type UseChatReturn = {
 export const useChat = (chatbotId: string): UseChatReturn => {
   const [messages, setMessages] = useState<IChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
   const loadConversationHistory = useCallback((conversation: IConversation) => {
+    setLoadingHistory(true);
+    setMessages([]);
     setCurrentConversationId(conversation.conversationId);
-    
-    // Convert conversation history to chat messages format
-    const historyMessages: IChatMessage[] = [];
-    
-    conversation.chat.forEach((chatItem: IChatHistoryMessage) => {
-      if (chatItem.role === "user") {
-        const message = typeof chatItem.message === "string" 
-          ? chatItem.message 
-          : chatItem.message[0] || "";
-        
-        historyMessages.push({
-          recipient_id: conversation.userId._id,
-          text: message
-        });
-      } else if (chatItem.role === "bot") {
-        const messages = Array.isArray(chatItem.message) 
-          ? chatItem.message 
-          : [chatItem.message];
-        
-        messages.forEach(msg => {
-          historyMessages.push({
-            recipient_id: "bot",
-            text: msg
-          });
-        });
-      }
-    });
-    
-    setMessages(historyMessages);
-    setError(null);
+
+    // Defer heavy parsing off the current paint frame so the spinner shows
+    setTimeout(() => {
+      const historyMessages: IChatMessage[] = [];
+
+      conversation.chat.forEach((chatItem: IChatHistoryMessage) => {
+        if (chatItem.role === "user") {
+          const message = typeof chatItem.message === "string"
+            ? chatItem.message
+            : chatItem.message[0] || "";
+          historyMessages.push({ recipient_id: conversation.userId._id, text: message });
+        } else if (chatItem.role === "bot") {
+          const msgs = Array.isArray(chatItem.message)
+            ? chatItem.message
+            : [chatItem.message];
+          msgs.forEach(msg => historyMessages.push({ recipient_id: "bot", text: msg }));
+        }
+      });
+
+      setMessages(historyMessages);
+      setError(null);
+      setLoadingHistory(false);
+    }, 0);
   }, []);
 
   const startNewConversation = useCallback(() => {
@@ -142,6 +139,7 @@ export const useChat = (chatbotId: string): UseChatReturn => {
   return {
     messages,
     loading,
+    loadingHistory,
     error,
     currentConversationId,
     sendMessage,

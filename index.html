@@ -6,9 +6,77 @@
   <link rel="icon" type="image/png" href="/logo3.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PCCC Nam Định Chatbot</title>
+  <script>
+    (function () {
+      try {
+        var storageKey = "vite-ui-theme";
+        var stored = localStorage.getItem(storageKey) || "system";
+        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var resolved = stored === "system" ? (prefersDark ? "dark" : "light") : stored;
+        var root = document.documentElement;
+
+        root.classList.remove("light", "dark");
+        root.classList.add(resolved);
+        root.style.colorScheme = resolved;
+        root.style.backgroundColor = resolved === "dark" ? "#0f172a" : "#ffffff";
+      } catch (_) {
+        // noop
+      }
+    })();
+  </script>
+  <style>
+    #boot-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      transition: opacity 180ms ease;
+    }
+
+    #boot-splash .boot-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    #boot-splash .spinner {
+      width: 36px;
+      height: 36px;
+      border-radius: 9999px;
+      border: 3px solid rgba(100, 116, 139, 0.3);
+      border-top-color: rgba(59, 130, 246, 0.95);
+      animation: boot-spin 0.9s linear infinite;
+    }
+
+    html.dark #boot-splash {
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    html.light #boot-splash {
+      background: #ffffff;
+      color: #1e293b;
+    }
+
+    @keyframes boot-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
 </head>
 
 <body>
+  <div id="boot-splash" role="status" aria-live="polite" aria-label="Loading page">
+    <div class="boot-content">
+      <div class="spinner"></div>
+      <div>Loading page...</div>
+    </div>
+  </div>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 </body>

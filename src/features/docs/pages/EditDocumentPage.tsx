@@ -216,7 +216,7 @@ export function EditDocumentPage() {
             className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors min-h-[140px] flex items-center justify-center ${
               isDragging
                 ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
-                : "border-gray-300 hover:border-gray-400"
+                : "border-gray-300 hover:border-gray-400 dark:border-slate-600 dark:hover:border-slate-400"
             }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -339,7 +339,7 @@ export function EditDocumentPage() {
                   {selectedTags.map((tag) => (
                     <div
                       key={tag}
-                      className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                      className="flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 rounded-full text-sm"
                     >
                       <span>{tag}</span>
                       <button

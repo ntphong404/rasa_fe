@@ -8,6 +8,8 @@ export interface IChatMessage {
   recipient_id: string;
   text: string;
   buttons?: IRasaButton[];
+  responseId?: string;
+  responseName?: string;
 }
 
 export interface ISendMessageRequest {
@@ -39,9 +41,27 @@ export interface IConversation {
   _id: string;
   conversationId: string;
   userId: IUser;
+  title?: string;
+  pinned?: boolean;
+  archived?: boolean;
   chat: IChatHistoryMessage[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface IConversationMutationResponse {
+  success: boolean;
+  data: IConversation;
+  message: string;
+}
+
+export interface IShareConversationResponse {
+  success: boolean;
+  data: {
+    conversationId: string;
+    sharePath: string;
+  };
+  message: string;
 }
 
 export interface IConversationsResponse {

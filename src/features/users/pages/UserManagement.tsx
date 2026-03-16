@@ -247,10 +247,10 @@ export const UserManagement = () => {
   //   };
 
   return (
-    <div className="relative p-3">
+    <div className="admin-page">
       <Form {...form}>
         <form
-          className="table-controller py-4 flex gap-4"
+          className="table-controller admin-toolbar"
           onSubmit={form.handleSubmit((data) => {
             setPagination((prev) => ({ ...prev, page: 1 })); // reset page
             fetchUsers(); // sẽ dùng giá trị search mới từ form

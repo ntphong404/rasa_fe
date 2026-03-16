@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -26,8 +27,11 @@ import { ChevronRight, MessageSquare, Loader2, MoreHorizontal, Share2, Edit, Pin
 import { chatService } from "@/features/chat/api/service";
 import { useAuthStore } from "@/store/auth";
 import { IConversation } from "@/interfaces/chat.interface";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { toast } from "sonner";
 
 export function NavConversations() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const [conversations, setConversations] = useState<IConversation[]>([]);
@@ -38,6 +42,16 @@ export function NavConversations() {
   const [isOpen, setIsOpen] = useState(false);
   const isLoadingRef = useRef(false);
   const [hoveredConversationId, setHoveredConversationId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+
+  const sortConversations = useCallback((list: IConversation[]) => {
+    return [...list].sort((a, b) => {
+      const pinDiff = Number(!!b.pinned) - Number(!!a.pinned);
+      if (pinDiff !== 0) return pinDiff;
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+  }, []);
 
   // Load conversations
   const loadConversations = useCallback(async (pageNum: number = 1, shouldAppend: boolean = false) => {
@@ -57,9 +71,9 @@ export function NavConversations() {
         console.log(`Loaded ${response.data.length} conversations, meta.total: ${response.meta.total}, pageNum: ${pageNum}`);
         
         if (shouldAppend) {
-          setConversations((prev) => [...prev, ...response.data]);
+          setConversations((prev) => sortConversations([...prev, ...response.data]));
         } else {
-          setConversations(response.data);
+          setConversations(sortConversations(response.data));
         }
         
         // Backend bug: meta.total seems to be totalPages, not total count
@@ -75,7 +89,7 @@ export function NavConversations() {
       setLoading(false);
       isLoadingRef.current = false;
     }
-  }, [user?._id]);
+  }, [sortConversations, user?._id]);
 
   // Initial load
   useEffect(() => {
@@ -113,28 +127,119 @@ export function NavConversations() {
     navigate(`/?conversationId=${conversationId}`);
   };
 
-  const handleDeleteConversation = async (conversationId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation
-    
-    if (!window.confirm("Bạn có chắc chắn muốn xóa cuộc hội thoại này?")) {
+  const handleShareConversation = async (conversation: IConversation, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const res = await chatService.shareConversation(conversation._id);
+      const sharePath = res?.data?.sharePath || `/?conversationId=${conversation._id}`;
+      const fullUrl = `${window.location.origin}${sharePath}`;
+      await navigator.clipboard.writeText(fullUrl);
+      toast.success(t("Copied share link"));
+    } catch (error) {
+      console.error("Failed to share conversation:", error);
+      toast.error(t("Failed to share conversation"));
+    }
+  };
+
+  const handleRenameConversation = async (conversation: IConversation, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const currentTitle = conversation.title || getConversationTitle(conversation);
+    const nextTitle = window.prompt(t("Enter new conversation name"), currentTitle);
+
+    if (!nextTitle || !nextTitle.trim() || nextTitle.trim() === currentTitle) {
       return;
     }
 
+    const previous = conversations;
+
     try {
-      // Optimistic update - remove from UI immediately
-      setConversations(prev => prev.filter(c => c._id !== conversationId));
-      
-      // Call API to delete
-      await chatService.deleteConversation(conversationId);
-      console.log("Conversation deleted successfully");
+      const trimmedTitle = nextTitle.trim();
+      setConversations((list) =>
+        list.map((item) =>
+          item._id === conversation._id ? { ...item, title: trimmedTitle } : item
+        )
+      );
+
+      await chatService.renameConversation(conversation._id, trimmedTitle);
+      toast.success(t("Conversation renamed successfully"));
     } catch (error) {
-      console.error("Failed to delete conversation:", error);
-      // Reload conversations on error
+      console.error("Failed to rename conversation:", error);
+      toast.error(t("Failed to rename conversation"));
+      setConversations(previous);
+    }
+  };
+
+  const handlePinConversation = async (conversation: IConversation, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextPinned = !conversation.pinned;
+    const previous = conversations;
+
+    try {
+      setConversations((list) =>
+        sortConversations(
+          list.map((item) =>
+            item._id === conversation._id ? { ...item, pinned: nextPinned } : item
+          )
+        )
+      );
+
+      await chatService.pinConversation(conversation._id, nextPinned);
+      toast.success(nextPinned ? t("Conversation pinned") : t("Conversation unpinned"));
+    } catch (error) {
+      console.error("Failed to pin conversation:", error);
+      toast.error(t("Failed to update pin status"));
+      setConversations(previous);
+    }
+  };
+
+  const handleArchiveConversation = async (conversation: IConversation, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    try {
+      setConversations((list) => list.filter((item) => item._id !== conversation._id));
+
+      await chatService.archiveConversation(conversation._id, true);
+      toast.success(t("Conversation archived successfully"));
+    } catch (error) {
+      console.error("Failed to archive conversation:", error);
+      toast.error(t("Failed to archive conversation"));
       loadConversations(1, false);
     }
   };
 
+  const handleDeleteConversation = async (conversationId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation
+    setConversationToDelete(conversationId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteConversation = async () => {
+    if (!conversationToDelete) return;
+
+    try {
+      // Optimistic update - remove from UI immediately
+      setConversations(prev => prev.filter(c => c._id !== conversationToDelete));
+      
+      // Call API to delete
+      await chatService.deleteConversation(conversationToDelete);
+      console.log("Conversation deleted successfully");
+      toast.success(t("Conversation deleted successfully"));
+    } catch (error) {
+      console.error("Failed to delete conversation:", error);
+      toast.error(t("Failed to delete conversation"));
+      // Reload conversations on error
+      loadConversations(1, false);
+      throw error;
+    } finally {
+      setConversationToDelete(null);
+    }
+  };
+
   const getConversationTitle = (conversation: IConversation): string => {
+    if (conversation.title && conversation.title.trim()) {
+      return conversation.title.trim();
+    }
+
     // Get first user message as title, or fallback to timestamp
     const firstUserMessage = conversation.chat.find(
       (msg) => msg.role === "user"
@@ -151,7 +256,7 @@ export function NavConversations() {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Lịch sử</SidebarGroupLabel>
+      <SidebarGroupLabel>{t("History")}</SidebarGroupLabel>
       <SidebarMenu>
         <Collapsible 
           asChild 
@@ -163,7 +268,7 @@ export function NavConversations() {
             <CollapsibleTrigger asChild>
               <SidebarMenuButton className="cursor-pointer">
                 <MessageSquare />
-                <span>Các đoạn chat của bạn</span>
+                <span>{t("Your conversations")}</span>
                 <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
               </SidebarMenuButton>
             </CollapsibleTrigger>
@@ -177,7 +282,7 @@ export function NavConversations() {
                   </div>
                 ) : conversations.length === 0 ? (
                   <div className="px-4 py-2 text-sm text-muted-foreground">
-                    Chưa có cuộc hội thoại nào
+                    {t("No conversations yet")}
                   </div>
                 ) : (
                   <>
@@ -211,21 +316,21 @@ export function NavConversations() {
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" side="right" className="w-48 border-2">
-                              <DropdownMenuItem disabled>
+                              <DropdownMenuItem onClick={(e) => handleShareConversation(conversation, e)}>
                                 <Share2 className="mr-2 h-4 w-4" />
-                                <span>Chia sẻ</span>
+                                <span>{t("Share")}</span>
                               </DropdownMenuItem>
-                              <DropdownMenuItem disabled>
+                              <DropdownMenuItem onClick={(e) => handleRenameConversation(conversation, e)}>
                                 <Edit className="mr-2 h-4 w-4" />
-                                <span>Đổi tên</span>
+                                <span>{t("Rename")}</span>
                               </DropdownMenuItem>
-                              <DropdownMenuItem disabled>
+                              <DropdownMenuItem onClick={(e) => handlePinConversation(conversation, e)}>
                                 <Pin className="mr-2 h-4 w-4" />
-                                <span>Ghim</span>
+                                <span>{conversation.pinned ? t("Unpin") : t("Pin")}</span>
                               </DropdownMenuItem>
-                              <DropdownMenuItem disabled>
+                              <DropdownMenuItem onClick={(e) => handleArchiveConversation(conversation, e)}>
                                 <Archive className="mr-2 h-4 w-4" />
-                                <span>Lưu trữ</span>
+                                <span>{t("Archive")}</span>
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
@@ -233,7 +338,7 @@ export function NavConversations() {
                                 onClick={(e) => handleDeleteConversation(conversation._id, e)}
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                <span>Xóa</span>
+                                <span>{t("Delete")}</span>
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -252,10 +357,10 @@ export function NavConversations() {
                           {loading ? (
                             <>
                               <Loader2 className="h-3 w-3 animate-spin" />
-                              <span>Đang tải...</span>
+                              <span>{t("Loading...")}</span>
                             </>
                           ) : (
-                            <span>Xem thêm</span>
+                            <span>{t("View more")}</span>
                           )}
                         </button>
                       </SidebarMenuSubItem>
@@ -267,6 +372,18 @@ export function NavConversations() {
           </SidebarMenuItem>
         </Collapsible>
       </SidebarMenu>
+
+      <ConfirmDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDeleteConversation}
+        title={t("Delete conversation")}
+        description={t("Are you sure you want to delete this conversation? This action cannot be undone.")}
+        confirmLabel={t("Delete")}
+        cancelLabel={t("Cancel")}
+        successMessage={t("Conversation deleted successfully")}
+        errorMessage={t("Failed to delete conversation")}
+      />
     </SidebarGroup>
   );
 }

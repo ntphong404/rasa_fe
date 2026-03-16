@@ -1,161 +1,174 @@
+import { Suspense, lazy, type ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { HomeDirectorPage, NotFoundPage, UserProfilePage } from "@/pages";
-import { AuthLayout, MainLayout } from "@/layouts";
-import { LoginPage, SignUpPage, VerifyPage } from "@/features/auth";
-import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage";
-import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
-import { RoleManagement } from "@/features/roles";
-import { EntityManagement } from "@/features/entity";
-import {
-  CreateIntentPage,
-  EditIntentPage,
-  IntentManagementPage,
-} from "@/features/intents";
-import { ResponseManagement } from "@/features/reponses";
-import { ActionManagement } from "@/features/action";
-import {
-  CreateRulePageSimple,
-  EditRulePageNew,
-  RuleManagementPage,
-} from "@/features/rules";
-import { CreateDataPage, ImportIntentPage } from "@/features/data-entry";
-import { ChatBotManagement } from "@/features/chatbot";
-import { HomeChatDemo } from "@/features/chat/pages/HomeChatPageDemo";
-import { PermissionManagement } from "@/features/permissions/pages/PermissionManagement";
-import { UserManagement } from "@/features/users/pages/UserManagement";
-import { UQuestionManagement } from "@/features/uquestion/pages/UQuestionManagement";
-import { StoryManagementPage } from "@/features/stories/pages/StoryManagementPage";
-import { EditStoryPage } from "@/features/stories/pages/EditStoryPage";
-import { CreateStoryPage } from "@/features/stories/pages/CreateStoryPage";
-import DataInfoPage from "@/features/data-info/pages/DataInfoPage";
-import DataInfoDetailPage from "@/features/data-info/pages/DataInfoDetailPage";
-import { TrainingManagementPage } from "@/features/training";
-import {
-  DocumentManagementPage,
-  CreateDocumentPage,
-  EditDocumentPage,
-} from "@/features/docs";
-import { RagChatPage } from "@/features/chat/pages/RagChatPage";
-import { ContextDocumentsPage } from "@/features/context-docs";
-import {
-  UserStatisticsPage,
-  ConversationStatisticsPage,
-  ChatbotStatisticsPage,
-  NLPStatisticsPage,
-  DocumentStatisticsPage,
-} from "@/features/statistics";
+
+const NotFoundPage = lazy(() => import("@/pages").then((module) => ({ default: module.NotFoundPage })));
+const HomeDirectorPage = lazy(() => import("@/pages").then((module) => ({ default: module.HomeDirectorPage })));
+const UserProfilePage = lazy(() => import("@/pages").then((module) => ({ default: module.UserProfilePage })));
+
+const MainLayout = lazy(() => import("@/layouts").then((module) => ({ default: module.MainLayout })));
+const AuthLayout = lazy(() => import("@/layouts").then((module) => ({ default: module.AuthLayout })));
+
+const LoginPage = lazy(() => import("@/features/auth").then((module) => ({ default: module.LoginPage })));
+const SignUpPage = lazy(() => import("@/features/auth").then((module) => ({ default: module.SignUpPage })));
+const VerifyPage = lazy(() => import("@/features/auth").then((module) => ({ default: module.VerifyPage })));
+const ForgotPasswordPage = lazy(() => import("@/features/auth/pages/ForgotPasswordPage").then((module) => ({ default: module.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import("@/features/auth/pages/ResetPasswordPage").then((module) => ({ default: module.ResetPasswordPage })));
+
+const RoleManagement = lazy(() => import("@/features/roles").then((module) => ({ default: module.RoleManagement })));
+const EntityManagement = lazy(() => import("@/features/entity").then((module) => ({ default: module.EntityManagement })));
+const IntentManagementPage = lazy(() => import("@/features/intents").then((module) => ({ default: module.IntentManagementPage })));
+const CreateIntentPage = lazy(() => import("@/features/intents").then((module) => ({ default: module.CreateIntentPage })));
+const EditIntentPage = lazy(() => import("@/features/intents").then((module) => ({ default: module.EditIntentPage })));
+const ResponseManagement = lazy(() => import("@/features/reponses").then((module) => ({ default: module.ResponseManagement })));
+const ActionManagement = lazy(() => import("@/features/action").then((module) => ({ default: module.ActionManagement })));
+const RuleManagementPage = lazy(() => import("@/features/rules").then((module) => ({ default: module.RuleManagementPage })));
+const CreateRulePageSimple = lazy(() => import("@/features/rules").then((module) => ({ default: module.CreateRulePageSimple })));
+const EditRulePageNew = lazy(() => import("@/features/rules").then((module) => ({ default: module.EditRulePageNew })));
+const CreateDataPage = lazy(() => import("@/features/data-entry").then((module) => ({ default: module.CreateDataPage })));
+const ImportIntentPage = lazy(() => import("@/features/data-entry").then((module) => ({ default: module.ImportIntentPage })));
+const ChatBotManagement = lazy(() => import("@/features/chatbot").then((module) => ({ default: module.ChatBotManagement })));
+const HomeChatDemo = lazy(() => import("@/features/chat/pages/HomeChatPageDemo").then((module) => ({ default: module.HomeChatDemo })));
+const RagChatPage = lazy(() => import("@/features/chat/pages/RagChatPage").then((module) => ({ default: module.RagChatPage })));
+const PermissionManagement = lazy(() => import("@/features/permissions/pages/PermissionManagement").then((module) => ({ default: module.PermissionManagement })));
+const UserManagement = lazy(() => import("@/features/users/pages/UserManagement").then((module) => ({ default: module.UserManagement })));
+const UQuestionManagement = lazy(() => import("@/features/uquestion/pages/UQuestionManagement").then((module) => ({ default: module.UQuestionManagement })));
+const StoryManagementPage = lazy(() => import("@/features/stories/pages/StoryManagementPage").then((module) => ({ default: module.StoryManagementPage })));
+const EditStoryPage = lazy(() => import("@/features/stories/pages/EditStoryPage").then((module) => ({ default: module.EditStoryPage })));
+const CreateStoryPage = lazy(() => import("@/features/stories/pages/CreateStoryPage").then((module) => ({ default: module.CreateStoryPage })));
+const DataInfoPage = lazy(() => import("@/features/data-info/pages/DataInfoPage"));
+const DataInfoDetailPage = lazy(() => import("@/features/data-info/pages/DataInfoDetailPage"));
+const TrainingManagementPage = lazy(() => import("@/features/training").then((module) => ({ default: module.TrainingManagementPage })));
+const DocumentManagementPage = lazy(() => import("@/features/docs").then((module) => ({ default: module.DocumentManagementPage })));
+const CreateDocumentPage = lazy(() => import("@/features/docs").then((module) => ({ default: module.CreateDocumentPage })));
+const EditDocumentPage = lazy(() => import("@/features/docs").then((module) => ({ default: module.EditDocumentPage })));
+const ContextDocumentsPage = lazy(() => import("@/features/context-docs").then((module) => ({ default: module.ContextDocumentsPage })));
+const SettingsPage = lazy(() => import("@/features/settings").then((module) => ({ default: module.SettingsPage })));
+const HelpCenterPage = lazy(() => import("@/features/help").then((module) => ({ default: module.HelpCenterPage })));
+const UserStatisticsPage = lazy(() => import("@/features/statistics").then((module) => ({ default: module.UserStatisticsPage })));
+const ConversationStatisticsPage = lazy(() => import("@/features/statistics").then((module) => ({ default: module.ConversationStatisticsPage })));
+const ChatbotStatisticsPage = lazy(() => import("@/features/statistics").then((module) => ({ default: module.ChatbotStatisticsPage })));
+const NLPStatisticsPage = lazy(() => import("@/features/statistics").then((module) => ({ default: module.NLPStatisticsPage })));
+const DocumentStatisticsPage = lazy(() => import("@/features/statistics").then((module) => ({ default: module.DocumentStatisticsPage })));
+
+function RouteLoader() {
+  return (
+    <div className="flex min-h-[40vh] w-full items-center justify-center">
+      <div className="surface-card flex items-center gap-3 px-4 py-3 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span>Loading page...</span>
+      </div>
+    </div>
+  );
+}
+
+function withSuspense(element: ReactNode) {
+  return <Suspense fallback={<RouteLoader />}>{element}</Suspense>;
+}
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <MainLayout />,
-    errorElement: <NotFoundPage />,
+    element: withSuspense(<MainLayout />),
+    errorElement: withSuspense(<NotFoundPage />),
     children: [
-      { index: true, element: <HomeDirectorPage /> },
-      { path: "home_chat", element: <HomeChatDemo /> },
-      { path: "home_chat_demo", element: <HomeChatDemo /> },
-      { path: "users", element: <UserManagement /> },
-      { path: "profile", element: <UserProfilePage /> },
-      { path: "roles", element: <RoleManagement /> },
-      { path: "permissions", element: <PermissionManagement /> },
-      { path: "entities", element: <EntityManagement /> },
-      { path: "users", element: <UserManagement /> },
+      { index: true, element: withSuspense(<HomeDirectorPage />) },
+      { path: "home_chat", element: withSuspense(<HomeChatDemo />) },
+      { path: "home_chat_demo", element: withSuspense(<HomeChatDemo />) },
+      { path: "users", element: withSuspense(<UserManagement />) },
+      { path: "profile", element: withSuspense(<UserProfilePage />) },
+      { path: "roles", element: withSuspense(<RoleManagement />) },
+      { path: "permissions", element: withSuspense(<PermissionManagement />) },
+      { path: "entities", element: withSuspense(<EntityManagement />) },
       {
         path: "intents",
         children: [
-          { index: true, element: <IntentManagementPage /> },
-          { path: "new", element: <CreateIntentPage /> },
-          { path: "edit", element: <EditIntentPage /> },
+          { index: true, element: withSuspense(<IntentManagementPage />) },
+          { path: "new", element: withSuspense(<CreateIntentPage />) },
+          { path: "edit", element: withSuspense(<EditIntentPage />) },
         ],
       },
-      { path: "actions", element: <ActionManagement /> },
-      { path: "responses", element: <ResponseManagement /> },
+      { path: "actions", element: withSuspense(<ActionManagement />) },
+      { path: "responses", element: withSuspense(<ResponseManagement />) },
       {
         path: "rules",
         children: [
-          { index: true, element: <RuleManagementPage /> },
-          { path: "new", element: <CreateRulePageSimple /> },
-          { path: "edit", element: <EditRulePageNew /> },
+          { index: true, element: withSuspense(<RuleManagementPage />) },
+          { path: "new", element: withSuspense(<CreateRulePageSimple />) },
+          { path: "edit", element: withSuspense(<EditRulePageNew />) },
         ],
       },
-      // Data entry independent routes
       {
         path: "add-data",
         children: [
-          { index: true, element: <CreateDataPage /> },
-          { path: "import", element: <ImportIntentPage /> },
+          { index: true, element: withSuspense(<CreateDataPage />) },
+          { path: "import", element: withSuspense(<ImportIntentPage />) },
         ],
       },
-      { path: "responses", element: <ResponseManagement /> },
-      { path: "actions", element: <ActionManagement /> },
-      { path: "chat_bot", element: <ChatBotManagement /> },
-      { path: "uquestion", element: <UQuestionManagement /> },
+      { path: "chat_bot", element: withSuspense(<ChatBotManagement />) },
+      { path: "uquestion", element: withSuspense(<UQuestionManagement />) },
       {
         path: "stories",
         children: [
-          { index: true, element: <StoryManagementPage /> },
-          { path: "new", element: <CreateStoryPage /> },
-          { path: "edit", element: <EditStoryPage /> },
+          { index: true, element: withSuspense(<StoryManagementPage />) },
+          { path: "new", element: withSuspense(<CreateStoryPage />) },
+          { path: "edit", element: withSuspense(<EditStoryPage />) },
         ],
       },
-      { path: "training", element: <TrainingManagementPage /> },
-      { path: "data-info", element: <DataInfoPage /> },
-      { path: "data-info/view", element: <DataInfoDetailPage /> },
+      { path: "training", element: withSuspense(<TrainingManagementPage />) },
+      { path: "data-info", element: withSuspense(<DataInfoPage />) },
+      { path: "data-info/view", element: withSuspense(<DataInfoDetailPage />) },
       {
         path: "docs",
         children: [
-          { index: true, element: <DocumentManagementPage /> },
-          { path: "new", element: <CreateDocumentPage /> },
-          { path: "edit", element: <EditDocumentPage /> },
+          { index: true, element: withSuspense(<DocumentManagementPage />) },
+          { path: "new", element: withSuspense(<CreateDocumentPage />) },
+          { path: "edit", element: withSuspense(<EditDocumentPage />) },
         ],
       },
-      { path: "context-docs", element: <ContextDocumentsPage /> },
-      { path: "rag-chat", element: <RagChatPage /> },
+      { path: "context-docs", element: withSuspense(<ContextDocumentsPage />) },
+      { path: "rag-chat", element: withSuspense(<RagChatPage />) },
+      { path: "settings", element: withSuspense(<SettingsPage />) },
+      { path: "help", element: withSuspense(<HelpCenterPage />) },
       {
         path: "statistics",
         children: [
-          { path: "users", element: <UserStatisticsPage /> },
-          { path: "conversations", element: <ConversationStatisticsPage /> },
-          { path: "chatbots", element: <ChatbotStatisticsPage /> },
-          { path: "nlp", element: <NLPStatisticsPage /> },
-          { path: "documents", element: <DocumentStatisticsPage /> },
+          { path: "users", element: withSuspense(<UserStatisticsPage />) },
+          { path: "conversations", element: withSuspense(<ConversationStatisticsPage />) },
+          { path: "chatbots", element: withSuspense(<ChatbotStatisticsPage />) },
+          { path: "nlp", element: withSuspense(<NLPStatisticsPage />) },
+          { path: "documents", element: withSuspense(<DocumentStatisticsPage />) },
         ],
       },
     ],
   },
   {
     path: "/auth",
-    element: <AuthLayout />,
+    element: withSuspense(<AuthLayout />),
     children: [
       {
         index: true,
-        element: <LoginPage />,
+        element: withSuspense(<LoginPage />),
       },
       {
         path: "register",
-        element: <SignUpPage />,
+        element: withSuspense(<SignUpPage />),
       },
       {
         path: "verify",
-        element: <VerifyPage />,
+        element: withSuspense(<VerifyPage />),
       },
       {
         path: "forgot-password",
-        element: <ForgotPasswordPage />,
+        element: withSuspense(<ForgotPasswordPage />),
       },
       {
         path: "reset-password",
-        element: <ResetPasswordPage />,
+        element: withSuspense(<ResetPasswordPage />),
       },
     ],
   },
-  // {
-  //   path: "/",
-  //   element: <MainLayout />,
-  //   errorElement: <NotFoundPage />,
-  //   children: [{ path: "home_chat", index: true, element: <HomeChat /> }],
-  // },
-  { path: "*", element: <NotFoundPage /> },
+  { path: "*", element: withSuspense(<NotFoundPage />) },
 ]);
 
 export default function AppRouter() {

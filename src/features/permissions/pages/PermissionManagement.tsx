@@ -47,6 +47,7 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { CreatePermissionDialog } from "./CreatePermissionDialog";
 import { EditPermissionDialog } from "./EditPermissionDialog";
 import { PermissionDetailsDialog } from "./PermissionDetailsDialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -201,10 +202,10 @@ export function PermissionManagement() {
   };
 
   return (
-    <div className="relative p-3">
+    <div className="admin-page">
       <Form {...form}>
         <form
-          className="table-controller py-4 flex gap-4 flex-col sm:flex-row"
+          className="table-controller admin-toolbar"
           onSubmit={form.handleSubmit(onSubmit)}
         >
           <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -503,27 +504,42 @@ export function PermissionManagement() {
               header: t("Actions"),
               cell: ({ row }) => (
                 <div className="flex gap-2">
-                  <Button
-                    onClick={() => handleViewDetails(row.original)}
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    onClick={() => handleEditPermission(row.original)}
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="bg-red-600 hover:bg-red-700"
-                    onClick={() => handleAskDeletePermission(row.original._id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={() => handleViewDetails(row.original)}
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Xem chi tiết</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={() => handleEditPermission(row.original)}
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Chỉnh sửa quyền hạn</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        className="bg-red-600 hover:bg-red-700"
+                        onClick={() => handleAskDeletePermission(row.original._id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Xóa quyền hạn</TooltipContent>
+                  </Tooltip>
                 </div>
               ),
             },

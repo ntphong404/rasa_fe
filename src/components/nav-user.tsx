@@ -5,7 +5,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "./ui/sidebar";
-import { BadgeCheck, ChevronsUpDown, LogIn, LogOut } from "lucide-react";
+import { BadgeCheck, ChevronsUpDown, LogIn, LogOut, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,8 +20,10 @@ import { useAuthStore } from "@/store/auth";
 import ENDPOINTS from "@/api/endpoints";
 import { useMe } from "@/hooks/useMe";
 import axiosInstance from "@/api/axios";
+import { useTranslation } from "react-i18next";
 
 export function NavUser() {
+  const { t } = useTranslation();
   const { isMobile } = useSidebar();
   // const { user } = useAuthStore();
   const { user } = useMe();
@@ -48,7 +50,7 @@ export function NavUser() {
             className="gap-2 text-sm font-medium border border-border rounded-md px-3 py-2 hover:bg-primary hover:text-primary-foreground transition-colors"
           >
             <LogIn className="size-4" />
-            Đăng nhập
+            {t("Login")}
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
@@ -127,7 +129,12 @@ export function NavUser() {
             {/* <DropdownMenuSeparator /> */}
             <DropdownMenuItem onClick={() => navigate("/profile")}>
               <BadgeCheck />
-              Account
+              {t("Account")}
+            </DropdownMenuItem>
+
+            <DropdownMenuItem onClick={() => navigate("/settings")}>
+              <Settings />
+              {t("Settings")}
             </DropdownMenuItem>
 
             <DropdownMenuItem
@@ -141,7 +148,7 @@ export function NavUser() {
               }}
             >
               <LogOut />
-              Log out
+              {t("Logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

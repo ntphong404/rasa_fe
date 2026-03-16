@@ -12,6 +12,13 @@
   "Permissions": "Quyền hạn",
   "Users Management": "Quản lý người dùng",
   "Users": "Người dùng",
+  "Login": "Đăng nhập",
+  "Logout": "Đăng xuất",
+  "Account": "Tài khoản",
+  "Administration": "Quản trị",
+  "Sidebar": "Thanh bên",
+  "Display sidebar on mobile devices.": "Hiển thị thanh bên trên thiết bị di động.",
+  "Toggle sidebar": "Bật/tắt thanh bên",
   "Settings": "Cài đặt",
   "Oops! Something went wrong.": "Ôi không! Đã xảy ra lỗi.",
   "The page you're looking for doesn't exist or an error occurred.": "Trang bạn đang tìm kiếm không tồn tại hoặc đã xảy ra lỗi.",
@@ -26,6 +33,10 @@
   "Select limit": "Chọn giới hạn",
   "documents / page": "bản ghi / trang",
   "Add": "Thêm",
+  "Likes": "Lượt thích",
+  "Dislikes": "Lượt không thích",
+  "Like/Dislike": "Thích/Không Thích",
+  "Normal": "Bình thường",
   "Features": "Tính năng",
   "Import": "Nhập dữ liệu",
   "Export": "Xuất dữ liệu",
@@ -34,8 +45,17 @@
   "Light": "Sáng",
   "Dark": "Tối",
   "System": "Hệ thống",
+  "Language": "Ngôn ngữ",
+  "Appearance": "Giao diện",
+  "Manage your app preferences": "Quản lý các tùy chọn của ứng dụng",
+  "Choose display language": "Chọn ngôn ngữ hiển thị",
+  "Choose light, dark, or system theme": "Chọn giao diện Sáng, Tối hoặc theo Hệ thống",
+  "Settings updated": "Đã cập nhật cài đặt",
+  "More settings coming soon": "Sẽ sớm có thêm cài đặt",
+  "Additional preferences will be added here in next updates": "Các tùy chọn khác sẽ được bổ sung tại đây ở các bản cập nhật tới",
   "Rules": "Rules",
   "Actions": "Actions",
+  "Add to data": "Thêm vào dữ liệu",
   "Operations": "Thao tác",
   "Create Rule": "Tạo Luật",
   "Edit Rule": "Chỉnh sửa Luật",
@@ -100,7 +120,7 @@
   "Updated At": "Cập nhật lúc",
   "Deleted At": "Xóa lúc",
   "intents": "intent",
-  "actions": "action",
+  "actions": "hành động",
   "No intents": "Không có intent",
   "No actions": "Không có action",
   "Searching...": "Đang tìm...",
@@ -108,7 +128,7 @@
   "Cancel": "Hủy",
   "Oldest": "Cũ nhất",
   "Newest": "Mới nhất",
-  "Responses": "Responses",
+  "Responses": "Phản hồi",
   "Associated Responses": "Phản hồi Liên quan",
   "No responses": "Không có phản hồi",
   "responses": "phản hồi",
@@ -196,7 +216,7 @@
   "ChatBot Operations": "Thao tác ChatBot",
   "Manage operations for": "Quản lý thao tác cho",
   "Health": "Tình trạng",
-  "Models": "Models",
+  "Models": "Mô hình",
   "Check Health": "Kiểm tra Tình trạng",
   "Health check completed but no service data available": "Kiểm tra hoàn tất nhưng không có dữ liệu dịch vụ",
   "Failed to check health": "Không thể kiểm tra tình trạng",
@@ -335,5 +355,264 @@
   "Start a conversation with AI": "Bắt đầu trò chuyện với AI",
   "Press Enter to send, Shift+Enter for new line": "Enter để gửi, Shift+Enter để xuống dòng",
   "Failed to load documents": "Không thể tải danh sách tài liệu",
-  "Failed to send message. Please try again.": "Không thể gửi tin nhắn. Vui lòng thử lại."
+  "Failed to send message. Please try again.": "Không thể gửi tin nhắn. Vui lòng thử lại.",
+  "Quick Help": "Trợ giúp nhanh",
+  "Use this quick guide to navigate core features": "Dùng hướng dẫn nhanh này để thao tác các tính năng chính.",
+  "Open Full Guide": "Mở hướng dẫn đầy đủ",
+  "General User Guide": "Hướng dẫn sử dụng chung",
+  "This guide applies to the entire web app.": "Hướng dẫn này áp dụng cho toàn bộ ứng dụng web.",
+  "Get Help": "Nhận hỗ trợ",
+  "Learn More": "Tìm hiểu thêm",
+  "Keyboard Shortcuts": "Phím tắt",
+  "Need more support? Contact your system administrator or support team.": "Cần hỗ trợ thêm? Hãy liên hệ quản trị viên hệ thống hoặc đội hỗ trợ.",
+  "Read module-specific instructions from each page's question mark icon.": "Đọc hướng dẫn riêng theo từng module tại biểu tượng dấu hỏi trên mỗi trang.",
+  "Enter sends chat messages, Shift + Enter inserts a new line, Esc closes most dialogs.": "Enter gửi tin nhắn chat, Shift + Enter xuống dòng, Esc đóng hầu hết hộp thoại.",
+  "Enter sends chat messages": "Enter gửi tin nhắn chat",
+  "Shift + Enter inserts a new line": "Shift + Enter xuống dòng",
+  "Esc closes most dialogs and popovers": "Esc đóng hầu hết hộp thoại và popover",
+  "What is an Action?": "Action là gì?",
+  "Actions are custom Python code that a bot can run. They are used for tasks like calling APIs, querying a database, or interacting with external systems.": "Action là đoạn mã Python tùy chỉnh mà bot có thể chạy. Action dùng để gọi API, truy vấn cơ sở dữ liệu hoặc tương tác với các hệ thống bên ngoài.",
+  "View Python code": "Xem mã Python",
+  "Help Center": "Trung tâm trợ giúp",
+  "Find guides, support options, and useful shortcuts": "Tìm hướng dẫn, kênh hỗ trợ và các phím tắt hữu ích",
+  "Get Started": "Bắt đầu nhanh",
+  "Core navigation and daily workflow": "Điều hướng chính và quy trình sử dụng hằng ngày",
+  "Use the left sidebar to switch modules: Intents, Entities, Actions, Rules, Stories, and Documents.": "Dùng thanh bên trái để chuyển module: Intents, Entities, Actions, Rules, Stories và Documents.",
+  "Use the top-right question mark icon for quick contextual help on any page.": "Dùng biểu tượng dấu hỏi góc phải trên để mở trợ giúp nhanh ở mọi trang.",
+  "Open Settings to change language and theme for the whole app.": "Mở Cài đặt để đổi ngôn ngữ và giao diện cho toàn bộ ứng dụng.",
+  "Speed up common actions": "Tăng tốc thao tác thường dùng",
+  "Ctrl + / opens the keyboard shortcuts dialog": "Ctrl + / mở hộp thoại phím tắt",
+  "Module-specific guidance": "Hướng dẫn theo từng module",
+  "Create and maintain NLU resources from Intents, Entities, Responses, and Rules.": "Tạo và quản lý tài nguyên NLU từ Intents, Entities, Responses và Rules.",
+  "Use Action editor for custom Python logic and syntax validation.": "Dùng trình soạn Action cho logic Python tùy chỉnh và kiểm tra cú pháp.",
+  "Use import/export tools for fast onboarding and migration.": "Dùng công cụ import/export để nhập liệu và di chuyển dữ liệu nhanh.",
+  "Support and troubleshooting": "Hỗ trợ và xử lý sự cố",
+  "Contact Support": "Liên hệ hỗ trợ",
+  "Open shortcuts help": "Mở trợ giúp phím tắt",
+  "Show deleted actions": "Hiển thị action đã xóa",
+  "What is an Entity?": "Entity là gì?",
+  "Entities are structured data that can be extracted from user input. There are three types:": "Entity là dữ liệu có cấu trúc được trích xuất từ câu người dùng. Có 3 loại chính:",
+  "What is a Response?": "Response là gì?",
+  "Responses are predefined messages that the bot sends to users. Each response must have a name starting with 'utter_' prefix.": "Response là câu trả lời định nghĩa sẵn mà bot gửi cho người dùng. Mỗi response phải có tên bắt đầu bằng tiền tố 'utter_'.",
+  "Role-based tips": "Gợi ý theo vai trò",
+  "Admin: manage users, roles, permissions, and system-wide training flows.": "Admin: quản lý người dùng, vai trò, quyền hạn và luồng huấn luyện toàn hệ thống.",
+  "Admin: review statistics dashboards to monitor quality and usage.": "Admin: theo dõi dashboard thống kê để giám sát chất lượng và mức sử dụng.",
+  "Manager: maintain data modules, documents, and context resources.": "Manager: quản lý module dữ liệu, tài liệu và tài nguyên ngữ cảnh.",
+  "Manager: coordinate content updates before training and deployment.": "Manager: điều phối cập nhật nội dung trước khi huấn luyện và triển khai.",
+  "User: focus on chatting, searching documents, and feedback loops.": "User: tập trung chat, tìm kiếm tài liệu và phản hồi cải tiến.",
+  "User: use Help Center shortcuts to work faster with daily tasks.": "User: dùng phím tắt trong Trung tâm trợ giúp để thao tác hằng ngày nhanh hơn.",
+  "History": "Lịch sử",
+  "Your conversations": "Các cuộc hội thoại của bạn",
+  "No conversations yet": "Chưa có cuộc hội thoại nào",
+  "View more": "Xem thêm",
+  "Share": "Chia sẻ",
+  "Rename": "Đổi tên",
+  "Unpin": "Bỏ ghim",
+  "Pin": "Ghim",
+  "Archive": "Lưu trữ",
+  "Copied share link": "Đã sao chép liên kết chia sẻ",
+  "Failed to share conversation": "Không thể chia sẻ cuộc hội thoại",
+  "Enter new conversation name": "Nhập tên cuộc hội thoại mới",
+  "Conversation renamed successfully": "Đổi tên cuộc hội thoại thành công",
+  "Failed to rename conversation": "Không thể đổi tên cuộc hội thoại",
+  "Conversation pinned": "Đã ghim cuộc hội thoại",
+  "Conversation unpinned": "Đã bỏ ghim cuộc hội thoại",
+  "Failed to update pin status": "Không thể cập nhật trạng thái ghim",
+  "Conversation archived successfully": "Đã lưu trữ cuộc hội thoại thành công",
+  "Failed to archive conversation": "Không thể lưu trữ cuộc hội thoại",
+  "Confirm delete": "Xác nhận xóa",
+  "Delete": "Xóa",
+  "Deleted successfully": "Xóa thành công",
+  "Delete failed. Please try again.": "Xóa thất bại. Vui lòng thử lại.",
+  "Delete conversation": "Xóa cuộc hội thoại",
+  "Are you sure you want to delete this conversation? This action cannot be undone.": "Bạn có chắc muốn xóa cuộc hội thoại này không? Hành động này không thể hoàn tác.",
+  "Conversation deleted successfully": "Đã xóa cuộc hội thoại thành công",
+  "Failed to delete conversation": "Không thể xóa cuộc hội thoại",
+  "Are you sure you want to delete this item? This action cannot be undone.": "Bạn có chắc muốn xóa mục này không? Hành động này không thể hoàn tác.",
+  "Moved to trash successfully": "Đã chuyển vào thùng rác thành công",
+  "Move to trash failed. Please try again.": "Chuyển vào thùng rác thất bại. Vui lòng thử lại.",
+  "Are you sure you want to move this item to trash?": "Bạn có chắc muốn chuyển mục này vào thùng rác không?",
+  "You can restore it later.": "Bạn có thể khôi phục lại sau.",
+  "Deleted permanently": "Đã xóa vĩnh viễn",
+  "Are you sure you want to permanently delete this item?": "Bạn có chắc muốn xóa vĩnh viễn mục này không?",
+  "This action cannot be undone!": "Hành động này KHÔNG thể hoàn tác!",
+  "Warning: All associated data will be permanently removed from the database.": "Cảnh báo: Tất cả dữ liệu liên quan sẽ bị xóa vĩnh viễn khỏi cơ sở dữ liệu.",
+  "Document uploaded successfully": "Đã tải lên tài liệu {{fileName}} thành công",
+  "Failed to upload document. Please try again.": "Không thể tải lên tài liệu. Vui lòng thử lại.",
+  "Document deleted successfully": "Đã xóa tài liệu {{fileName}} thành công",
+  "Failed to delete document. Please try again.": "Không thể xóa tài liệu. Vui lòng thử lại.",
+  "Delete document": "Xóa tài liệu",
+  "Are you sure you want to delete this document? This action cannot be undone.": "Bạn có chắc muốn xóa tài liệu này không? Hành động này không thể hoàn tác."
+  ,"Please enter action name": "Vui lòng nhập tên action"
+  ,"Failed to create action": "Không thể tạo action"
+  ,"Action updated successfully": "Cập nhật action thành công"
+  ,"Failed to update action": "Không thể cập nhật action"
+  ,"Failed to create response": "Không thể tạo response"
+  ,"Failed to update response": "Không thể cập nhật response"
+  ,"Please enter entity name": "Vui lòng nhập tên entity"
+  ,"Entity ID is missing": "Thiếu ID entity"
+  ,"Failed to create entity": "Không thể tạo entity"
+  ,"Failed to update entity": "Không thể cập nhật entity"
+  ,"Restored successfully": "Khôi phục thành công"
+  ,"Restore failed. Please try again.": "Khôi phục thất bại. Vui lòng thử lại."
+  ,"Restore item": "Khôi phục mục"
+  ,"Are you sure you want to restore this item?": "Bạn có chắc muốn khôi phục mục này không?"
+  ,"It will be moved back to active list.": "Mục sẽ được chuyển về danh sách đang hoạt động."
+  ,"Restore": "Khôi phục"
+  ,"Copied to clipboard": "Đã sao chép vào clipboard"
+  ,"Failed to copy text": "Không thể sao chép văn bản"
+  ,"An error occurred while copying": "Có lỗi xảy ra khi sao chép"
+  ,"PDF exported successfully": "Đã xuất file PDF thành công"
+  ,"Failed to export PDF": "Không thể xuất file PDF"
+  ,"Word exported successfully": "Đã xuất file Word thành công"
+  ,"Failed to export Word": "Không thể xuất file Word"
+  ,"Options": "Tùy chọn"
+  ,"Copied": "Đã sao chép"
+  ,"Copy": "Sao chép"
+  ,"Export PDF": "Xuất PDF"
+  ,"Export Word": "Xuất Word"
+  ,"No messages to export": "Không có tin nhắn nào để xuất"
+  ,"Export conversation": "Xuất cuộc trò chuyện"
+  ,"Export file": "Xuất file"
+  ,"Exporting...": "Đang xuất..."
+  ,"Saved selected documents": "Đã lưu {{count}} tài liệu được chọn"
+  ,"Failed to save selection. Please try again.": "Không thể lưu lựa chọn. Vui lòng thử lại."
+  ,"Read intents successfully from files": "Đã đọc thành công {{count}} intents từ {{nluName}} + {{domainName}}"
+  ,"Failed to read YAML file: {{error}}": "Lỗi khi đọc file YAML: {{error}}"
+  ,"Read rows successfully from file": "Đã đọc thành công {{count}} dòng từ file {{fileName}}"
+  ,"Failed to read file: {{error}}. Please check file format (Excel or CSV).": "Lỗi khi đọc file: {{error}}. Vui lòng kiểm tra định dạng file (Excel hoặc CSV)."
+  ,"Please select both NLU and Domain files": "Vui lòng chọn cả 2 file NLU và Domain"
+  ,"Intent name cannot be empty": "Tên intent không được để trống"
+  ,"Intent name is duplicated. Please choose another name.": "Tên intent bị trùng. Vui lòng đặt tên khác."
+  ,"Updated successfully": "Đã cập nhật"
+  ,"Example cannot be empty": "Ví dụ không được để trống"
+  ,"Example updated successfully": "Đã cập nhật ví dụ"
+  ,"At least one example is required": "Phải có ít nhất 1 ví dụ"
+  ,"Example deleted successfully": "Đã xóa ví dụ"
+  ,"Question and answer are required to generate examples": "Cần có câu hỏi và câu trả lời để tạo ví dụ"
+  ,"No examples were generated": "Không có ví dụ nào được tạo"
+  ,"Added new examples": "Đã thêm {{count}} ví dụ mới"
+  ,"Please import a file first": "Vui lòng import file trước"
+  ,"The first row must include both question and answer": "Dòng đầu tiên cần có đầy đủ câu hỏi và câu trả lời"
+  ,"Created new intents": "Đã tạo {{count}} intent mới"
+  ,"No rows selected for import": "Chưa chọn dòng nào để import"
+  ,"Intents require at least 5 examples": "{{count}} intent không đủ 5 ví dụ. Vui lòng thêm ví dụ hoặc dùng nút ✨ để tạo tự động."
+  ,"Duplicate intent names detected: {{names}}. Please fix before import.": "Phát hiện tên intent trùng: {{names}}. Vui lòng sửa trước khi import."
+  ,"Imported rows successfully": "Đã import thành công {{count}} dòng"
+  ,"Import result: {{success}} succeeded, {{failed}} failed. Please check errors below.": "Thành công: {{success}}, Thất bại: {{failed}}. Kiểm tra lỗi bên dưới."
+  ,"No failed rows to retry": "Không có dòng nào thất bại để thử lại"
+  ,"Excel template downloaded. Please fill data and upload.": "Đã tải file mẫu Excel. Hãy điền dữ liệu và tải lên."
+  ,"YAML template downloaded. Please adjust data and upload.": "Đã tải file mẫu YAML. Hãy chỉnh dữ liệu và tải lên."
+  ,"Failed to generate template file": "Lỗi khi tạo file mẫu"
+  ,"No questions were generated": "Không có câu hỏi nào được tạo"
+  ,"Added questions automatically": "Đã thêm các câu hỏi tự động"
+  ,"Please enter question group name": "Vui lòng nhập tên nhóm câu hỏi"
+  ,"Please enter at least one question to start": "Vui lòng nhập ít nhất một câu hỏi để bắt đầu"
+  ,"Data created successfully": "Tạo dữ liệu thành công"
+  ,"Failed to create data": "Tạo dữ liệu thất bại"
+  ,"Import question groups from file": "Nhập nhóm câu hỏi từ file"
+  ,"Import intents and create stories automatically": "Import intents và tạo stories tự động"
+  ,"Download template": "Tải file mẫu"
+  ,"Excel template": "Mẫu Excel"
+  ,"YAML template": "Mẫu YAML"
+  ,"Import from file": "Nhập từ file"
+  ,"Import from YAML (2 files)": "Nhập từ YAML (2 file)"
+  ,"Drag and drop an Excel file here to import": "Kéo thả file Excel vào đây để nhập"
+  ,"Or": "Hoặc"
+  ,"choose file from your computer": "chọn file từ máy tính"
+  ,"Supported: XLSX, CSV, TSV": "Hỗ trợ: XLSX, CSV, TSV"
+  ,"Drop files here or click to select": "Thả file vào đây hoặc bấm để chọn"
+  ,"Excel guide: Download template and fill data manually": "Excel: Tải file mẫu và điền dữ liệu thủ công"
+  ,"Selected": "Đã chọn"
+  ,"Choose NLU file (.yaml)": "Chọn file NLU (.yaml)"
+  ,"Contains intent definitions and examples": "Chứa định nghĩa intent và ví dụ"
+  ,"Choose Domain/Response file (.yaml)": "Chọn file Domain/Response (.yaml)"
+  ,"Contains response definitions (utterances)": "Chứa định nghĩa response (utterances)"
+  ,"Process 2 files and preview": "Xử lý 2 file và xem trước"
+  ,"NLU file help: Intent structure with examples": "NLU File: Cấu trúc intent với examples"
+  ,"Domain file help: Response/utterance structure": "Domain File: Cấu trúc responses/utterances"
+  ,"Reading file...": "Đang đọc file..."
+  ,"Data preview": "Xem trước dữ liệu"
+  ,"Question groups count: {{count}}": "{{count}} nhóm câu hỏi"
+  ,"Progress": "Tiến trình"
+  ,"Generating...": "Đang tạo..."
+  ,"Generate more question groups": "Tạo thêm nhóm câu hỏi"
+  ,"Select": "Chọn"
+  ,"Actions": "Thao tác"
+  ,"Answer": "Câu trả lời"
+  ,"question_group_name": "ten_nhom_cau_hoi"
+  ,"Enter answer...": "Nhập câu trả lời..."
+  ,"Questions count: {{count}}": "{{count}} câu hỏi"
+  ,"Saved": "Đã lưu"
+  ,"Edit question group": "Sửa nhóm câu hỏi"
+  ,"Generate more questions": "Tạo thêm câu hỏi"
+  ,"Delete question group": "Xóa nhóm câu hỏi"
+  ,"API error": "Lỗi API"
+  ,"Validation": "Kiểm tra"
+  ,"Importing...": "Đang nhập..."
+  ,"Import selected data": "Nhập dữ liệu đã chọn"
+  ,"Retry failed rows": "Thử lại các dòng lỗi"
+  ,"Cancel / Clear all": "Hủy / Xóa tất cả"
+  ,"At least 5 examples required (current: {{count}})": "Cần ít nhất 5 ví dụ (hiện tại: {{count}})"
+  ,"Unable to read file": "Không thể đọc file"
+  ,"Unknown error": "Lỗi không xác định"
+  ,"At least 5 questions are required before saving": "Cần ít nhất 5 câu hỏi trước khi lưu"
+  ,"Normalized name": "Tên chuẩn hóa"
+  ,"(auto-generated)": "(sẽ được tạo tự động)"
+  ,"No questions yet. Add manually or generate automatically.": "Chưa có câu hỏi. Thêm thủ công hoặc tạo tự động."
+  ,"Delete question": "Xóa câu hỏi"
+  ,"Saving...": "Đang lưu..."
+  ,"Generate questions automatically": "Tạo câu hỏi tự động"
+  ,"Clear all questions": "Xóa tất cả câu hỏi"
+  ,"Help": "Trợ giúp"
+  ,"Usage guide": "Hướng dẫn sử dụng"
+  ,"What is a question group?": "Nhóm câu hỏi là gì?"
+  ,"A question group represents a user intent (what users may ask). Similar questions help the system recognize that group.": "Nhóm câu hỏi đại diện cho ý định người dùng (những gì họ có thể hỏi). Các câu hỏi tương tự giúp hệ thống nhận diện nhóm này."
+  ,"Example": "Ví dụ"
+  ,"Example question group line": "• chao_hoi - người dùng chào hỏi"
+  ,"Name format": "Định dạng tên"
+  ,"The question group name is normalized to lower_case_with_underscores. You can preview the normalized name under the input field.": "Tên nhóm câu hỏi sẽ được chuẩn hóa về dạng chữ_thường_gạch_dưới. Bạn có thể xem trước ngay bên dưới ô nhập."
+  ,"Answer name": "Tên câu trả lời"
+  ,"If you enter an answer, it will be created with the default name pattern utter_<group_name>.": "Nếu bạn nhập câu trả lời, hệ thống sẽ tạo theo mẫu tên mặc định utter_<ten_nhom>."
+  ,"Similar questions help": "Các câu hỏi tương tự"
+  ,"You can add many similar questions to improve recognition. Use the Generate questions automatically button to let AI suggest more from your sample.": "Bạn có thể thêm nhiều câu hỏi tương tự để cải thiện khả năng nhận diện. Dùng nút Tạo câu hỏi tự động để AI gợi ý thêm từ câu hỏi mẫu."
+  ,"Loading chatbot list...": "Đang tải danh sách chatbot..."
+  ,"Select chatbot...": "Chọn chatbot..."
+  ,"General": "Thường"
+  ,"Add data": "Thêm dữ liệu"
+  ,"View details": "Xem chi tiết"
+  ,"Expert": "Chuyên gia"
+  ,"Training": "Huấn luyện"
+  ,"Context documents": "Tài liệu ngữ cảnh"
+  ,"Statistics reports": "Báo cáo thống kê"
+  ,"Conversations": "Cuộc hội thoại"
+  ,"System": "Hệ thống"
+  ,"Unable to send message. Please try again.": "Không thể gửi tin nhắn. Vui lòng thử lại."
+  ,"Sorry, I cannot respond right now. Please try again later.": "Xin lỗi, tôi không thể phản hồi lúc này. Vui lòng thử lại sau."
+  ,"Switched to normal chat mode": "Đã chuyển sang chế độ Chat thường"
+  ,"Switched to RAG chat mode": "Đã chuyển sang chế độ RAG Chat"
+  ,"How can I help you?": "Tôi có thể giúp gì cho bạn?"
+  ,"Normal chat": "Chat thường"
+  ,"Start a conversation": "Bắt đầu cuộc trò chuyện"
+  ,"Ask a question or request help to start the conversation": "Chọn gợi ý bên dưới hoặc nhập câu hỏi của bạn để bắt đầu trò chuyện với AI"
+  ,"Responding...": "Đang trả lời..."
+  ,"Loading chatbot...": "Đang tải chatbot..."
+  ,"Select chatbot": "Chọn chatbot"
+  ,"No chatbots available": "Không có chatbot khả dụng"
+  ,"Ask anything": "Hỏi bất kỳ điều gì"
+  ,"Chatbot may make mistakes. Please verify important information.": "Chat Bot có thể mắc lỗi. Hãy kiểm tra các thông tin quan trọng."
+  ,"Like response": "Thích câu trả lời"
+  ,"Dislike response": "Không thích câu trả lời"
+  ,"Unable to record feedback right now": "Chưa thể ghi nhận đánh giá lúc này"
+  ,"Choose chat type": "Chọn loại chat"
+  ,"Choose the chat mode that fits your needs": "Chọn chế độ chat phù hợp với nhu cầu của bạn"
+  ,"Chat with Rasa bot for general questions and standard support": "Chat với Rasa bot để trả lời câu hỏi chung và hỗ trợ thông thường"
+  ,"Chat with AI based on uploaded documents for specific questions": "Chat với AI dựa trên tài liệu đã upload để trả lời câu hỏi cụ thể"
+  ,"Select documents (optional)": "Chọn tài liệu (tùy chọn)"
+  ,"All documents": "Tất cả tài liệu"
+  ,"No documents yet. Please upload documents before using RAG Chat.": "Chưa có tài liệu nào. Vui lòng upload tài liệu trước khi sử dụng RAG Chat."
+  ,"Start": "Bắt đầu"
+  ,"More": "Thêm"
+  ,"More pages": "Thêm trang"
+  ,"RAG Chat": "RAG Chat"
 }

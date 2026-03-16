@@ -12,6 +12,13 @@
   "Permissions": "Permissions",
   "Users Management": "Users Management",
   "Users": "Users",
+  "Login": "Login",
+  "Logout": "Logout",
+  "Account": "Account",
+  "Administration": "Administration",
+  "Sidebar": "Sidebar",
+  "Display sidebar on mobile devices.": "Display sidebar on mobile devices.",
+  "Toggle sidebar": "Toggle sidebar",
   "Settings": "Settings",
   "Oops! Something went wrong.": "Oops! Something went wrong.",
   "The page you're looking for doesn't exist or an error occurred.": "The page you're looking for doesn't exist or an error occurred.",
@@ -26,6 +33,10 @@
   "Select limit": "Select limit",
   "documents / page": "documents / page",
   "Add": "Add",
+  "Likes": "Likes",
+  "Dislikes": "Dislikes",
+  "Like/Dislike": "Like/Dislike",
+  "Normal": "Normal",
   "Features": "Features",
   "Import": "Import",
   "Export": "Export",
@@ -34,8 +45,17 @@
   "Light": "Light",
   "Dark": "Dark",
   "System": "System",
+  "Language": "Language",
+  "Appearance": "Appearance",
+  "Manage your app preferences": "Manage your app preferences",
+  "Choose display language": "Choose display language",
+  "Choose light, dark, or system theme": "Choose light, dark, or system theme",
+  "Settings updated": "Settings updated",
+  "More settings coming soon": "More settings coming soon",
+  "Additional preferences will be added here in next updates": "Additional preferences will be added here in next updates",
   "Rules": "Rules",
   "Actions": "Actions",
+  "Add to data": "Add to data",
   "Create Rule": "Create Rule",
   "Edit Rule": "Edit Rule",
   "Rule Details": "Rule Details",
@@ -179,5 +199,264 @@
   "Start a conversation with AI": "Start a conversation with AI",
   "Press Enter to send, Shift+Enter for new line": "Press Enter to send, Shift+Enter for new line",
   "Failed to load documents": "Failed to load documents",
-  "Failed to send message. Please try again.": "Failed to send message. Please try again."
+  "Failed to send message. Please try again.": "Failed to send message. Please try again.",
+  "Quick Help": "Quick Help",
+  "Use this quick guide to navigate core features": "Use this quick guide to navigate core features",
+  "Open Full Guide": "Open Full Guide",
+  "General User Guide": "General User Guide",
+  "This guide applies to the entire web app.": "This guide applies to the entire web app.",
+  "Get Help": "Get Help",
+  "Learn More": "Learn More",
+  "Keyboard Shortcuts": "Keyboard Shortcuts",
+  "Need more support? Contact your system administrator or support team.": "Need more support? Contact your system administrator or support team.",
+  "Read module-specific instructions from each page's question mark icon.": "Read module-specific instructions from each page's question mark icon.",
+  "Enter sends chat messages, Shift + Enter inserts a new line, Esc closes most dialogs.": "Enter sends chat messages, Shift + Enter inserts a new line, Esc closes most dialogs.",
+  "Enter sends chat messages": "Enter sends chat messages",
+  "Shift + Enter inserts a new line": "Shift + Enter inserts a new line",
+  "Esc closes most dialogs and popovers": "Esc closes most dialogs and popovers",
+  "What is an Action?": "What is an Action?",
+  "Actions are custom Python code that a bot can run. They are used for tasks like calling APIs, querying a database, or interacting with external systems.": "Actions are custom Python code that a bot can run. They are used for tasks like calling APIs, querying a database, or interacting with external systems.",
+  "View Python code": "View Python code",
+  "Help Center": "Help Center",
+  "Find guides, support options, and useful shortcuts": "Find guides, support options, and useful shortcuts",
+  "Get Started": "Get Started",
+  "Core navigation and daily workflow": "Core navigation and daily workflow",
+  "Use the left sidebar to switch modules: Intents, Entities, Actions, Rules, Stories, and Documents.": "Use the left sidebar to switch modules: Intents, Entities, Actions, Rules, Stories, and Documents.",
+  "Use the top-right question mark icon for quick contextual help on any page.": "Use the top-right question mark icon for quick contextual help on any page.",
+  "Open Settings to change language and theme for the whole app.": "Open Settings to change language and theme for the whole app.",
+  "Speed up common actions": "Speed up common actions",
+  "Ctrl + / opens the keyboard shortcuts dialog": "Ctrl + / opens the keyboard shortcuts dialog",
+  "Module-specific guidance": "Module-specific guidance",
+  "Create and maintain NLU resources from Intents, Entities, Responses, and Rules.": "Create and maintain NLU resources from Intents, Entities, Responses, and Rules.",
+  "Use Action editor for custom Python logic and syntax validation.": "Use Action editor for custom Python logic and syntax validation.",
+  "Use import/export tools for fast onboarding and migration.": "Use import/export tools for fast onboarding and migration.",
+  "Support and troubleshooting": "Support and troubleshooting",
+  "Contact Support": "Contact Support",
+  "Open shortcuts help": "Open shortcuts help",
+  "Show deleted actions": "Show deleted actions",
+  "What is an Entity?": "What is an Entity?",
+  "Entities are structured data that can be extracted from user input. There are three types:": "Entities are structured data that can be extracted from user input. There are three types:",
+  "What is a Response?": "What is a Response?",
+  "Responses are predefined messages that the bot sends to users. Each response must have a name starting with 'utter_' prefix.": "Responses are predefined messages that the bot sends to users. Each response must have a name starting with 'utter_' prefix.",
+  "Role-based tips": "Role-based tips",
+  "Admin: manage users, roles, permissions, and system-wide training flows.": "Admin: manage users, roles, permissions, and system-wide training flows.",
+  "Admin: review statistics dashboards to monitor quality and usage.": "Admin: review statistics dashboards to monitor quality and usage.",
+  "Manager: maintain data modules, documents, and context resources.": "Manager: maintain data modules, documents, and context resources.",
+  "Manager: coordinate content updates before training and deployment.": "Manager: coordinate content updates before training and deployment.",
+  "User: focus on chatting, searching documents, and feedback loops.": "User: focus on chatting, searching documents, and feedback loops.",
+  "User: use Help Center shortcuts to work faster with daily tasks.": "User: use Help Center shortcuts to work faster with daily tasks.",
+  "History": "History",
+  "Your conversations": "Your conversations",
+  "No conversations yet": "No conversations yet",
+  "View more": "View more",
+  "Share": "Share",
+  "Rename": "Rename",
+  "Unpin": "Unpin",
+  "Pin": "Pin",
+  "Archive": "Archive",
+  "Copied share link": "Copied share link",
+  "Failed to share conversation": "Failed to share conversation",
+  "Enter new conversation name": "Enter new conversation name",
+  "Conversation renamed successfully": "Conversation renamed successfully",
+  "Failed to rename conversation": "Failed to rename conversation",
+  "Conversation pinned": "Conversation pinned",
+  "Conversation unpinned": "Conversation unpinned",
+  "Failed to update pin status": "Failed to update pin status",
+  "Conversation archived successfully": "Conversation archived successfully",
+  "Failed to archive conversation": "Failed to archive conversation",
+  "Confirm delete": "Confirm delete",
+  "Delete": "Delete",
+  "Deleted successfully": "Deleted successfully",
+  "Delete failed. Please try again.": "Delete failed. Please try again.",
+  "Delete conversation": "Delete conversation",
+  "Are you sure you want to delete this conversation? This action cannot be undone.": "Are you sure you want to delete this conversation? This action cannot be undone.",
+  "Conversation deleted successfully": "Conversation deleted successfully",
+  "Failed to delete conversation": "Failed to delete conversation",
+  "Are you sure you want to delete this item? This action cannot be undone.": "Are you sure you want to delete this item? This action cannot be undone.",
+  "Moved to trash successfully": "Moved to trash successfully",
+  "Move to trash failed. Please try again.": "Move to trash failed. Please try again.",
+  "Are you sure you want to move this item to trash?": "Are you sure you want to move this item to trash?",
+  "You can restore it later.": "You can restore it later.",
+  "Deleted permanently": "Deleted permanently",
+  "Are you sure you want to permanently delete this item?": "Are you sure you want to permanently delete this item?",
+  "This action cannot be undone!": "This action cannot be undone!",
+  "Warning: All associated data will be permanently removed from the database.": "Warning: All associated data will be permanently removed from the database.",
+  "Document uploaded successfully": "Document {{fileName}} uploaded successfully",
+  "Failed to upload document. Please try again.": "Failed to upload document. Please try again.",
+  "Document deleted successfully": "Document {{fileName}} deleted successfully",
+  "Failed to delete document. Please try again.": "Failed to delete document. Please try again.",
+  "Delete document": "Delete document",
+  "Are you sure you want to delete this document? This action cannot be undone.": "Are you sure you want to delete this document? This action cannot be undone."
+  ,"Please enter action name": "Please enter action name"
+  ,"Failed to create action": "Failed to create action"
+  ,"Action updated successfully": "Action updated successfully"
+  ,"Failed to update action": "Failed to update action"
+  ,"Failed to create response": "Failed to create response"
+  ,"Failed to update response": "Failed to update response"
+  ,"Please enter entity name": "Please enter entity name"
+  ,"Entity ID is missing": "Entity ID is missing"
+  ,"Failed to create entity": "Failed to create entity"
+  ,"Failed to update entity": "Failed to update entity"
+  ,"Restored successfully": "Restored successfully"
+  ,"Restore failed. Please try again.": "Restore failed. Please try again."
+  ,"Restore item": "Restore item"
+  ,"Are you sure you want to restore this item?": "Are you sure you want to restore this item?"
+  ,"It will be moved back to active list.": "It will be moved back to active list."
+  ,"Restore": "Restore"
+  ,"Copied to clipboard": "Copied to clipboard"
+  ,"Failed to copy text": "Failed to copy text"
+  ,"An error occurred while copying": "An error occurred while copying"
+  ,"PDF exported successfully": "PDF exported successfully"
+  ,"Failed to export PDF": "Failed to export PDF"
+  ,"Word exported successfully": "Word exported successfully"
+  ,"Failed to export Word": "Failed to export Word"
+  ,"Options": "Options"
+  ,"Copied": "Copied"
+  ,"Copy": "Copy"
+  ,"Export PDF": "Export PDF"
+  ,"Export Word": "Export Word"
+  ,"No messages to export": "No messages to export"
+  ,"Export conversation": "Export conversation"
+  ,"Export file": "Export file"
+  ,"Exporting...": "Exporting..."
+  ,"Saved selected documents": "Saved {{count}} selected documents"
+  ,"Failed to save selection. Please try again.": "Failed to save selection. Please try again."
+  ,"Read intents successfully from files": "Read {{count}} intents successfully from {{nluName}} + {{domainName}}"
+  ,"Failed to read YAML file: {{error}}": "Failed to read YAML file: {{error}}"
+  ,"Read rows successfully from file": "Read {{count}} rows successfully from file {{fileName}}"
+  ,"Failed to read file: {{error}}. Please check file format (Excel or CSV).": "Failed to read file: {{error}}. Please check file format (Excel or CSV)."
+  ,"Please select both NLU and Domain files": "Please select both NLU and Domain files"
+  ,"Intent name cannot be empty": "Intent name cannot be empty"
+  ,"Intent name is duplicated. Please choose another name.": "Intent name is duplicated. Please choose another name."
+  ,"Updated successfully": "Updated successfully"
+  ,"Example cannot be empty": "Example cannot be empty"
+  ,"Example updated successfully": "Example updated successfully"
+  ,"At least one example is required": "At least one example is required"
+  ,"Example deleted successfully": "Example deleted successfully"
+  ,"Question and answer are required to generate examples": "Question and answer are required to generate examples"
+  ,"No examples were generated": "No examples were generated"
+  ,"Added new examples": "Added {{count}} new examples"
+  ,"Please import a file first": "Please import a file first"
+  ,"The first row must include both question and answer": "The first row must include both question and answer"
+  ,"Created new intents": "Created {{count}} new intents"
+  ,"No rows selected for import": "No rows selected for import"
+  ,"Intents require at least 5 examples": "{{count}} intents have fewer than 5 examples. Please add more or use ✨ to generate automatically."
+  ,"Duplicate intent names detected: {{names}}. Please fix before import.": "Duplicate intent names detected: {{names}}. Please fix before import."
+  ,"Imported rows successfully": "Imported {{count}} rows successfully"
+  ,"Import result: {{success}} succeeded, {{failed}} failed. Please check errors below.": "Import result: {{success}} succeeded, {{failed}} failed. Please check errors below."
+  ,"No failed rows to retry": "No failed rows to retry"
+  ,"Excel template downloaded. Please fill data and upload.": "Excel template downloaded. Please fill data and upload."
+  ,"YAML template downloaded. Please adjust data and upload.": "YAML template downloaded. Please adjust data and upload."
+  ,"Failed to generate template file": "Failed to generate template file"
+  ,"No questions were generated": "No questions were generated"
+  ,"Added questions automatically": "Added questions automatically"
+  ,"Please enter question group name": "Please enter question group name"
+  ,"Please enter at least one question to start": "Please enter at least one question to start"
+  ,"Data created successfully": "Data created successfully"
+  ,"Failed to create data": "Failed to create data"
+  ,"Import question groups from file": "Import question groups from file"
+  ,"Import intents and create stories automatically": "Import intents and create stories automatically"
+  ,"Download template": "Download template"
+  ,"Excel template": "Excel template"
+  ,"YAML template": "YAML template"
+  ,"Import from file": "Import from file"
+  ,"Import from YAML (2 files)": "Import from YAML (2 files)"
+  ,"Drag and drop an Excel file here to import": "Drag and drop an Excel file here to import"
+  ,"Or": "Or"
+  ,"choose file from your computer": "choose file from your computer"
+  ,"Supported: XLSX, CSV, TSV": "Supported: XLSX, CSV, TSV"
+  ,"Drop files here or click to select": "Drop files here or click to select"
+  ,"Excel guide: Download template and fill data manually": "Excel: Download template and fill data manually"
+  ,"Selected": "Selected"
+  ,"Choose NLU file (.yaml)": "Choose NLU file (.yaml)"
+  ,"Contains intent definitions and examples": "Contains intent definitions and examples"
+  ,"Choose Domain/Response file (.yaml)": "Choose Domain/Response file (.yaml)"
+  ,"Contains response definitions (utterances)": "Contains response definitions (utterances)"
+  ,"Process 2 files and preview": "Process 2 files and preview"
+  ,"NLU file help: Intent structure with examples": "NLU File: Intent structure with examples"
+  ,"Domain file help: Response/utterance structure": "Domain File: Response/utterance structure"
+  ,"Reading file...": "Reading file..."
+  ,"Data preview": "Data preview"
+  ,"Question groups count: {{count}}": "{{count}} question groups"
+  ,"Progress": "Progress"
+  ,"Generating...": "Generating..."
+  ,"Generate more question groups": "Generate more question groups"
+  ,"Select": "Select"
+  ,"Actions": "Actions"
+  ,"Answer": "Answer"
+  ,"question_group_name": "question_group_name"
+  ,"Enter answer...": "Enter answer..."
+  ,"Questions count: {{count}}": "{{count}} questions"
+  ,"Saved": "Saved"
+  ,"Edit question group": "Edit question group"
+  ,"Generate more questions": "Generate more questions"
+  ,"Delete question group": "Delete question group"
+  ,"API error": "API error"
+  ,"Validation": "Validation"
+  ,"Importing...": "Importing..."
+  ,"Import selected data": "Import selected data"
+  ,"Retry failed rows": "Retry failed rows"
+  ,"Cancel / Clear all": "Cancel / Clear all"
+  ,"At least 5 examples required (current: {{count}})": "At least 5 examples required (current: {{count}})"
+  ,"Unable to read file": "Unable to read file"
+  ,"Unknown error": "Unknown error"
+  ,"At least 5 questions are required before saving": "At least 5 questions are required before saving"
+  ,"Normalized name": "Normalized name"
+  ,"(auto-generated)": "(auto-generated)"
+  ,"No questions yet. Add manually or generate automatically.": "No questions yet. Add manually or generate automatically."
+  ,"Delete question": "Delete question"
+  ,"Saving...": "Saving..."
+  ,"Generate questions automatically": "Generate questions automatically"
+  ,"Clear all questions": "Clear all questions"
+  ,"Help": "Help"
+  ,"Usage guide": "Usage guide"
+  ,"What is a question group?": "What is a question group?"
+  ,"A question group represents a user intent (what users may ask). Similar questions help the system recognize that group.": "A question group represents a user intent (what users may ask). Similar questions help the system recognize that group."
+  ,"Example": "Example"
+  ,"Example question group line": "- chao_hoi - user greets"
+  ,"Name format": "Name format"
+  ,"The question group name is normalized to lower_case_with_underscores. You can preview the normalized name under the input field.": "The question group name is normalized to lower_case_with_underscores. You can preview the normalized name under the input field."
+  ,"Answer name": "Answer name"
+  ,"If you enter an answer, it will be created with the default name pattern utter_<group_name>.": "If you enter an answer, it will be created with the default name pattern utter_<group_name>."
+  ,"Similar questions help": "Similar questions"
+  ,"You can add many similar questions to improve recognition. Use the Generate questions automatically button to let AI suggest more from your sample.": "You can add many similar questions to improve recognition. Use the Generate questions automatically button to let AI suggest more from your sample."
+  ,"Loading chatbot list...": "Loading chatbot list..."
+  ,"Select chatbot...": "Select chatbot..."
+  ,"General": "General"
+  ,"Add data": "Add data"
+  ,"View details": "View details"
+  ,"Expert": "Expert"
+  ,"Training": "Training"
+  ,"Context documents": "Context documents"
+  ,"Statistics reports": "Statistics reports"
+  ,"Conversations": "Conversations"
+  ,"System": "System"
+  ,"Unable to send message. Please try again.": "Unable to send message. Please try again."
+  ,"Sorry, I cannot respond right now. Please try again later.": "Sorry, I cannot respond right now. Please try again later."
+  ,"Switched to normal chat mode": "Switched to normal chat mode"
+  ,"Switched to RAG chat mode": "Switched to RAG chat mode"
+  ,"How can I help you?": "How can I help you?"
+  ,"Normal chat": "Normal chat"
+  ,"Start a conversation": "Start a conversation"
+  ,"Ask a question or request help to start the conversation": "Ask a question or request help to start the conversation"
+  ,"Responding...": "Responding..."
+  ,"Loading chatbot...": "Loading chatbot..."
+  ,"Select chatbot": "Select chatbot"
+  ,"No chatbots available": "No chatbots available"
+  ,"Ask anything": "Ask anything"
+  ,"Chatbot may make mistakes. Please verify important information.": "Chatbot may make mistakes. Please verify important information."
+  ,"Like response": "Like response"
+  ,"Dislike response": "Dislike response"
+  ,"Unable to record feedback right now": "Unable to record feedback right now"
+  ,"Choose chat type": "Choose chat type"
+  ,"Choose the chat mode that fits your needs": "Choose the chat mode that fits your needs"
+  ,"Chat with Rasa bot for general questions and standard support": "Chat with Rasa bot for general questions and standard support"
+  ,"Chat with AI based on uploaded documents for specific questions": "Chat with AI based on uploaded documents for specific questions"
+  ,"Select documents (optional)": "Select documents (optional)"
+  ,"All documents": "All documents"
+  ,"No documents yet. Please upload documents before using RAG Chat.": "No documents yet. Please upload documents before using RAG Chat."
+  ,"Start": "Start"
+  ,"More": "More"
+  ,"More pages": "More pages"
+  ,"RAG Chat": "RAG Chat"
 }

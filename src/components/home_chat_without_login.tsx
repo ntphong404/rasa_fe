@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { ragService } from "@/features/chat/api/ragService";
 import { IngestedDocument } from "@/interfaces/rag.interface";
 import { useChatbots } from "@/hooks/useChatbots";
+import { useTranslation } from "react-i18next";
 
 const RASA_URL = import.meta.env.VITE_RASA_URL || 'http://localhost:5005';
 
@@ -46,6 +47,7 @@ interface RasaResponse {
 }
 
 export function HomeChatDemoWithoutLogin() {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -161,11 +163,11 @@ export function HomeChatDemoWithoutLogin() {
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Không thể gửi tin nhắn. Vui lòng thử lại.");
+      toast.error(t("Unable to send message. Please try again."));
 
       const errorMessage: Message = {
         id: `error_${Date.now()}`,
-        text: "Xin lỗi, tôi không thể phản hồi lúc này. Vui lòng thử lại sau.",
+        text: t("Sorry, I cannot respond right now. Please try again later."),
         isUser: false,
         timestamp: new Date(),
       };
@@ -198,8 +200,8 @@ export function HomeChatDemoWithoutLogin() {
     
     toast.success(
       tempChatMode === 'normal' 
-        ? 'Đã chuyển sang chế độ Chat thường' 
-        : 'Đã chuyển sang chế độ RAG Chat'
+        ? t('Switched to normal chat mode')
+        : t('Switched to RAG chat mode')
     );
   };
 
@@ -218,7 +220,7 @@ export function HomeChatDemoWithoutLogin() {
         <div className="max-w-3xl w-full flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl md:text-3xl font-semibold text-blue-800">
-              Tôi có thể giúp gì cho bạn?
+              {t("How can I help you?")}
             </h2>
             <Badge 
               variant={chatMode === 'normal' ? 'default' : 'secondary'}
@@ -227,12 +229,12 @@ export function HomeChatDemoWithoutLogin() {
               {chatMode === 'normal' ? (
                 <>
                   <Bot className="h-4 w-4" />
-                  <span>Chat thường</span>
+                  <span>{t("Normal chat")}</span>
                 </>
               ) : (
                 <>
                   <FileText className="h-4 w-4" />
-                  <span>RAG Chat</span>
+                  <span>{t("RAG Chat")}</span>
                 </>
               )}
             </Badge>
@@ -246,10 +248,10 @@ export function HomeChatDemoWithoutLogin() {
                   <MessageSquare className="h-8 w-8 text-blue-400" />
                 </div>
                 <p className="text-lg font-medium mb-2">
-                  Bắt đầu cuộc trò chuyện
+                  {t("Start a conversation")}
                 </p>
                 <p className="text-sm max-w-xs">
-                  Hãy đặt câu hỏi hoặc yêu cầu trợ giúp để bắt đầu cuộc trò chuyện
+                  {t("Ask a question or request help to start the conversation")}
                 </p>
               </div>
             ) : (
@@ -303,7 +305,7 @@ export function HomeChatDemoWithoutLogin() {
                     <div className="bg-gray-100 text-gray-800 max-w-xs lg:max-w-md px-4 py-2 rounded-lg">
                       <div className="flex items-center space-x-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-sm">Đang trả lời...</span>
+                        <span className="text-sm">{t("Responding...")}</span>
                       </div>
                     </div>
                   </div>
@@ -318,16 +320,16 @@ export function HomeChatDemoWithoutLogin() {
               <SelectValue 
                 placeholder={
                   loadingChatbots 
-                    ? "Loading chatbots..." 
-                    : "Select a chatbot"
+                    ? t("Loading chatbot...")
+                    : t("Select chatbot")
                 } 
               />
             </SelectTrigger>
             <SelectContent className="text-sm">
               {loadingChatbots ? (
-                <div className="px-2 py-1 text-xs text-muted-foreground">⏳ Loading...</div>
+                <div className="px-2 py-1 text-xs text-muted-foreground">{t("Loading...")}</div>
               ) : chatbots.length === 0 ? (
-                <div className="px-2 py-1 text-xs text-muted-foreground">No chatbots available</div>
+                <div className="px-2 py-1 text-xs text-muted-foreground">{t("No chatbots available")}</div>
               ) : (
                 chatbots.map((bot) => (
                   <SelectItem key={bot._id} value={bot._id}>
@@ -342,7 +344,7 @@ export function HomeChatDemoWithoutLogin() {
           <div className="w-full relative">
             <div className="relative rounded-xl border border-blue-200 bg-white shadow-md transition-all focus-within:shadow-lg focus-within:border-blue-300">
               <Input
-                placeholder="Hỏi bất kỳ điều gì"
+                placeholder={t("Ask anything")}
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -390,7 +392,7 @@ export function HomeChatDemoWithoutLogin() {
                 className="rounded-lg border-blue-200 bg-white text-blue-600 hover:bg-blue-50 transition-colors shadow-sm"
               >
                 <Search className="h-4 w-4 mr-2" />
-                Tìm kiếm
+                {t("Search")}
               </Button>
             </div>
           </div>
@@ -400,7 +402,7 @@ export function HomeChatDemoWithoutLogin() {
       {/* Footer */}
       <footer className="p-2 text-center text-sm text-gray-500 bg-white/80 backdrop-blur-sm border-t">
         <div className="max-w-2xl mx-auto">
-          Chat Bot có thể mắc lỗi. Hãy kiểm tra các thông tin quan trọng.
+          {t("Chatbot may make mistakes. Please verify important information.")}
         </div>
       </footer>
 
@@ -408,9 +410,9 @@ export function HomeChatDemoWithoutLogin() {
       <Dialog open={showChatModeDialog} onOpenChange={setShowChatModeDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Chọn loại chat</DialogTitle>
+            <DialogTitle>{t("Choose chat type")}</DialogTitle>
             <DialogDescription>
-              Chọn chế độ chat phù hợp với nhu cầu của bạn
+              {t("Choose the chat mode that fits your needs")}
             </DialogDescription>
           </DialogHeader>
           
@@ -429,9 +431,9 @@ export function HomeChatDemoWithoutLogin() {
                   <Bot className="h-6 w-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold mb-1">Chat thường</h3>
+                  <h3 className="font-semibold mb-1">{t("Normal chat")}</h3>
                   <p className="text-sm text-gray-600">
-                    Chat với Rasa bot để trả lời câu hỏi chung và hỗ trợ thông thường
+                    {t("Chat with Rasa bot for general questions and standard support")}
                   </p>
                 </div>
               </div>
@@ -451,9 +453,9 @@ export function HomeChatDemoWithoutLogin() {
                   <FileText className="h-6 w-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold mb-1">RAG Chat</h3>
+                  <h3 className="font-semibold mb-1">{t("RAG Chat")}</h3>
                   <p className="text-sm text-gray-600">
-                    Chat với AI dựa trên tài liệu đã upload để trả lời câu hỏi cụ thể
+                    {t("Chat with AI based on uploaded documents for specific questions")}
                   </p>
                 </div>
               </div>
@@ -463,7 +465,7 @@ export function HomeChatDemoWithoutLogin() {
             {tempChatMode === 'rag' && (
               <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                 <label className="block text-sm font-medium mb-2">
-                  Chọn tài liệu (tùy chọn)
+                  {t("Select documents (optional)")}
                 </label>
                 <Select
                   value={tempSelectedDocs[0] || 'all'}
@@ -472,10 +474,10 @@ export function HomeChatDemoWithoutLogin() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Tất cả tài liệu" />
+                    <SelectValue placeholder={t("All documents")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tất cả tài liệu</SelectItem>
+                    <SelectItem value="all">{t("All documents")}</SelectItem>
                     {availableDocs.map((doc) => (
                       <SelectItem key={doc.doc_id} value={doc.doc_id}>
                         {doc.doc_metadata.file_name}
@@ -485,7 +487,7 @@ export function HomeChatDemoWithoutLogin() {
                 </Select>
                 {availableDocs.length === 0 && (
                   <p className="text-xs text-amber-600 mt-2">
-                    Chưa có tài liệu nào. Vui lòng upload tài liệu trước khi sử dụng RAG Chat.
+                    {t("No documents yet. Please upload documents before using RAG Chat.")}
                   </p>
                 )}
               </div>
@@ -497,13 +499,13 @@ export function HomeChatDemoWithoutLogin() {
               variant="outline"
               onClick={() => setShowChatModeDialog(false)}
             >
-              Hủy
+              {t("Cancel")}
             </Button>
             <Button
               onClick={handleConfirmChatMode}
               disabled={tempChatMode === 'rag' && availableDocs.length === 0}
             >
-              Bắt đầu
+              {t("Start")}
             </Button>
           </div>
         </DialogContent>

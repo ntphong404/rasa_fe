@@ -273,12 +273,12 @@ export function LoginPage({
             </div>
 
             <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
+              Bạn chưa có tài khoản?{" "}
               <Link
                 to="/auth/register"
                 className="underline underline-offset-4"
               >
-                Sign up
+                Đăng ký
               </Link>
             </div>
           </form>

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ import {
   SlidersHorizontal,
   Trash2,
   Eye,
+  Plus,
 } from "lucide-react";
 import {
   Popover,
@@ -138,6 +140,7 @@ function UQuestionDetailsDialog({
 
 export function UQuestionManagement() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [rowSelection, setRowSelection] = useState({});
   const [uquestionsData, setUQuestionsData] = useState<UQuestion[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -251,11 +254,16 @@ export function UQuestionManagement() {
     setDetailsDialogOpen(true);
   };
 
+  const handleAddToData = (uquestion: UQuestion) => {
+    const params = new URLSearchParams({ sampleQuestion: uquestion.question });
+    navigate(`/add-data?${params.toString()}`);
+  };
+
   return (
-    <div className="relative p-3">
+    <div className="admin-page">
       <Form {...form}>
         <form
-          className="table-controller py-4 flex gap-4 flex-col sm:flex-row"
+          className="table-controller admin-toolbar"
           onSubmit={form.handleSubmit(onSubmit)}
         >
           <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -538,6 +546,14 @@ export function UQuestionManagement() {
                       title={t("View details")}
                     >
                       <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={() => handleAddToData(uquestion)}
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700"
+                      title={t("Add to data")}
+                    >
+                      <Plus className="h-4 w-4" />
                     </Button>
                     <Button
                       size="sm"

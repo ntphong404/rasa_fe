@@ -18,6 +18,11 @@ export type ResponseMap = {
     [utteranceName: string]: string;
 };
 
+const excelWorker = () =>
+    new Worker(new URL("../workers/excel.worker.ts", import.meta.url), {
+        type: "module",
+    });
+
 /**
  * Format intent name to lowercase_with_underscores
  * Removes diacritics and special characters
@@ -266,35 +271,34 @@ export function mergeNLUWithResponses(nlus: ParsedRow[], responses: ResponseMap)
  * Expects format: STT | Câu hỏi | Câu trả lời
  */
 export async function parseXLSX(file: File): Promise<ParsedRow[]> {
-    // Dynamic import to avoid bundling if not needed
-    // @ts-ignore - optional runtime dependency
-    const ExcelJS = await import('exceljs');
     const arrayBuffer = await file.arrayBuffer();
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(arrayBuffer);
-    const worksheet = workbook.worksheets[0];
+    return new Promise<ParsedRow[]>((resolve, reject) => {
+        const worker = excelWorker();
+        const id = `parse-xlsx-${Date.now()}`;
 
-    const out: ParsedRow[] = [];
-    // ExcelJS rows are 1-indexed. Skip first two rows per requirement.
-    worksheet.eachRow((row: any, rowNumber: number) => {
-        if (rowNumber <= 2) return;
+        worker.onmessage = (event: MessageEvent<any>) => {
+            const message = event.data;
+            if (!message || message.id !== id) return;
 
-        // Read columns B and C (2 and 3)
-        const rawColB = (row.getCell(2).value ?? '').toString().trim();
-        const rawColC = (row.getCell(3).value ?? '').toString().trim();
+            worker.terminate();
+            if (message.success) {
+                resolve(message.data as ParsedRow[]);
+            } else {
+                reject(new Error(message.error || "Failed to parse XLSX"));
+            }
+        };
 
-        if (!rawColB && !rawColC) return;
+        worker.onerror = (error) => {
+            worker.terminate();
+            reject(error);
+        };
 
-        const name = formatIntentName(rawColB || rawColC || '');
-        out.push({
-            rawName: rawColB,
-            name,
-            examples: [rawColB],
-            response: rawColC
-        });
+        worker.postMessage({
+            id,
+            type: "parse-xlsx",
+            payload: { arrayBuffer },
+        }, [arrayBuffer]);
     });
-
-    return out;
 }
 
 /**

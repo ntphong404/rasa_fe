@@ -85,15 +85,15 @@ export default function RoleDetailsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[90vw] sm:max-w-3xl max-h-[90vh] overflow-hidden p-0">
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b px-3 pt-4">
+        <div className="border-b bg-gradient-to-r from-indigo-50 to-purple-50 px-3 pt-4 dark:border-white/10 dark:from-slate-900 dark:to-slate-800">
           <DialogHeader className="space-y-2">
-            <DialogTitle className="text-2xl font-bold flex items-center gap-3 text-indigo-900">
-              <div className="p-2 bg-white rounded-lg shadow-sm">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3 text-indigo-900 dark:text-indigo-200">
+              <div className="p-2 bg-white rounded-lg shadow-sm dark:bg-slate-800">
                 <ShieldCheck className="h-6 w-6 text-indigo-600" />
               </div>
               Chi tiết vai trò
             </DialogTitle>
-            <DialogDescription className="text-sm text-indigo-600">
+            <DialogDescription className="text-sm text-indigo-600 dark:text-indigo-300">
               Xem thông tin chi tiết về vai trò này
             </DialogDescription>
           </DialogHeader>
@@ -124,8 +124,8 @@ export default function RoleDetailsDialog({
                   <Tag className="h-4 w-4 text-indigo-600" />
                   Tên vai trò
                 </div>
-                <div className="rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 px-3 py-2 shadow-sm">
-                  <p className="text-lg font-bold text-indigo-900">{role.name}</p>
+                <div className="rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 px-3 py-2 shadow-sm dark:border-indigo-800/40 dark:from-slate-900 dark:to-slate-900">
+                  <p className="text-lg font-bold text-indigo-900 dark:text-indigo-200">{role.name}</p>
                 </div>
               </div>
 
@@ -137,10 +137,10 @@ export default function RoleDetailsDialog({
                   <FileText className="h-4 w-4 text-indigo-600" />
                   Mô tả
                 </div>
-                <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2">
-                  <p className="text-sm leading-relaxed text-slate-700">
+                <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 dark:border-white/15 dark:bg-slate-900">
+                  <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">
                     {role.description || (
-                      <span className="italic text-slate-400">
+                      <span className="italic text-slate-400 dark:text-slate-500">
                         Không có mô tả
                       </span>
                     )}
@@ -160,7 +160,7 @@ export default function RoleDetailsDialog({
                   </Badge>
                 </div>
                 {role.permissions.length > 0 ? (
-                  <div className="rounded-lg border-2 border-indigo-100 bg-white p-3 shadow-sm">
+                  <div className="rounded-lg border-2 border-indigo-100 bg-white p-3 shadow-sm dark:border-indigo-700/40 dark:bg-slate-900">
                     <div className="flex flex-wrap gap-2">
                       {role.permissions.map((permId) => {
                         const permission = permissionsList.find(
@@ -170,7 +170,7 @@ export default function RoleDetailsDialog({
                           <Badge
                             key={permId}
                             variant="outline"
-                            className="px-3 py-1.5 text-xs font-medium border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                            className="px-3 py-1.5 text-xs font-medium border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-500/40 dark:bg-indigo-950/40 dark:text-indigo-200 dark:hover:bg-indigo-900/40"
                           >
                             {permission?.originalUrl || permId}
                           </Badge>
@@ -179,9 +179,9 @@ export default function RoleDetailsDialog({
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
+                  <div className="rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center dark:border-white/15 dark:bg-slate-900">
                     <AlertCircle className="mx-auto h-8 w-8 text-slate-300 mb-2" />
-                    <p className="text-sm text-slate-500 font-medium">
+                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
                       Không có quyền hạn
                     </p>
                   </div>
@@ -236,8 +236,8 @@ export default function RoleDetailsDialog({
                     <Calendar className="h-4 w-4 text-green-600" />
                     Ngày tạo
                   </div>
-                  <div className="rounded-lg bg-green-50 border border-green-100 px-3 py-2 shadow-sm">
-                    <p className="text-sm font-medium text-green-900">{formatDate(role.createdAt)}</p>
+                  <div className="rounded-lg bg-green-50 border border-green-100 px-3 py-2 shadow-sm dark:border-green-700/40 dark:bg-green-950/25">
+                    <p className="text-sm font-medium text-green-900 dark:text-green-200">{formatDate(role.createdAt)}</p>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -245,18 +245,18 @@ export default function RoleDetailsDialog({
                     <Calendar className="h-4 w-4 text-blue-600" />
                     Ngày cập nhật
                   </div>
-                  <div className="rounded-lg bg-blue-50 border border-blue-100 px-3 py-2 shadow-sm">
-                    <p className="text-sm font-medium text-blue-900">{formatDate(role.updatedAt)}</p>
+                  <div className="rounded-lg bg-blue-50 border border-blue-100 px-3 py-2 shadow-sm dark:border-blue-700/40 dark:bg-blue-950/25">
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-200">{formatDate(role.updatedAt)}</p>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16">
-              <div className="p-4 bg-slate-100 rounded-full mb-4">
+              <div className="p-4 bg-slate-100 rounded-full mb-4 dark:bg-slate-800">
                 <AlertCircle className="h-12 w-12 text-slate-400" />
               </div>
-              <p className="text-base font-medium text-slate-600">
+              <p className="text-base font-medium text-slate-600 dark:text-slate-300">
                 Chưa chọn vai trò
               </p>
             </div>

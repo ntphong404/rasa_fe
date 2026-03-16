@@ -6,6 +6,29 @@ import { keymap } from "@codemirror/view";
 import { indentLess, indentMore } from "@codemirror/commands";
 import { EditorState, Compartment } from "@codemirror/state";
 
+const editorTheme = EditorView.theme({
+  "&": {
+    height: "100%",
+  },
+  ".cm-scroller": {
+    overflow: "auto",
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace",
+  },
+  ".cm-gutters": {
+    backgroundColor: "transparent",
+    borderRight: "1px solid var(--cm-gutter-border)",
+  },
+  ".cm-lineNumbers .cm-gutterElement": {
+    color: "var(--cm-line-number)",
+  },
+  ".cm-activeLineGutter": {
+    color: "var(--cm-line-number-active)",
+  },
+  ".cm-activeLine": {
+    backgroundColor: "var(--cm-active-line)",
+  },
+});
+
 interface PythonCodeEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -35,6 +58,7 @@ export function PythonCodeEditor({
       extensions: [
         basicSetup,
         python(),
+        editorTheme,
         EditorState.tabSize.of(4),
         readOnlyCompartment.current.of(EditorState.readOnly.of(readOnly)),
         keymap.of([

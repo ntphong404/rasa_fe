@@ -6,17 +6,17 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
 } from "./ui/sidebar";
-import { BookOpen, Bot, MessageCircleCode, ShieldCheck, UserCog, MessageSquare } from "lucide-react";
+import { BookOpen, Bot, MessageCircleCode, ShieldCheck, UserCog, MessageSquare, Settings, CircleHelp } from "lucide-react";
 import { NavMain } from "./nav-main";
 import { NavConversations } from "./nav-conversations";
 import { NavUser } from "./nav-user";
-import { ChatbotSelector } from "./chatbot-selector";
 import { useAuthStore } from "@/store/auth";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -59,24 +59,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     // 'admin' = only admin, 'manager' = manager + admin, 'user' = everyone
     const navMainFull = [
       {
-        title: "Normal",
+        title: t("General"),
         icon: Bot,
         hidden: false,
         allowedRoles: ['manager', 'admin'], // Manager and Admin can see
         items: [
-          { title: "Thêm dữ liệu", url: "/add-data" },
-          { title: "Xem chi tiết", url: "/data-info" },
+          { title: t("Add data"), url: "/add-data" },
+          { title: t("View details"), url: "/data-info" },
         ]
       },
       {
-        title: "Expert",
+        title: t("Expert"),
         url: "#",
         icon: Bot,
         hidden: false,
         allowedRoles: ['admin'], // Only Admin can see
         items: [
           {
-            title: "Training",
+            title: t("Training"),
             url: "/training",
           },
           {
@@ -105,7 +105,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           //   url: "/slots",
           // },
           {
-            title: "Chat Bot",
+            title: "Chatbot",
             url: "/chat_bot",
           },
           {
@@ -126,23 +126,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: "/docs",
           },
           {
-            title: "Tài liệu ngữ cảnh",
+            title: t("Context documents"),
             url: "/context-docs",
           },
         ],
       },
       {
-        title: "Báo cáo thống kê",
+        title: t("Statistics reports"),
         icon: MessageSquare,
         hidden: false,
         allowedRoles: ['admin'], // Only Admin can see
         items: [
           {
-            title: "Người dùng",
+            title: t("Users"),
             url: "/statistics/users",
           },
           {
-            title: "Cuộc hội thoại",
+            title: t("Conversations"),
             url: "/statistics/conversations",
           },
           {
@@ -154,7 +154,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: "/statistics/nlp",
           },
           {
-            title: "Tài liệu",
+            title: t("Documents"),
             url: "/statistics/documents",
           },
         ],
@@ -249,6 +249,35 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         
         {isAuthenticated && (isAdmin || isManager) && <NavMain items={data.navMain} />}
         {isAuthenticated && <NavConversations />}
+        {isAuthenticated && (
+          <SidebarGroup>
+            <SidebarGroupLabel>{t("System")}</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link
+                    to="/settings"
+                    className="transition-all duration-200 transform hover:translate-x-1"
+                  >
+                    <Settings size={18} />
+                    <span>{t("Settings")}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link
+                    to="/help"
+                    className="transition-all duration-200 transform hover:translate-x-1"
+                  >
+                    <CircleHelp size={18} />
+                    <span>{t("Help Center")}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
         {/* 'Thêm dữ liệu' is now inside Models (NavMain) */}
       </SidebarContent>
       <SidebarFooter>

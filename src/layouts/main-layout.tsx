@@ -5,13 +5,15 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useEffect } from "react";
-import toast from "react-hot-toast";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { ChatbotSelector } from "@/components/chatbot-selector";
 import { useAuthStore } from "@/store/auth";
+import { ThemeModeToggle } from "@/components/theme-mode-toggle";
+import { GlobalHelpPopover } from "@/components/global-help-popover";
+import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
+import { AppChatHeaderInfo } from "@/features/chat/components/AppChatHeaderInfo";
 
 export function MainLayout() {
-  const location = useLocation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   // Yêu cầu quyền hiển thị Notification khi load lần đầu
@@ -25,19 +27,24 @@ export function MainLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="relative">
+      <SidebarInset className="relative min-w-0 overflow-x-hidden">
+        <KeyboardShortcutsDialog />
         <header
           id="app-header"
-          className="flex px-4 sticky bg-background top-0 z-50 w-full h-16 shrink-0 items-center gap-4 shadow-md"
+          className="sticky top-0 z-50 flex h-16 w-full min-w-0 shrink-0 items-center gap-3 overflow-x-clip border-b border-border/70 bg-background/95 px-4 backdrop-blur"
         >
           <SidebarTrigger className="-ml-1 border-[1px]" />
-          <div className="flex-1"></div>
+          <div className="min-w-0 flex-1">
+            <AppChatHeaderInfo />
+          </div>
           {isAuthenticated && <ChatbotSelector />}
+          <GlobalHelpPopover />
+          <ThemeModeToggle />
           {/* <LanguageSwicher />
           <div className="w-2"></div>
           <ModeToggle /> */}
         </header>
-        <div className="bg-background">
+        <div className="min-h-[calc(100svh-4rem)] w-full min-w-0 overflow-x-hidden bg-background">
           <Outlet />
         </div>
       </SidebarInset>

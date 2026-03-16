@@ -1,14 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Download, FileText, File, Loader2 } from "lucide-react";
-import {
-  exportToPDF,
-  exportToWord,
-  ExportMessage,
-} from "../../../lib/exportUtils";
+import type { ExportMessage } from "../../../lib/exportUtils";
 import { IChatMessage } from "@/interfaces/chat.interface";
 import { useCurrentUserId } from "@/hooks/useCurrentUserId";
-import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 interface ConversationExportProps {
   messages: IChatMessage[];
@@ -21,6 +18,7 @@ export function ConversationExport({
   conversationTitle = "Cuộc trò chuyện",
   className = "",
 }: ConversationExportProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState<"pdf" | "word" | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
@@ -56,19 +54,20 @@ export function ConversationExport({
 
   const handleExportPDF = async () => {
     if (messages.length === 0) {
-      toast.error("Không có tin nhắn nào để xuất");
+      toast.error(t("No messages to export"));
       return;
     }
 
     setLoading("pdf");
     try {
+      const { exportToPDF } = await import("../../../lib/exportUtils");
       const exportMessages = convertToExportFormat(messages);
       await exportToPDF(exportMessages, conversationTitle);
-      toast.success("Đã xuất file PDF thành công!");
+      toast.success(t("PDF exported successfully"));
       setShowMenu(false);
     } catch (error) {
       console.error("PDF export failed:", error);
-      toast.error("Không thể xuất file PDF");
+      toast.error(t("Failed to export PDF"));
     } finally {
       setLoading(null);
     }
@@ -76,19 +75,20 @@ export function ConversationExport({
 
   const handleExportWord = async () => {
     if (messages.length === 0) {
-      toast.error("Không có tin nhắn nào để xuất");
+      toast.error(t("No messages to export"));
       return;
     }
 
     setLoading("word");
     try {
+      const { exportToWord } = await import("../../../lib/exportUtils");
       const exportMessages = convertToExportFormat(messages);
       await exportToWord(exportMessages, conversationTitle);
-      toast.success("Đã xuất file Word thành công!");
+      toast.success(t("Word exported successfully"));
       setShowMenu(false);
     } catch (error) {
       console.error("Word export failed:", error);
-      toast.error("Không thể xuất file Word");
+      toast.error(t("Failed to export Word"));
     } finally {
       setLoading(null);
     }
@@ -104,7 +104,7 @@ export function ConversationExport({
           ref={buttonRef}
           onClick={() => setShowMenu(!showMenu)}
           className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
-          title="Xuất cuộc trò chuyện"
+          title={t("Export conversation")}
         >
           <Download className="h-5 w-5 text-gray-600 dark:text-gray-300" />
         </button>
@@ -131,7 +131,7 @@ export function ConversationExport({
             >
               {/* Header */}
               <div className="px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                Xuất file
+                {t("Export file")}
               </div>
 
               {/* Menu items */}
@@ -148,7 +148,7 @@ export function ConversationExport({
                     <FileText className="h-3.5 w-3.5 text-red-500" />
                   )}
                   <span className="text-xs">
-                    {loading === "pdf" ? "Đang xuất..." : "PDF"}
+                    {loading === "pdf" ? t("Exporting...") : "PDF"}
                   </span>
                 </button>
 
@@ -164,7 +164,7 @@ export function ConversationExport({
                     <File className="h-3.5 w-3.5 text-blue-500" />
                   )}
                   <span className="text-xs">
-                    {loading === "word" ? "Đang xuất..." : "Word"}
+                    {loading === "word" ? t("Exporting...") : "Word"}
                   </span>
                 </button>
               </div>

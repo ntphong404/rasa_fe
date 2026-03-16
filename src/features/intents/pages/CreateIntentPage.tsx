@@ -19,6 +19,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ArrowLeft, FileCode, Search, X, AlertCircle, Eye, Plus, Code2, FormInput, HelpCircle } from "lucide-react";
 import { intentService } from "../api/service";
 import { IEntity } from "@/interfaces/entity.interface";
@@ -352,7 +358,7 @@ ${exampleLines || "    - example1"}`;
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-5xl p-3">
+    <div className="admin-page container mx-auto py-6 max-w-5xl p-3">
       {/* Help Button - Fixed position */}
       <Button
         variant="outline"
@@ -365,20 +371,13 @@ ${exampleLines || "    - example1"}`;
       </Button>
 
       {/* Help Dialog/Modal */}
-      {showHelp && (
-        <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={() => setShowHelp(false)}
-        >
-          <div 
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b p-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold flex items-center gap-2">
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="app-dialog-content w-[95vw] md:max-w-2xl p-0 overflow-hidden">
+            <DialogHeader className="sticky top-0 border-b border-slate-200/80 bg-white/95 px-4 py-3 backdrop-blur dark:border-white/10 dark:bg-slate-900/95">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
                 <HelpCircle className="h-5 w-5 text-blue-600" />
                 {t("Intent Guide")}
-              </h2>
+              </DialogTitle>
               <Button
                 variant="ghost"
                 size="icon"
@@ -386,9 +385,9 @@ ${exampleLines || "    - example1"}`;
               >
                 <X className="h-4 w-4" />
               </Button>
-            </div>
+            </DialogHeader>
             
-            <div className="p-6 space-y-6">
+            <div className="max-h-[calc(88vh-4.5rem)] overflow-y-auto p-6 space-y-6">
               {/* What is Intent */}
               <section>
                 <h3 className="text-lg font-semibold mb-3 text-blue-600">
@@ -501,9 +500,8 @@ ${exampleLines || "    - example1"}`;
                 </div>
               </section>
             </div>
-          </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/drawer";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Popover,
   PopoverContent,
@@ -48,6 +49,7 @@ import { ListActionResponse } from "../api/dto/ActionResponse";
 import { actionService } from "../api/service";
 import CreateActionDialog from "../components/CreateActionDialog";
 import UpdateActionDialog from "../components/UpdateActionDialog";
+import ActionDetailsDialog from "../components/ActionDetailsDialog";
 import {
   ConfirmSoftDeleteDialog,
   ConfirmHardDeleteDialog,
@@ -76,7 +78,7 @@ export function ActionManagement() {
   // States cho các Dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  // details dialog removed; view will open edit dialog instead
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [confirmSoftDeleteOpen, setConfirmSoftDeleteOpen] = useState(false);
   const [confirmHardDeleteOpen, setConfirmHardDeleteOpen] = useState(false);
   const [confirmRestoreOpen, setConfirmRestoreOpen] = useState(false);
@@ -196,9 +198,8 @@ export function ActionManagement() {
   };
 
   const handleViewDetails = (action: IAction) => {
-    // Open the edit dialog to view details
     setSelectedAction(action);
-    setEditDialogOpen(true);
+    setDetailsDialogOpen(true);
   };
 
   const refreshActions = () => {
@@ -206,10 +207,10 @@ export function ActionManagement() {
   };
 
   return (
-    <div className="relative p-3">
+    <div className="admin-page">
       <Form {...form}>
         <form
-          className="table-controller py-4 flex gap-4 flex-col sm:flex-row"
+          className="table-controller admin-toolbar"
           onSubmit={form.handleSubmit(onSubmit)}
         >
           <div className="relative w-full max-w-sm">
@@ -220,7 +221,7 @@ export function ActionManagement() {
               render={({ field }) => (
                 <Input
                   placeholder={t("Search actions")}
-                  className="w-full pl-8"
+                  className="w-full rounded-lg bg-background pl-8"
                   {...field}
                 />
               )}
@@ -232,7 +233,7 @@ export function ActionManagement() {
           </Button>
           <Drawer>
             <DrawerTrigger asChild>
-              <Button variant="outline">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                 <SlidersHorizontal className="mr-2 h-4 w-4" />
                 {t("Filter")}
               </Button>
@@ -259,7 +260,7 @@ export function ActionManagement() {
                               htmlFor="entity-filter-deleted"
                               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             >
-                              {t("Show deleted entities")}
+                              {t("Show deleted actions")}
                             </label>
                           </div>
                         </FormControl>
@@ -410,6 +411,9 @@ export function ActionManagement() {
                                         <CommandItem
                                           value={limit.toString()}
                                           key={limit}
+                                          onSelect={() => {
+                                            form.setValue("limit", limit);
+                                          }}
                                         >
                                           {limit}
                                           <Check
@@ -519,13 +523,13 @@ export function ActionManagement() {
                     {define ? (
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-8">
+                          <Button variant="outline" size="sm" className="h-8" title={t("View Python code")}>
                             <Code className="mr-2 h-4 w-4" />
                             {t("View Code")}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent
-                          className="w-[600px] max-h-[500px] overflow-y-auto"
+                          className="w-[calc(100vw-2rem)] md:w-[600px] max-h-[500px] overflow-y-auto"
                           align="start"
                         >
                           <div className="p-2">
@@ -561,50 +565,72 @@ export function ActionManagement() {
                 const isDeleted = action.deleted;
                 return (
                   <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleViewDetails(action)}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={() => handleViewDetails(action)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>{t("View details")}</TooltipContent>
+                    </Tooltip>
                     {!isDeleted && (
-                      <Button
-                        onClick={() => handleEditAction(action)}
-                        size="sm"
-                        variant="outline"
-                      >
-                        <Edit className="h-4 w-4 text-blue-600" />
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={() => handleEditAction(action)}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <Edit className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>{t("Edit action")}</TooltipContent>
+                      </Tooltip>
                     )}
                     {isDeleted ? (
                       <>
-                        <Button
-                          onClick={() => handleAskRestoreAction(action)}
-                          size="sm"
-                          variant="outline"
-                          title={t("Restore")}
-                        >
-                          <RotateCcw className="h-4 w-4 text-green-600" />
-                        </Button>
-                        <Button
-                          onClick={() => handleAskDeleteAction(action)}
-                          size="sm"
-                          variant="destructive"
-                          title={t("Delete permanently")}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={() => handleAskRestoreAction(action)}
+                              size="sm"
+                              variant="outline"
+                            >
+                              <RotateCcw className="h-4 w-4 text-green-600" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{t("Restore")}</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={() => handleAskDeleteAction(action)}
+                              size="sm"
+                              variant="destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{t("Delete permanently")}</TooltipContent>
+                        </Tooltip>
                       </>
                     ) : (
-                      <Button
-                        onClick={() => handleAskDeleteAction(action)}
-                        size="sm"
-                        variant="outline"
-                        title={t("Move to trash")}
-                      >
-                        <Archive className="h-4 w-4 text-orange-600" />
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={() => handleAskDeleteAction(action)}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <Archive className="h-4 w-4 text-orange-600" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>{t("Move to trash")}</TooltipContent>
+                      </Tooltip>
                     )}
                   </div>
                 );
@@ -632,7 +658,11 @@ export function ActionManagement() {
         onOpenChange={setEditDialogOpen}
         onActionUpdated={refreshActions}
       />
-      {/* Action details dialog intentionally omitted (not needed) */}
+      <ActionDetailsDialog
+        action={selectedAction}
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
+      />
       <ConfirmSoftDeleteDialog
         open={confirmSoftDeleteOpen}
         onOpenChange={setConfirmSoftDeleteOpen}

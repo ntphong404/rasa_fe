@@ -10,16 +10,17 @@ function Table({
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-auto rounded-t-md"
+      className="relative w-full max-w-full overflow-x-auto overflow-y-auto overscroll-x-contain rounded-t-md"
       style={{
         maxHeight: props.tableheight ? `${props.tableheight}px` : "auto",
         minHeight: props.tableheight ? `${props.tableheight}px` : "auto",
+        touchAction: "pan-x pan-y",
         ...style,
       }}
     >
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
+        className={cn("min-w-full caption-bottom text-sm", className)}
         {...props}
       />
     </div>
@@ -30,7 +31,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
     <thead
       data-slot="table-header"
       className={cn(
-        "[&_tr]:border-b sticky top-0 bg-background z-10 shadow-sm",
+        "[&_tr]:border-b md:sticky md:top-0 bg-background z-10 shadow-sm",
         className
       )}
       {...props}

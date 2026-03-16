@@ -117,6 +117,27 @@ export interface DocumentStatistics {
   };
 }
 
+export interface ResponseFeedbackItem {
+  _id: string;
+  name: string;
+  botId: string;
+  likeCount: number;
+  dislikeCount: number;
+  totalFeedback: number;
+  score: number;
+}
+
+export interface ResponseFeedbackStatistics {
+  totalResponses: number;
+  totalLikes: number;
+  totalDislikes: number;
+  botId: string | null;
+  topLiked: ResponseFeedbackItem[];
+  topDisliked: ResponseFeedbackItem[];
+  avgLikesPerResponse: number;
+  avgDislikesPerResponse: number;
+}
+
 export interface SystemStatistics {
   overall: OverallStatistics;
   users: UserStatistics;

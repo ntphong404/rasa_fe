@@ -62,10 +62,10 @@ export function ContextDocumentsPage() {
       // Save to localStorage (or call API if needed)
       localStorage.setItem('rag_selected_docs', JSON.stringify(selectedDocIds));
       setSavedSelectedDocIds([...selectedDocIds]);
-      toast.success(`Đã lưu ${selectedDocIds.length} tài liệu được chọn!`);
+      toast.success(t("Saved selected documents", { count: selectedDocIds.length }));
     } catch (error) {
       console.error("Error saving selection:", error);
-      toast.error("Không thể lưu lựa chọn. Vui lòng thử lại.");
+      toast.error(t("Failed to save selection. Please try again."));
     } finally {
       setIsSaving(false);
     }
@@ -80,7 +80,7 @@ export function ContextDocumentsPage() {
       setDocuments(response.data);
     } catch (error) {
       console.error("Error fetching documents:", error);
-      toast.error("Không thể tải danh sách tài liệu");
+      toast.error(t("Failed to load documents"));
     } finally {
       setIsLoading(false);
     }
@@ -90,11 +90,11 @@ export function ContextDocumentsPage() {
     try {
       setIsUploading(true);
       await ragService.ingestFile(file);
-      toast.success(`Đã tải lên tài liệu "${file.name}" thành công!`);
+      toast.success(t("Document uploaded successfully", { fileName: file.name }));
       await fetchDocuments();
     } catch (error) {
       console.error("Error uploading file:", error);
-      toast.error("Không thể tải lên tài liệu. Vui lòng thử lại.");
+      toast.error(t("Failed to upload document. Please try again."));
     } finally {
       setIsUploading(false);
     }
@@ -117,13 +117,14 @@ export function ContextDocumentsPage() {
 
     try {
       await ragService.deleteDocument(documentToDelete.id);
-      toast.success(`Đã xóa tài liệu "${documentToDelete.name}" thành công!`);
+      toast.success(t("Document deleted successfully", { fileName: documentToDelete.name }));
       // Remove from selected if it was selected
       setSelectedDocIds(prev => prev.filter(id => id !== documentToDelete.id));
       await fetchDocuments();
     } catch (error) {
       console.error("Error deleting document:", error);
-      toast.error("Không thể xóa tài liệu. Vui lòng thử lại.");
+      toast.error(t("Failed to delete document. Please try again."));
+      throw error;
     } finally {
       setDeleteDialogOpen(false);
       setDocumentToDelete(null);
@@ -297,7 +298,7 @@ export function ContextDocumentsPage() {
                     id="select-all-docs"
                     checked={selectedDocIds.length === paginatedDocuments.length && paginatedDocuments.length > 0}
                     onChange={handleSelectAll}
-                    className="rounded border-gray-300"
+                    className="rounded border-gray-300 dark:border-slate-600"
                   />
                   <label htmlFor="select-all-docs" className="text-sm font-medium cursor-pointer">
                     Chọn tất cả trang này
@@ -328,7 +329,7 @@ export function ContextDocumentsPage() {
               {/* Table with fixed height - fits 3 items */}
               <div className="h-[188px] overflow-y-auto border rounded-lg">
                 <Table>
-                  <TableHeader className="sticky top-0 bg-white z-10">
+                  <TableHeader className="sticky top-0 bg-white dark:bg-slate-900 z-10">
                     <TableRow>
                       <TableHead className="w-12">Chọn</TableHead>
                       <TableHead>Tên tài liệu</TableHead>
@@ -343,7 +344,7 @@ export function ContextDocumentsPage() {
                             type="checkbox"
                             checked={selectedDocIds.includes(doc.doc_id)}
                             onChange={() => handleToggleSelect(doc.doc_id)}
-                            className="rounded border-gray-300"
+                            className="rounded border-gray-300 dark:border-slate-600"
                           />
                         </TableCell>
                         <TableCell className="font-medium">
@@ -353,7 +354,7 @@ export function ContextDocumentsPage() {
                               {doc.doc_metadata?.file_name || "Không có tên"}
                             </span>
                             {doc._groupCount > 1 && (
-                              <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
+                              <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-full">
                                 x{doc._groupCount}
                               </span>
                             )}
@@ -441,6 +442,12 @@ export function ContextDocumentsPage() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={confirmDelete}
+        title={t("Delete document")}
+        description={t("Are you sure you want to delete this document? This action cannot be undone.")}
+        confirmLabel={t("Delete")}
+        cancelLabel={t("Cancel")}
+        successMessage={t("Document deleted successfully", { fileName: documentToDelete?.name || "" })}
+        errorMessage={t("Failed to delete document. Please try again.")}
       />
     </div>
   );

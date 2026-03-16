@@ -4,6 +4,14 @@ import { ListMyResponseResult } from "./dto/MyResponseResult";
 import { CreateMyReponseRequest } from "./dto/CreateMyReponse";
 import { IMyResponse } from "@/interfaces/response.interface";
 
+type TResponseFeedbackVote = "like" | "dislike";
+interface ISubmitResponseFeedbackResult {
+  responseId: string;
+  likeCount: number;
+  dislikeCount: number;
+  userVote: TResponseFeedbackVote | null;
+}
+
 
 export const responseService = {
   fetchResponses: async (query: string): Promise<ListMyResponseResult> => {
@@ -30,5 +38,12 @@ export const responseService = {
   },
   restoreResponse: async (id: string) : Promise<void> => {
     await axiosInstance.patch(ENDPOINTS.RESPONSE_ENDPOINTS.RESTORE(id));
-  }
+  },
+  submitResponseFeedback: async (
+    id: string,
+    vote: TResponseFeedbackVote | null
+  ): Promise<ISubmitResponseFeedbackResult> => {
+    const response = await axiosInstance.patch(ENDPOINTS.RESPONSE_ENDPOINTS.FEEDBACK(id), { vote });
+    return response.data.data;
+  },
 }

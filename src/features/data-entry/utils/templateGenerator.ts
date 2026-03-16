@@ -9,87 +9,33 @@
  */
 export async function generateXLSXTemplate(): Promise<void> {
     try {
-        // Use exceljs for reliable styling and merge support
-        // @ts-ignore - optional runtime import
-        const ExcelJS = await import('exceljs');
-        const workbook = new ExcelJS.Workbook();
+        const worker = new Worker(new URL("../workers/excel.worker.ts", import.meta.url), {
+            type: "module",
+        });
 
-        // Main template sheet
-        const ws = workbook.addWorksheet('template');
+        const id = `generate-template-${Date.now()}`;
+        const buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+            worker.onmessage = (event: MessageEvent<any>) => {
+                const message = event.data;
+                if (!message || message.id !== id) return;
 
-        // Row 1: STT | VÍ DỤ MẪU (merge B1:C1)
-        ws.getRow(1).values = ['STT', 'VÍ DỤ MẪU', ''];
-        // Row 2: header row
-        ws.getRow(2).values = ['', 'Câu hỏi', 'Câu trả lời'];
-        // Example data row
-        ws.getRow(3).values = [
-            1,
-            'Cháy là gì',
-            'Theo Khoản 1 Điều 2, Luật Phòng cháy, chữa cháy và cứu nạn, cứu hộ 2024 quy định: Cháy là phản ứng...'
-        ];
+                worker.terminate();
+                if (message.success) {
+                    resolve(message.data as ArrayBuffer);
+                } else {
+                    reject(new Error(message.error || "Template generation failed"));
+                }
+            };
 
-        // Merge cells
-        ws.mergeCells('B1:C1');
-        ws.mergeCells('A1:A2');
+            worker.onerror = (error) => {
+                worker.terminate();
+                reject(error);
+            };
 
-        // Set column widths
-        ws.columns = [
-            { key: 'A', width: 6 },
-            { key: 'B', width: 40 },
-            { key: 'C', width: 100 },
-        ];
+            worker.postMessage({ id, type: "generate-template" });
+        });
 
-        // Style first 2 rows (fill + alignment)
-        for (let r = 1; r <= 2; r++) {
-            const row = ws.getRow(r);
-            for (let c = 1; c <= 3; c++) {
-                const cell = row.getCell(c);
-                cell.fill = {
-                    type: 'pattern',
-                    pattern: 'solid',
-                    fgColor: { argb: 'FFFF00' },
-                };
-                cell.alignment = {
-                    horizontal: 'center',
-                    vertical: 'middle',
-                    wrapText: true
-                };
-                cell.font = { bold: true };
-            }
-            row.height = 18;
-        }
-
-        // Add borders for first 3 rows
-        for (let r = 1; r <= 3; r++) {
-            const row = ws.getRow(r);
-            for (let c = 1; c <= 3; c++) {
-                const cell = row.getCell(c);
-                cell.border = {
-                    top: { style: 'thin' },
-                    left: { style: 'thin' },
-                    bottom: { style: 'thin' },
-                    right: { style: 'thin' },
-                };
-            }
-        }
-
-        // README sheet with instructions
-        const readme = workbook.addWorksheet('README');
-        const instructions = [
-            ['Hướng dẫn / Instructions'],
-            [''],
-            ['File mẫu cho import dữ liệu (định dạng mẫu):'],
-            ['- Dòng 1: Tiêu đề (VÍ DỤ MẪU).'],
-            ['- Dòng 2: Header với các cột: STT | Câu hỏi | Câu trả lời'],
-            ['- Dòng dữ liệu bắt đầu từ dòng 3: cột A = STT (số), cột B = Câu hỏi, cột C = Câu trả lời.'],
-            ['- Import sẽ bỏ qua 2 dòng đầu tiên và bỏ cột A (STT).'],
-            ['- Câu trả lời sẽ được dùng làm nội dung response; nếu cần nhiều ví dụ trong câu hỏi, tách bằng ";"'],
-        ];
-        instructions.forEach((r, i) => readme.getRow(i + 1).values = r);
-
-        // Write workbook to buffer and download
-        const buf = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buf], { type: 'application/octet-stream' });
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
         downloadFile(blob, 'intent_import_template.xlsx');
     } catch (err) {
         console.error('ExcelJS template generation failed', err);

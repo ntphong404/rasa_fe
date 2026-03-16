@@ -136,10 +136,10 @@ export default function IntentDetailsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b px-6 py-5">
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-slate-900 dark:to-slate-800 border-b dark:border-white/10 px-6 py-5">
           <DialogHeader className="space-y-2">
-            <DialogTitle className="text-2xl font-bold flex items-center gap-3 text-indigo-900">
-              <div className="p-2 bg-white rounded-lg shadow-sm">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3 text-indigo-900 dark:text-indigo-200">
+              <div className="p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
                 <FileText className="h-6 w-6 text-indigo-600" />
               </div>
               {t("Intent Details")}
@@ -161,7 +161,7 @@ export default function IntentDetailsDialog({
           ) : intent ? (
             <div className="space-y-4">
               {/* Name & Description Card */}
-              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-lg p-5 shadow-sm">
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-slate-900 dark:to-slate-900 border-2 border-indigo-200 dark:border-indigo-800/50 rounded-lg p-5 shadow-sm">
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -170,7 +170,7 @@ export default function IntentDetailsDialog({
                         {t("Name")}
                       </h3>
                     </div>
-                    <p className="text-xl font-bold text-indigo-900">{intent.name}</p>
+                      <p className="text-xl font-bold text-indigo-900 dark:text-indigo-200">{intent.name}</p>
                   </div>
                   {intent.description && (
                     <div>
@@ -180,18 +180,18 @@ export default function IntentDetailsDialog({
                           {t("Description")}
                         </h3>
                       </div>
-                      <p className="text-sm text-slate-700 leading-relaxed">{intent.description}</p>
+                      <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{intent.description}</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Entities & Roles */}
-              <div className="bg-white border-2 border-slate-200 rounded-lg p-5 shadow-sm">
+              <div className="surface-card-strong p-5">
                 <div className="grid grid-cols-2 gap-6">
                   {/* Entities */}
                   <div>
-                    <h3 className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-3">
+                    <h3 className="flex items-center gap-2 text-sm font-bold text-foreground mb-3">
                       <Tag className="h-4 w-4 text-blue-600" />
                       {t("Entities")}
                       <Badge className="ml-auto bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs">
@@ -215,7 +215,7 @@ export default function IntentDetailsDialog({
 
                   {/* Roles */}
                   <div>
-                    <h3 className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-3">
+                    <h3 className="flex items-center gap-2 text-sm font-bold text-foreground mb-3">
                       <Users className="h-4 w-4 text-green-600" />
                       {t("Roles")}
                       <Badge className="ml-auto bg-green-100 text-green-700 hover:bg-green-200 text-xs">
@@ -240,8 +240,8 @@ export default function IntentDetailsDialog({
               </div>
 
               {/* Define (YAML) */}
-              <div className="bg-white border-2 border-slate-200 rounded-lg p-5 shadow-sm">
-                <h3 className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-3">
+              <div className="surface-card-strong p-5">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-foreground mb-3">
                   <Code className="h-4 w-4 text-purple-600" />
                   {t("Definition (YAML)")}
                 </h3>
@@ -252,25 +252,25 @@ export default function IntentDetailsDialog({
 
               {/* Timestamps */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center gap-2 text-green-700 mb-2">
+                <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-slate-900 dark:to-slate-900 border-2 border-green-200 dark:border-slate-700 rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center gap-2 text-green-700 dark:text-green-400 mb-2">
                     <Calendar className="h-4 w-4" />
                     <h3 className="text-xs font-bold uppercase tracking-wide">
                       {t("Created At")}
                     </h3>
                   </div>
-                  <p className="text-sm font-semibold text-green-900">
+                  <p className="text-sm font-semibold text-green-900 dark:text-green-200">
                     {new Date(intent.createdAt).toLocaleString()}
                   </p>
                 </div>
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center gap-2 text-blue-700 mb-2">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-slate-900 dark:to-slate-900 border-2 border-blue-200 dark:border-slate-700 rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 mb-2">
                     <Calendar className="h-4 w-4" />
                     <h3 className="text-xs font-bold uppercase tracking-wide">
                       {t("Updated At")}
                     </h3>
                   </div>
-                  <p className="text-sm font-semibold text-blue-900">
+                  <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
                     {new Date(intent.updatedAt).toLocaleString()}
                   </p>
                 </div>
@@ -278,7 +278,7 @@ export default function IntentDetailsDialog({
 
               {/* Deleted status */}
               {intent.deleted && (
-                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 shadow-sm">
+                <div className="bg-red-50 dark:bg-red-950/30 border-2 border-red-200 dark:border-red-800/50 rounded-lg p-4 shadow-sm">
                   <div className="flex items-center gap-3">
                     <AlertCircle className="h-5 w-5 text-red-600" />
                     <Badge variant="destructive" className="text-sm font-bold">{t("Deleted")}</Badge>

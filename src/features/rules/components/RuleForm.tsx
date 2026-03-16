@@ -1302,7 +1302,7 @@ export function RuleForm({
 
       {/* Intent Dialog */}
       <Dialog open={intentDialogOpen} onOpenChange={setIntentDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="app-dialog-content w-[95vw] md:max-w-lg overflow-hidden">
           <DialogHeader>
             <DialogTitle>Select Intent</DialogTitle>
           </DialogHeader>
@@ -1367,7 +1367,7 @@ export function RuleForm({
 
       {/* Action/Response Dialog */}
       <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="app-dialog-content w-[95vw] md:max-w-4xl overflow-hidden">
           <DialogHeader>
             <DialogTitle>Select Action or Response</DialogTitle>
           </DialogHeader>
@@ -1509,21 +1509,13 @@ export function RuleForm({
         <HelpCircle className="h-6 w-6" />
       </Button>
 
-      {/* Help Dialog/Modal */}
-      {showHelp && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={() => setShowHelp(false)}
-        >
-          <div
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b p-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold flex items-center gap-2">
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="app-dialog-content w-[95vw] md:max-w-2xl p-0 overflow-hidden">
+            <DialogHeader className="sticky top-0 border-b border-slate-200/80 bg-white/95 px-4 py-3 backdrop-blur dark:border-white/10 dark:bg-slate-900/95">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
                 <HelpCircle className="h-5 w-5 text-blue-600" />
                 {t("Rule Guide")}
-              </h2>
+              </DialogTitle>
               <Button
                 variant="ghost"
                 size="icon"
@@ -1531,9 +1523,9 @@ export function RuleForm({
               >
                 <X className="h-4 w-4" />
               </Button>
-            </div>
+            </DialogHeader>
 
-            <div className="p-6 space-y-6">
+            <div className="max-h-[calc(88vh-4.5rem)] overflow-y-auto p-6 space-y-6">
               {/* What is Rule */}
               <section>
                 <h3 className="text-lg font-semibold mb-3 text-blue-600">
@@ -1605,9 +1597,8 @@ export function RuleForm({
                 </div>
               </section>
             </div>
-          </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

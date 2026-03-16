@@ -1382,7 +1382,7 @@ export function StoryForm({
 
       {/* Intent Selection Dialog */}
       <Dialog open={intentDialogOpen} onOpenChange={setIntentDialogOpen}>
-        <DialogContent className="max-w-md max-h-[70vh] overflow-hidden">
+        <DialogContent className="app-dialog-content w-[95vw] md:max-w-md overflow-hidden">
           <DialogHeader>
             <DialogTitle>{t("Select Intent")}</DialogTitle>
           </DialogHeader>
@@ -1429,7 +1429,7 @@ export function StoryForm({
 
       {/* Action/Response Selection Dialog */}
       <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[70vh] overflow-hidden">
+        <DialogContent className="app-dialog-content w-[95vw] md:max-w-2xl overflow-hidden">
           <DialogHeader>
             <DialogTitle>{t("Select Action or Response")}</DialogTitle>
           </DialogHeader>
@@ -1517,7 +1517,7 @@ export function StoryForm({
 
       {/* Help Dialog */}
       <Dialog open={showHelp} onOpenChange={setShowHelp}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="app-dialog-content w-[95vw] md:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{t("Story Form Help")}</DialogTitle>
           </DialogHeader>

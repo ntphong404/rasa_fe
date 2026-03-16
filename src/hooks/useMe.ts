@@ -3,7 +3,7 @@ import { UpdateMeRequest } from "@/features/auth/api/dto/UpdateMeRequest";
 import { authService } from "@/features/auth/api/service";
 import { useAuthStore } from "@/store/auth";
 import { useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export const useMe = () => {
     const [isLoading, setIsLoading] = useState(true);
@@ -39,7 +39,7 @@ export const useMe = () => {
         setIsLoading(true);
         try {
             const response = await authService.updateMe(data);
-            toast.success("Cập nhật thông tin người dùng thành công!");
+            toast.success("Cập nhật thông tin thành công");
             updateUser(response);
             return response;
         } catch (err: any) {

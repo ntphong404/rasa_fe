@@ -3,3 +3,4 @@ export {
   ThemeProvider
 }
 export { ChatbotSelector } from '@/components/chatbot-selector';
+export { ThemeModeToggle } from '@/components/theme-mode-toggle';

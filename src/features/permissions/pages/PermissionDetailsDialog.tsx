@@ -60,15 +60,15 @@ export function PermissionDetailsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[90vw] sm:max-w-3xl max-h-[90vh] overflow-hidden p-0">
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b px-3 pt-4">
+        <div className="border-b bg-gradient-to-r from-indigo-50 to-purple-50 px-3 pt-4 dark:border-white/10 dark:from-slate-900 dark:to-slate-800">
           <DialogHeader className="space-y-2">
-            <DialogTitle className="text-2xl font-bold flex items-center gap-3 text-indigo-900">
-              <div className="p-2 bg-white rounded-lg shadow-sm">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3 text-indigo-900 dark:text-indigo-200">
+              <div className="p-2 bg-white rounded-lg shadow-sm dark:bg-slate-800">
                 <ShieldCheck className="h-6 w-6 text-indigo-600" />
               </div>
               Chi tiết quyền hạn
             </DialogTitle>
-            <DialogDescription className="text-sm text-indigo-600">
+            <DialogDescription className="text-sm text-indigo-600 dark:text-indigo-300">
               Xem thông tin chi tiết về quyền hạn này
             </DialogDescription>
           </DialogHeader>
@@ -92,8 +92,8 @@ export function PermissionDetailsDialog({
                   <Tag className="h-4 w-4 text-indigo-600" />
                   Đường dẫn API
                 </div>
-                <div className="rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 px-3 py-2 shadow-sm">
-                  <p className="text-sm font-mono break-all font-semibold text-indigo-900">
+                <div className="rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 px-3 py-2 shadow-sm dark:border-indigo-700/40 dark:from-slate-900 dark:to-slate-900">
+                  <p className="text-sm font-mono break-all font-semibold text-indigo-900 dark:text-indigo-200">
                     {permission.originalUrl}
                   </p>
                 </div>
@@ -131,10 +131,10 @@ export function PermissionDetailsDialog({
                   <FileText className="h-4 w-4 text-purple-600" />
                   Mô tả
                 </div>
-                <div className="rounded-lg bg-slate-50 border-2 border-slate-200 px-3 py-2 shadow-sm">
-                  <p className="text-sm leading-relaxed text-slate-700">
+                <div className="rounded-lg bg-slate-50 border-2 border-slate-200 px-3 py-2 shadow-sm dark:border-white/15 dark:bg-slate-900">
+                  <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">
                     {permission.description || (
-                      <span className="italic text-slate-400">
+                      <span className="italic text-slate-400 dark:text-slate-500">
                         Không có mô tả
                       </span>
                     )}
@@ -150,8 +150,8 @@ export function PermissionDetailsDialog({
                   <Puzzle className="h-4 w-4 text-orange-600" />
                   Phân hệ
                 </div>
-                <div className="rounded-lg bg-orange-50 border-2 border-orange-200 px-3 py-2 shadow-sm">
-                  <p className="text-sm font-bold text-orange-900">{permission.module}</p>
+                <div className="rounded-lg bg-orange-50 border-2 border-orange-200 px-3 py-2 shadow-sm dark:border-orange-700/40 dark:bg-orange-950/25">
+                  <p className="text-sm font-bold text-orange-900 dark:text-orange-200">{permission.module}</p>
                 </div>
               </div>
 
@@ -163,18 +163,18 @@ export function PermissionDetailsDialog({
                   <Globe className="h-4 w-4 text-blue-600" />
                   Quyền truy cập
                 </div>
-                <div className={`rounded-lg px-3 py-2 flex items-center gap-2 border-2 shadow-sm ${permission.isPublic ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                <div className={`rounded-lg px-3 py-2 flex items-center gap-2 border-2 shadow-sm ${permission.isPublic ? 'bg-green-50 border-green-200 dark:bg-green-950/25 dark:border-green-700/40' : 'bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-700/40'}`}>
                   {permission.isPublic ? (
                     <>
                       <Unlock className="h-5 w-5 text-green-600" />
-                      <span className="text-sm font-bold text-green-700">
+                      <span className="text-sm font-bold text-green-700 dark:text-green-200">
                         Công khai
                       </span>
                     </>
                   ) : (
                     <>
                       <Lock className="h-5 w-5 text-red-600" />
-                      <span className="text-sm font-bold text-red-700">
+                      <span className="text-sm font-bold text-red-700 dark:text-red-200">
                         Riêng tư
                       </span>
                     </>
@@ -191,8 +191,8 @@ export function PermissionDetailsDialog({
                     <Calendar className="h-4 w-4 text-green-600" />
                     Ngày tạo
                   </div>
-                  <div className="rounded-lg bg-green-50 border-2 border-green-200 px-3 py-2 shadow-sm">
-                    <p className="text-sm font-semibold text-green-900">{formatDate(permission.createdAt)}</p>
+                  <div className="rounded-lg bg-green-50 border-2 border-green-200 px-3 py-2 shadow-sm dark:border-green-700/40 dark:bg-green-950/25">
+                    <p className="text-sm font-semibold text-green-900 dark:text-green-200">{formatDate(permission.createdAt)}</p>
                   </div>
                 </div>
 
@@ -201,18 +201,18 @@ export function PermissionDetailsDialog({
                     <Calendar className="h-4 w-4 text-blue-600" />
                     Ngày cập nhật
                   </div>
-                  <div className="rounded-lg bg-blue-50 border-2 border-blue-200 px-3 py-2 shadow-sm">
-                    <p className="text-sm font-semibold text-blue-900">{formatDate(permission.updatedAt)}</p>
+                  <div className="rounded-lg bg-blue-50 border-2 border-blue-200 px-3 py-2 shadow-sm dark:border-blue-700/40 dark:bg-blue-950/25">
+                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">{formatDate(permission.updatedAt)}</p>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16">
-              <div className="p-4 bg-slate-100 rounded-full mb-4">
+              <div className="p-4 bg-slate-100 rounded-full mb-4 dark:bg-slate-800">
                 <AlertCircle className="h-12 w-12 text-slate-400" />
               </div>
-              <p className="text-base font-medium text-slate-600">
+              <p className="text-base font-medium text-slate-600 dark:text-slate-300">
                 Chưa chọn quyền hạn
               </p>
             </div>

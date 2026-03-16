@@ -9,10 +9,6 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -50,6 +46,15 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
+  --selection-bg: rgba(148, 163, 184, 0.45);
+  --selection-text: #0f172a;
+  --cm-gutter-border: rgba(148, 163, 184, 0.4);
+  --cm-line-number: #64748b;
+  --cm-line-number-active: #334155;
+  --cm-active-line: rgba(148, 163, 184, 0.14);
 }
 
 .dark {
@@ -85,6 +90,49 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+  --scrollbar-track: rgba(15, 23, 42, 0.9);
+  --scrollbar-thumb: rgba(148, 163, 184, 0.45);
+  --scrollbar-thumb-hover: rgba(148, 163, 184, 0.65);
+  --selection-bg: rgba(71, 85, 105, 0.65);
+  --selection-text: #f8fafc;
+  --cm-gutter-border: rgba(148, 163, 184, 0.28);
+  --cm-line-number: #94a3b8;
+  --cm-line-number-active: #cbd5e1;
+  --cm-active-line: rgba(100, 116, 139, 0.2);
+}
+
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-text);
+}
+
+::-moz-selection {
+  background: var(--selection-bg);
+  color: var(--selection-text);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  border: 2px solid var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 
 @theme inline {
@@ -155,4 +203,56 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  html,
+  body,
+  #root {
+    overflow-x: hidden;
+    max-width: 100%;
+    min-height: 100%;
+  }
+
+  html,
+  body {
+    background-color: var(--background);
+  }
+
+  #root {
+    min-height: 100svh;
+  }
+}
+
+@layer components {
+  .admin-page {
+    @apply relative min-h-0 overflow-x-hidden p-3 md:p-4;
+  }
+
+  .admin-toolbar {
+    @apply py-4 flex gap-4 flex-col sm:flex-row;
+  }
+
+  .surface-card {
+    @apply rounded-xl border border-slate-200 bg-white/95 shadow-sm dark:border-white/15 dark:bg-slate-900/80;
+  }
+
+  .surface-card-strong {
+    @apply rounded-xl border border-slate-200 bg-white shadow-md dark:border-white/15 dark:bg-slate-900/85;
+  }
+
+  .app-dialog-content {
+    @apply max-h-[88vh] overflow-hidden;
+  }
+
+  .app-code-panel {
+    @apply min-h-[240px];
+  }
+
+  .app-table-shell {
+    @apply w-full max-w-full overflow-x-auto overscroll-x-contain;
+  }
+}
+
+.dark .surface-card,
+.dark .surface-card-strong {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 20px 42px rgba(2, 6, 23, 0.5);
 }

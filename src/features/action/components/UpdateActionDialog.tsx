@@ -11,15 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useTranslation } from "react-i18next";
-import { Code, HelpCircle, AlertTriangle, Edit } from "lucide-react";
+import { Code, AlertTriangle, Edit } from "lucide-react";
 
 import { actionService } from "../api/service";
 import { usePyodideSyntaxCheck } from "@/hooks/usePyodideSyntaxCheck";
 import { PythonCodeEditor } from "@/components/code-editor";
 import { IAction } from "@/interfaces/action.interface";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
+import { ModuleHelpPopover } from "@/components/module-help-popover";
 
 interface UpdateActionDialogProps {
   action: IAction | null;
@@ -104,7 +104,7 @@ export default function UpdateActionDialog({
 
     const sanitizedName = toSnakeCase(name);
     if (!sanitizedName) {
-      alert(t("Please enter action name"));
+      toast.error(t("Please enter action name"));
       return;
     }
 
@@ -131,11 +131,11 @@ export default function UpdateActionDialog({
       await actionService.updateAction(action._id, payload);
 
       onActionUpdated();
-      toast.success("Cập nhật action thành công.")
+      toast.success(t("Action updated successfully"));
       onOpenChange(false);
     } catch (error) {
       console.error("Error updating action:", error);
-      alert(t("Failed to update action"));
+      toast.error(t("Failed to update action"));
     } finally {
       setIsSubmitting(false);
     }
@@ -143,37 +143,24 @@ export default function UpdateActionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-none w-[90vw] h-[90vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-r from-blue-50 to-cyan-50">
+      <DialogContent className="app-dialog-content !max-w-none w-[95vw] md:w-[92vw] h-[88vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b bg-gradient-to-r from-indigo-50 to-blue-50 dark:border-white/10 dark:from-slate-950 dark:to-slate-900">
           <DialogTitle className="flex items-center gap-2 text-2xl">
             <Edit className="h-6 w-6 text-blue-600" />
             {t("Edit Action")}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="ml-auto">
-                  <HelpCircle className="h-5 w-5 text-blue-600" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80" align="end">
-                <div className="space-y-2">
-                  <h4 className="font-medium">{t("What is an Action?")}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {t(
-                      "Actions are custom Python code that a bot can run. They are used for tasks like calling APIs, querying a database, or interacting with external systems."
-                    )}
-                  </p>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <ModuleHelpPopover
+              title={t("What is an Action?")}
+              description={t("Actions are custom Python code that a bot can run. They are used for tasks like calling APIs, querying a database, or interacting with external systems.")}
+              iconClassName="text-blue-600"
+            />
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-          <div className="space-y-4">
-            {/* Basic Info Card */}
-            <div className="bg-white border rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">{t("Basic Information")}</h3>
-              <div className="space-y-4">
+        <div className="flex-1 overflow-hidden px-5 py-3">
+          <div className="grid h-full gap-3 lg:grid-cols-12">
+            <div className="surface-card p-3 lg:col-span-3">
+              <h3 className="mb-2 text-sm font-semibold text-foreground">{t("Basic Information")}</h3>
+              <div className="space-y-2">
                 <div className="space-y-2">
                   <Label htmlFor="action-name">{t("Action Name")} *</Label>
                   <Input
@@ -192,16 +179,16 @@ export default function UpdateActionDialog({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder={t("Describe what this action does")}
-                    rows={2}
+                    rows={6}
+                    className="max-h-[22rem] min-h-[112px]"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Code Editor Card */}
-            <div className="bg-white border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-gray-700">{t("Python Code")}</h3>
+            <div className="surface-card p-3 lg:col-span-9 flex min-h-0 flex-col">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-foreground">{t("Python Code")}</h3>
                 <Button type="button" variant="outline" size="sm" onClick={generateTemplate}>
                   <Code className="h-4 w-4 mr-2" />
                   {t("Generate Template")}
@@ -216,19 +203,19 @@ export default function UpdateActionDialog({
                   </div>
                 </div>
               )}
-              <div className="h-[calc(90vh-450px)] min-h-[400px] overflow-auto">
+              <div className="app-code-panel flex-1 min-h-[240px] md:min-h-[320px] overflow-hidden">
                 <PythonCodeEditor
                   value={define}
                   onChange={setDefine}
                   onClearError={() => setSyntaxError(null)}
-                  className="h-full border rounded-md bg-white"
+                  className="h-full rounded-md border border-slate-200 bg-white dark:border-white/15 dark:bg-slate-950"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        <DialogFooter className="gap-2 px-6 py-4 border-t bg-gray-50">
+        <DialogFooter className="gap-2 px-5 py-3 border-t bg-gray-50 dark:border-white/10 dark:bg-slate-900">
           <Button
             type="button"
             variant="outline"

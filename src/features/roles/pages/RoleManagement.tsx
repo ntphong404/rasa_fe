@@ -56,6 +56,7 @@ import RoleDetailsDialog from "./RoleDetailsDialog";
 import EditRoleDialog from "./EditRoleDialog";
 import { CreateRoleDialog } from "./CreateRoleDialog";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -391,10 +392,10 @@ export function RoleManagement() {
   };
 
   return (
-    <div className="relative p-3">
+    <div className="admin-page">
       <Form {...form}>
         <form
-          className="table-controller py-4 flex gap-4 flex-col sm:flex-row"
+          className="table-controller admin-toolbar"
           onSubmit={form.handleSubmit(onSubmit)}
         >
           <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -794,27 +795,42 @@ export function RoleManagement() {
               header: t("Actions"),
               cell: ({ row }) => (
                 <div className="flex gap-2">
-                  <Button
-                    onClick={() => handleViewDetails(row.original)}
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    onClick={() => handleEditRole(row.original)}
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="bg-red-600 hover:bg-red-700"
-                    onClick={() => handleAskDeleteRole(row.original._id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={() => handleViewDetails(row.original)}
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Xem chi tiết</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={() => handleEditRole(row.original)}
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Chỉnh sửa vai trò</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        className="bg-red-600 hover:bg-red-700"
+                        onClick={() => handleAskDeleteRole(row.original._id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Xóa vai trò</TooltipContent>
+                  </Tooltip>
                 </div>
               ),
             },

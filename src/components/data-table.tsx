@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
+import { Skeleton } from "./ui/skeleton";
 import { useEffect, useState } from "react";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -79,7 +80,7 @@ export function DataTable<TData, TValue>({
   }, []);
   return (
     <>
-      <div className="rounded-md border border-border">
+      <div className="app-table-shell rounded-md border border-border bg-background">
         <Table tableheight={tableHeight}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -100,7 +101,17 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              Array.from({ length: Math.min(meta.limit || 10, 10) }).map((_, index) => (
+                <TableRow key={`loading-${index}`} isevenrow={index % 2 === 0}>
+                  {columns.map((_, cellIndex) => (
+                    <TableCell key={`loading-cell-${cellIndex}`}>
+                      <Skeleton className="h-4 w-full max-w-[220px]" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row, index) => (
                 <TableRow
                   key={row.id}
@@ -121,9 +132,9 @@ export function DataTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-24 text-center text-muted-foreground"
                 >
-                  No results.
+                  No data available.
                 </TableCell>
               </TableRow>
             )}

@@ -17,15 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { useTranslation } from "react-i18next";
-import { FileCode, FileText, Plus, Trash2, Eye, EyeOff, HelpCircle, Tag, Info } from "lucide-react";
+import { FileCode, FileText, Plus, Trash2, Eye, EyeOff, HelpCircle, Tag } from "lucide-react";
 import { entityService } from "../api/service";
 import { Badge } from "@/components/ui/badge";
+import { ModuleHelpPopover } from "@/components/module-help-popover";
+import { toast } from "sonner";
 
 interface CreateEntityDialogProps {
   open: boolean;
@@ -154,7 +151,7 @@ ${examplesList || "      - example1"}`;
     const sanitizedName = toSnakeCase(name);
     
     if (!sanitizedName) {
-      alert(t("Please enter entity name"));
+      toast.error(t("Please enter entity name"));
       return;
     }
 
@@ -191,7 +188,7 @@ ${examplesList || "      - example1"}`;
       onOpenChange(false);
     } catch (error) {
       console.error("Error creating entity:", error);
-      alert(t("Failed to create entity"));
+      toast.error(t("Failed to create entity"));
     } finally {
       setIsSubmitting(false);
     }
@@ -206,29 +203,11 @@ ${examplesList || "      - example1"}`;
               <Plus className="h-6 w-6 text-emerald-600" />
               {t("Create New Entity")}
             </DialogTitle>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="sm" className="mr-8">
-                  <HelpCircle className="h-5 w-5 text-emerald-600" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80" align="end">
-                <div className="space-y-2">
-                  <h4 className="font-medium flex items-center gap-2">
-                    <Info className="h-4 w-4 text-emerald-600" />
-                    {t("What is an Entity?")}
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    {t("Entities are structured data that can be extracted from user input. There are three types:")}
-                  </p>
-                  <ul className="text-sm text-muted-foreground space-y-1 list-disc pl-4">
-                    <li><strong>regex:</strong> {t("Pattern-based matching (e.g., email, phone)")}</li>
-                    <li><strong>lookup:</strong> {t("List-based matching (e.g., countries, cities)")}</li>
-                    <li><strong>synonym:</strong> {t("Value mapping (e.g., 'credit card' → 'credit')")}</li>
-                  </ul>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <ModuleHelpPopover
+              title={t("What is an Entity?")}
+              description={t("Entities are structured data that can be extracted from user input. There are three types:")}
+              iconClassName="text-emerald-600"
+            />
           </div>
         </DialogHeader>
 

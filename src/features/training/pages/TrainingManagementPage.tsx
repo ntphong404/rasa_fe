@@ -151,10 +151,10 @@ export function TrainingManagementPage() {
   };
 
   return (
-    <div className="relative p-3">
+    <div className="admin-page">
       <Form {...form}>
         <form
-          className="table-controller py-4 flex gap-4 flex-col sm:flex-row"
+          className="table-controller admin-toolbar"
           onSubmit={form.handleSubmit(onSubmit)}
         >
           <FormField

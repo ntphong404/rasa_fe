@@ -73,6 +73,7 @@ export default {
     HARD_DELETE: (id: string) => `/api/v1/my-response/${id}/hard`,
     SOFT_DELETE: (id: string) => `/api/v1/my-response/${id}/soft`,
     RESTORE: (id: string) => `/api/v1/my-response/${id}/restore`,
+    FEEDBACK: (id: string) => `/api/v1/my-response/${id}/feedback`,
   },
   RULE_ENDPOINTS: {
     GET_ALL_PAGINATED: "/api/v1/rule",
@@ -88,7 +89,7 @@ export default {
     GET_BY_ID: (id: string) => `/api/v1/uquestion/${id}`,
     CREATE: "/api/v1/uquestion",
     UPDATE: (id: string) => `/api/v1/uquestion/${id}`,
-    HARD_DELETE: (id: string) => `/api/v1/uquestion/${id}/hard`,
+    HARD_DELETE: (id: string) => `/api/v1/uquestion/${id}`,
     SOFT_DELETE: (id: string) => `/api/v1/uquestion/${id}/soft`,
     RESTORE: (id: string) => `/api/v1/uuestion/${id}/restore`,
   },
@@ -148,6 +149,14 @@ export default {
       `/api/v1/conversation/${conversationId}`,
     DELETE_CONVERSATION: (conversationId: string) =>
       `/api/v1/conversation/${conversationId}`,
+    RENAME_CONVERSATION: (conversationId: string) =>
+      `/api/v1/conversation/${conversationId}/rename`,
+    PIN_CONVERSATION: (conversationId: string) =>
+      `/api/v1/conversation/${conversationId}/pin`,
+    ARCHIVE_CONVERSATION: (conversationId: string) =>
+      `/api/v1/conversation/${conversationId}/archive`,
+    SHARE_CONVERSATION: (conversationId: string) =>
+      `/api/v1/conversation/${conversationId}/share`,
   },
 
   DOC_ENDPOINTS: {
@@ -167,6 +176,7 @@ export default {
     CHATBOTS: "/api/v1/statistic/chatbots",
     NLP: "/api/v1/statistic/nlp",
     DOCUMENTS: "/api/v1/statistic/documents",
+    RESPONSES_FEEDBACK: "/api/v1/statistic/responses-feedback",
     SYSTEM: "/api/v1/statistic/system",
   },
 } as const;

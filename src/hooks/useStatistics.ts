@@ -44,6 +44,17 @@ export const useDocumentStatistics = () => {
   });
 };
 
+export const useResponseFeedbackStatistics = (params?: {
+  limit?: number;
+  botId?: string;
+}) => {
+  return useQuery({
+    queryKey: ["statistics", "responses-feedback", params],
+    queryFn: () => statisticService.getResponseFeedbackStatistics(params),
+    staleTime: 30000,
+  });
+};
+
 export const useOverallStatistics = () => {
   return useQuery({
     queryKey: ["statistics", "overall"],

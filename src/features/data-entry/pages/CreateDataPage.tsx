@@ -1,9 +1,15 @@
-import { useState, useMemo, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { HelpCircle, X } from "lucide-react";
 import { intentService } from "@/features/intents/api/service";
@@ -14,6 +20,7 @@ export function CreateDataPage() {
     const [showHelp, setShowHelp] = useState(false);
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [intentName, setIntentName] = useState("");
     const [initialExample, setInitialExample] = useState("");
     const [examples, setExamples] = useState<string[]>([]);
@@ -26,6 +33,13 @@ export function CreateDataPage() {
     const responseRef = useRef<HTMLTextAreaElement | null>(null);
     const examplesSectionRef = useRef<HTMLDivElement | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
+
+    useEffect(() => {
+        const sampleQuestion = searchParams.get("sampleQuestion")?.trim();
+        if (sampleQuestion) {
+            setInitialExample(sampleQuestion);
+        }
+    }, [searchParams]);
 
     const handleCancel = () => navigate("/");
 
@@ -110,9 +124,9 @@ export function CreateDataPage() {
         // Require all main fields before generating: intent name, at least one example, and response
         const seed = examples[0] || initialExample || "";
         const newErrors: typeof errors = {};
-        if (!intentName.trim()) newErrors.intentName = "Vui lòng nhập tên nhóm câu hỏi";
-        if (!seed.trim()) newErrors.initialExample = "Vui lòng nhập ít nhất một câu hỏi để tạo tự động";
-        if (!responseText.trim()) newErrors.responseText = "Vui lòng nhập câu trả lời";
+        if (!intentName.trim()) newErrors.intentName = t("Please enter question group name");
+        if (!seed.trim()) newErrors.initialExample = t("Please enter at least one question to auto-generate");
+        if (!responseText.trim()) newErrors.responseText = t("Please enter answer text");
         if (Object.keys(newErrors).length) {
             setErrors((p) => ({ ...p, ...newErrors }));
             // also show toast for immediate feedback
@@ -148,7 +162,7 @@ export function CreateDataPage() {
             const returnedExamples: string[] = Array.isArray(genAny)
                 ? genAny
                 : (Array.isArray(genAny?.data?.examples) ? genAny.data.examples : []);
-            if (!returnedExamples || returnedExamples.length === 0) return toast.error("Không có câu hỏi nào được tạo");
+            if (!returnedExamples || returnedExamples.length === 0) return toast.error(t("No questions were generated"));
 
             // Ensure user's original example is always first, then add generated ones
             const filteredGenerated = returnedExamples.slice(0, toRequest).filter(ex => ex.trim() !== userOriginalExample.trim());
@@ -171,10 +185,10 @@ export function CreateDataPage() {
             setErrors((p) => ({ ...p, examples: undefined, initialExample: undefined }));
             // ensure examples panel is visible so user sees generated examples
             setStep('examples');
-            toast.success("Đã thêm các câu hỏi tự động");
+            toast.success(t("Added questions automatically"));
         } catch (err) {
             console.error(err);
-            toast.error("Lỗi khi tạo ví dụ tự động");
+            toast.error(t("Failed to generate examples automatically"));
         }
         finally {
             setIsGenerating(false);
@@ -182,8 +196,8 @@ export function CreateDataPage() {
     };
 
     const goToExamplesStep = () => {
-        if (!intentName.trim()) return toast.error("Vui lòng nhập tên nhóm câu hỏi");
-        if (!initialExample.trim()) return toast.error("Vui lòng nhập ít nhất một câu hỏi để bắt đầu");
+        if (!intentName.trim()) return toast.error(t("Please enter question group name"));
+        if (!initialExample.trim()) return toast.error(t("Please enter at least one question to start"));
         setExamples([initialExample.trim()]);
         setStep('examples');
     };
@@ -191,10 +205,10 @@ export function CreateDataPage() {
     const handleSubmit = async () => {
         // Validate required fields: intent name, response text, and at least 5 examples
         const newErrors: typeof errors = {};
-        if (!intentName.trim()) newErrors.intentName = "Vui lòng nhập tên nhóm câu hỏi";
-        if (!responseText.trim()) newErrors.responseText = "Vui lòng nhập câu trả lời";
+        if (!intentName.trim()) newErrors.intentName = t("Please enter question group name");
+        if (!responseText.trim()) newErrors.responseText = t("Please enter answer text");
         if (examples.length < 5) {
-            newErrors.examples = "Cần ít nhất 5 câu hỏi trước khi lưu";
+            newErrors.examples = t("At least 5 questions are required before saving");
             // If user is still on the initial 'form' step, surface the examples error under the initial example input
             if (step === 'form') {
                 newErrors.initialExample = newErrors.examples;
@@ -266,7 +280,7 @@ export function CreateDataPage() {
                 await storyService.createStory(storyPayload as any);
             }
 
-            toast.success("Tạo dữ liệu thành công");
+            toast.success(t("Data created successfully"));
             // Reset form after successful save
             setIntentName("");
             setInitialExample("");
@@ -280,7 +294,7 @@ export function CreateDataPage() {
             }, 100);
         } catch (err) {
             console.error(err);
-            toast.error("Tạo dữ liệu thất bại");
+            toast.error(t("Failed to create data"));
         } finally {
             setIsSubmitting(false);
         }
@@ -288,20 +302,20 @@ export function CreateDataPage() {
 
     return (
         <>
-            <div className="container mx-auto p-6 max-w-6xl w-full">
+            <div className="admin-page container mx-auto p-6 max-w-6xl w-full">
                 <div className="flex items-center justify-between mb-4">
                     <div>
-                        <h1 className="text-2xl font-bold">Thêm dữ liệu nhanh</h1>
-                        <p className="text-sm text-muted-foreground">Tạo nhóm câu hỏi, câu trả lời và liên kết chúng với nhau</p>
+                        <h1 className="text-2xl font-bold">{t("Quick data creation")}</h1>
+                        <p className="text-sm text-muted-foreground">{t("Create question groups, answers, and link them together")}</p>
                     </div>
                     <div className="ml-auto flex items-center gap-4">
-                        <Button variant="outline" size="sm" onClick={() => navigate('/add-data/import')}>Nhập từ File</Button>
+                        <Button variant="outline" size="sm" onClick={() => navigate('/add-data/import')}>{t("Import from file")}</Button>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-lg border-2 border-slate-300 dark:border-slate-600 grid gap-6 relative">
+                <div className="surface-card-strong grid gap-6 rounded-lg border-2 border-slate-300 p-6 text-foreground dark:border-white/20 relative">
                     <div>
-                        <label className="block text-base font-medium mb-2 text-slate-700">Tên nhóm câu hỏi</label>
+                        <label className="mb-2 block text-base font-medium text-foreground">{t("Question group name")}</label>
                         <div className="relative mb-7">
                             <Input
                                 ref={intentRef}
@@ -311,12 +325,12 @@ export function CreateDataPage() {
                             />
                             {errors.intentName && <div className="absolute left-0 top-full mt-1 text-sm text-red-600 whitespace-nowrap z-10">{errors.intentName}</div>}
                         </div>
-                        <div className="text-sm text-slate-600">Tên chuẩn hóa: <span className="font-mono text-sm ml-2 text-indigo-700">{formattedIntent || <span className="text-slate-400">(sẽ được tạo tự động)</span>}</span></div>
+                        <div className="text-sm text-muted-foreground">{t("Normalized name")}: <span className="ml-2 font-mono text-sm text-indigo-700 dark:text-indigo-300">{formattedIntent || <span className="text-slate-400 dark:text-slate-500">{t("(auto-generated)")}</span>}</span></div>
                     </div>
 
                     {step === 'form' ? (
                         <div>
-                            <label className="block text-base font-medium mb-2 text-slate-700">Câu hỏi mẫu (nhập 1 câu hỏi để bắt đầu)</label>
+                            <label className="mb-2 block text-base font-medium text-foreground">{t("Sample question (enter one question to start)")}</label>
                             <div className="relative">
                                 <Input
                                     ref={initialExampleRef}
@@ -330,10 +344,10 @@ export function CreateDataPage() {
                         </div>
                     ) : (
                         <div>
-                            <label className="block text-base font-medium mb-2 text-slate-700">Các câu hỏi tương tự</label>
+                            <label className="mb-2 block text-base font-medium text-foreground">{t("Similar questions")}</label>
                             <div className="space-y-2" ref={examplesSectionRef}>
                                 {examples.length === 0 ? (
-                                    <div className="text-sm text-slate-500">Chưa có câu hỏi. Thêm hoặc tạo tự động.</div>
+                                    <div className="text-sm text-muted-foreground">{t("No questions yet. Add manually or generate automatically.")}</div>
                                 ) : (
                                     examples.map((ex, idx) => (
                                         <div key={idx} className="flex items-center gap-2">
@@ -342,7 +356,7 @@ export function CreateDataPage() {
                                                 value={ex}
                                                 onChange={(e) => { setExamples((prev) => prev.map((p, i) => i === idx ? e.target.value : p)); if (examples.length >= 5) setErrors((p) => ({ ...p, examples: undefined })); }}
                                             />
-                                            <Button variant="ghost" size="icon" onClick={() => removeExample(idx)} aria-label={"Xóa câu hỏi"}>
+                                            <Button variant="ghost" size="icon" onClick={() => removeExample(idx)} aria-label={t("Delete question")}>
                                                 <X className="h-4 w-4 text-red-500" />
                                             </Button>
                                         </div>
@@ -353,14 +367,14 @@ export function CreateDataPage() {
                             {/* example buttons removed from here and placed at bottom-right */}
 
                             <div className="mt-4 flex items-center gap-2 relative">
-                                <Button variant="ghost" onClick={() => setStep('form')}>Quay lại</Button>
+                                <Button variant="ghost" onClick={() => setStep('form')}>{t("Back")}</Button>
                                 {errors.examples && <div className="absolute left-0 top-full mt-2 text-sm text-red-600 whitespace-nowrap">{errors.examples}</div>}
                             </div>
                         </div>
                     )}
 
                     <div>
-                        <label className="block text-base font-medium mb-2 text-slate-700">Câu trả lời</label>
+                        <label className="mb-2 block text-base font-medium text-foreground">{t("Answer")}</label>
                         <div className="relative mb-4">
                             <Textarea
                                 className={`h-24 text-base ${errors.responseText ? 'border-red-500 ring-1 ring-red-300' : ''}`}
@@ -373,10 +387,10 @@ export function CreateDataPage() {
 
                     <div className="flex gap-2">
                         <Button onClick={handleSubmit} disabled={isSubmitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                            {isSubmitting ? "Đang lưu..." : "Lưu"}
+                            {isSubmitting ? t("Saving...") : t("Save")}
                         </Button>
                         <Button variant="ghost" onClick={handleCancel}>
-                            Hủy
+                            {t("Cancel")}
                         </Button>
                     </div>
 
@@ -388,7 +402,7 @@ export function CreateDataPage() {
                             disabled={isGenerating}
                         >
                             {isGenerating && <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />}
-                            Tạo câu hỏi tự động
+                            {t("Generate questions automatically")}
                         </Button>
                         <Button
                             variant="outline"
@@ -402,7 +416,7 @@ export function CreateDataPage() {
                                 setStep('form');
                             }}
                         >
-                            Xóa tất cả câu hỏi
+                            {t("Clear all questions")}
                         </Button>
                     </div>
                 </div>
@@ -412,25 +426,18 @@ export function CreateDataPage() {
             <button
                 className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg bg-blue-600 text-white hover:bg-blue-700 z-50 flex items-center justify-center"
                 onClick={() => setShowHelp(true)}
-                aria-label="Trợ giúp"
+                aria-label={t("Help")}
             >
                 <HelpCircle className="h-6 w-6" />
             </button>
 
-            {showHelp && (
-                <div
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-                    onClick={() => setShowHelp(false)}
-                >
-                    <div
-                        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b p-4 flex items-center justify-between">
-                            <h2 className="text-xl font-bold flex items-center gap-2">
+            <Dialog open={showHelp} onOpenChange={setShowHelp}>
+                <DialogContent className="app-dialog-content w-[95vw] md:max-w-2xl p-0 overflow-hidden">
+                        <DialogHeader className="sticky top-0 flex items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 py-3 backdrop-blur dark:border-white/10 dark:bg-slate-900/95">
+                            <DialogTitle className="text-xl font-bold flex items-center gap-2">
                                 <HelpCircle className="h-5 w-5 text-blue-600" />
-                                Hướng dẫn sử dụng
-                            </h2>
+                                {t("Usage guide")}
+                            </DialogTitle>
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -438,41 +445,40 @@ export function CreateDataPage() {
                             >
                                 <X className="h-4 w-4" />
                             </Button>
-                        </div>
+                        </DialogHeader>
 
-                        <div className="p-6 space-y-6">
+                        <div className="max-h-[calc(88vh-4.5rem)] overflow-y-auto p-6 space-y-6">
                             <section>
-                                <h3 className="text-lg font-semibold mb-3 text-blue-600">📌 Nhóm câu hỏi là gì?</h3>
-                                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">Nhóm câu hỏi đại diện cho ý định của người dùng (những gì người dùng có thể hỏi). Các câu hỏi tương tự giúp hệ thống nhận diện nhóm câu hỏi.</p>
+                                <h3 className="text-lg font-semibold mb-3 text-blue-600">{t("What is a question group?")}</h3>
+                                <p className="text-sm leading-relaxed text-muted-foreground">{t("A question group represents a user intent (what users may ask). Similar questions help the system recognize that group.")}</p>
                                 <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
-                                    <p className="text-sm font-medium mb-2">Ví dụ:</p>
-                                    <ul className="text-sm space-y-1 text-gray-700 dark:text-gray-300">
-                                        <li>• <code className="bg-white dark:bg-gray-900 px-1 rounded">chao_hoi</code> - người dùng chào hỏi</li>
+                                    <p className="text-sm font-medium mb-2">{t("Example")}:</p>
+                                    <ul className="space-y-1 text-sm text-muted-foreground">
+                                        <li>{t("Example question group line")}</li>
                                     </ul>
                                 </div>
                             </section>
 
                             <section>
-                                <h3 className="text-lg font-semibold mb-3 text-green-600">🏷️ Định dạng tên</h3>
-                                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 mb-3">Tên nhóm câu hỏi sẽ được chuẩn hóa thành <code className="font-mono">chu_thuong_gach_duoi</code>. Bạn có thể xem trước tên đã chuẩn hóa bên dưới ô nhập.</p>
+                                <h3 className="text-lg font-semibold mb-3 text-green-600">{t("Name format")}</h3>
+                                <p className="mb-3 text-sm leading-relaxed text-muted-foreground">{t("The question group name is normalized to lower_case_with_underscores. You can preview the normalized name under the input field.")}</p>
                                 <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg font-mono text-sm">
-                                    <pre>{formattedIntent || "(sẽ được tạo tự động)"}</pre>
+                                    <pre>{formattedIntent || t("(auto-generated)")}</pre>
                                 </div>
                             </section>
 
                             <section>
-                                <h3 className="text-lg font-semibold mb-3 text-orange-600">💬 Tên câu trả lời</h3>
-                                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">Nếu bạn nhập câu trả lời, nó sẽ được tạo với tên <code className="font-mono">utter_{`<ten_nhom>`}</code> theo mặc định.</p>
+                                <h3 className="text-lg font-semibold mb-3 text-orange-600">{t("Answer name")}</h3>
+                                <p className="text-sm leading-relaxed text-muted-foreground">{t("If you enter an answer, it will be created with the default name pattern utter_<group_name>.")}</p>
                             </section>
 
                             <section>
-                                <h3 className="text-lg font-semibold mb-3 text-purple-600">✍️ Các câu hỏi tương tự</h3>
-                                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">Bạn có thể thêm nhiều câu hỏi tương tự để hệ thống nhận diện tốt hơn. Sử dụng nút "Tạo câu hỏi tự động" để AI tạo thêm các câu hỏi tương tự dựa trên câu hỏi mẫu của bạn.</p>
+                                <h3 className="text-lg font-semibold mb-3 text-purple-600">{t("Similar questions help")}</h3>
+                                <p className="text-sm leading-relaxed text-muted-foreground">{t("You can add many similar questions to improve recognition. Use the Generate questions automatically button to let AI suggest more from your sample.")}</p>
                             </section>
                         </div>
-                    </div>
-                </div>
-            )}
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

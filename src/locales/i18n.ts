@@ -7,13 +7,13 @@ const LANGUAGE_KEY = "language";
 
 const getLanguage = (): string => {
   const savedLanguage = localStorage.getItem(LANGUAGE_KEY);
-  if (savedLanguage) {
+  if (savedLanguage === "vi" || savedLanguage === "en") {
     return savedLanguage;
   }
 
-  // Get browser language
+  // Default to Vietnamese for this admin app.
   const browserLang = navigator.language;
-  const language = browserLang.toLowerCase().startsWith("vi") ? "vi" : "en";
+  const language = browserLang.toLowerCase().startsWith("en") ? "en" : "vi";
 
   // Save the detected language
   localStorage.setItem(LANGUAGE_KEY, language);
@@ -30,8 +30,14 @@ i18n.use(initReactI18next).init({
     vi: { translation: vi },
   },
   lng: getLanguage(),
-  fallbackLng: "en",
+  fallbackLng: "vi",
   interpolation: { escapeValue: false },
+});
+
+document.documentElement.lang = i18n.language;
+i18n.on("languageChanged", (language) => {
+  document.documentElement.lang = language;
+  setLanguage(language);
 });
 
 export { getLanguage, setLanguage };

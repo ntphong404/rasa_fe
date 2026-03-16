@@ -1,6 +1,13 @@
 import axiosInstance from "@/api/axios";
 import ENDPOINTS from "@/api/endpoints";
-import { ISendMessageRequest, ISendMessageResponse, IConversationsResponse, IConversation } from "@/interfaces/chat.interface";
+import {
+  ISendMessageRequest,
+  ISendMessageResponse,
+  IConversationsResponse,
+  IConversation,
+  IConversationMutationResponse,
+  IShareConversationResponse,
+} from "@/interfaces/chat.interface";
 
 export const chatService = {
   sendMessage: async (
@@ -46,6 +53,48 @@ export const chatService = {
   ): Promise<{ success: boolean; message: string }> => {
     const response = await axiosInstance.delete(
       ENDPOINTS.CHAT_ENDPOINTS.DELETE_CONVERSATION(conversationId)
+    );
+    return response.data;
+  },
+
+  renameConversation: async (
+    conversationId: string,
+    title: string
+  ): Promise<IConversationMutationResponse> => {
+    const response = await axiosInstance.patch(
+      ENDPOINTS.CHAT_ENDPOINTS.RENAME_CONVERSATION(conversationId),
+      { title }
+    );
+    return response.data;
+  },
+
+  pinConversation: async (
+    conversationId: string,
+    pinned?: boolean
+  ): Promise<IConversationMutationResponse> => {
+    const response = await axiosInstance.patch(
+      ENDPOINTS.CHAT_ENDPOINTS.PIN_CONVERSATION(conversationId),
+      { pinned }
+    );
+    return response.data;
+  },
+
+  archiveConversation: async (
+    conversationId: string,
+    archived?: boolean
+  ): Promise<IConversationMutationResponse> => {
+    const response = await axiosInstance.patch(
+      ENDPOINTS.CHAT_ENDPOINTS.ARCHIVE_CONVERSATION(conversationId),
+      { archived }
+    );
+    return response.data;
+  },
+
+  shareConversation: async (
+    conversationId: string
+  ): Promise<IShareConversationResponse> => {
+    const response = await axiosInstance.post(
+      ENDPOINTS.CHAT_ENDPOINTS.SHARE_CONVERSATION(conversationId)
     );
     return response.data;
   }
