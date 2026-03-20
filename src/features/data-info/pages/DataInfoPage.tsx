@@ -3,11 +3,6 @@ import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-    CommandGroup,
-    CommandItem,
-    CommandList,
-} from "@/components/ui/command";
-import {
     Drawer,
     DrawerClose,
     DrawerContent,
@@ -18,11 +13,6 @@ import {
 } from "@/components/ui/drawer";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -33,9 +23,9 @@ import {
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { IStory } from "@/interfaces/story.interface";
-import { storyService } from "@/features/stories/api/service";
-import { ListStoryResponse } from "@/features/stories/api/dto/StoryDto";
+import { IRule } from "@/interfaces/rule.interface";
+import { ruleService } from "@/features/rules/api/service";
+import { ListRuleResponse } from "@/features/rules/api/dto/RuleResponse";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import {
@@ -43,7 +33,6 @@ import {
     Trash2,
     RotateCcw,
 } from "lucide-react";
-import StoryDetailsDialog from "@/features/stories/components/StoryDetailsDialog";
 import { ConfirmSoftDeleteDialog, ConfirmHardDeleteDialog } from "@/components/confirm-delete-dialog";
 import { ConfirmRestoreDialog } from "@/components/confirm-restore-dialog";
 
@@ -60,16 +49,14 @@ const filterSchema = z.object({
 export default function DataInfoPage() {
     const { t } = useTranslation();
     const [rowSelection, setRowSelection] = useState({});
-    const [storiesData, setStoriesData] = useState<IStory[]>([]);
+    const [rulesData, setRulesData] = useState<IRule[]>([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-    const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
     const [confirmSoftDeleteOpen, setConfirmSoftDeleteOpen] = useState(false);
     const [confirmHardDeleteOpen, setConfirmHardDeleteOpen] = useState(false);
     const [confirmRestoreOpen, setConfirmRestoreOpen] = useState(false);
-    const [storyToDelete, setStoryToDelete] = useState<IStory | null>(null);
-    const [storyToRestore, setStoryToRestore] = useState<IStory | null>(null);
+    const [ruleToDelete, setRuleToDelete] = useState<IRule | null>(null);
+    const [ruleToRestore, setRuleToRestore] = useState<IRule | null>(null);
     const navigate = useNavigate();
 
     const [pagination, setPagination] = useState({
@@ -92,20 +79,20 @@ export default function DataInfoPage() {
         },
     });
 
-    const fetchStoriesData = useCallback(
+    const fetchRulesData = useCallback(
         async (query: any) => {
             try {
                 setIsDataLoading(true);
                 setError(null);
-                const response: ListStoryResponse = await storyService.fetchStories(query);
-                setStoriesData(response.data || []);
+                const response: ListRuleResponse = await ruleService.fetchRules(query);
+                setRulesData(response.data || []);
                 setPagination(
                     response.meta || { total: 0, page: 1, limit: 10, totalPages: 1 }
                 );
             } catch (error) {
-                console.error("Error fetching stories:", error);
+                console.error("Error fetching rules:", error);
                 setError("Không tải được dữ liệu");
-                setStoriesData([]);
+                setRulesData([]);
             } finally {
                 setIsDataLoading(false);
             }
@@ -116,81 +103,81 @@ export default function DataInfoPage() {
     useEffect(() => {
         const subscription = form.watch(() => {
             const values = form.getValues();
-            fetchStoriesData(values);
+            fetchRulesData(values);
         });
         return () => subscription.unsubscribe();
-    }, [form, fetchStoriesData]);
+    }, [form, fetchRulesData]);
 
     useEffect(() => {
-        fetchStoriesData({ page: 1, limit: 10, deleted: false, sort: "DESC" });
-    }, [fetchStoriesData]);
+        fetchRulesData({ page: 1, limit: 10, deleted: false, sort: "DESC" });
+    }, [fetchRulesData]);
 
     const onSubmit = (values: z.infer<typeof filterSchema>) => {
-        fetchStoriesData(values);
+        fetchRulesData(values);
     };
 
     const handlePageChange = (page: number) => {
         form.setValue("page", page);
     };
 
-    const handleViewDetails = (story: IStory) => {
-        navigate(`/data-info/view?id=${story._id}`);
+    const handleViewDetails = (rule: IRule) => {
+        navigate(`/data-info/view?id=${rule._id}`);
     };
 
     // Edit button removed for Data Info view per product request
 
-    const handleAskDeleteStory = (story: IStory) => {
-        setStoryToDelete(story);
-        if (story.deleted) {
+    const handleAskDeleteRule = (rule: IRule) => {
+        setRuleToDelete(rule);
+        if (rule.deleted) {
             setConfirmHardDeleteOpen(true);
         } else {
             setConfirmSoftDeleteOpen(true);
         }
     };
 
-    const handleAskRestoreStory = (story: IStory) => {
-        setStoryToRestore(story);
+    const handleAskRestoreRule = (rule: IRule) => {
+        setRuleToRestore(rule);
         setConfirmRestoreOpen(true);
     };
 
     const handleConfirmSoftDelete = async () => {
-        if (storyToDelete) {
+        if (ruleToDelete) {
             try {
-                await storyService.softDeleteStory(storyToDelete._id);
-                toast.success(t("Story moved to trash"));
+                await ruleService.softDeleteRule(ruleToDelete._id);
+                toast.success(t("Rule moved to trash"));
                 const currentValues = form.getValues();
-                fetchStoriesData(currentValues);
+                fetchRulesData(currentValues);
             } catch (error) {
-                console.error("Error deleting story:", error);
-                toast.error(t("Failed to delete story"));
+                console.error("Error deleting rule:", error);
+                toast.error(t("Failed to delete rule"));
             }
         }
     };
 
     const handleConfirmHardDelete = async () => {
-        if (storyToDelete) {
+        if (ruleToDelete) {
             try {
-                await storyService.hardDeleteStory(storyToDelete._id);
-                toast.success(t("Story deleted permanently"));
+                await ruleService.hardDeleteRule(ruleToDelete._id);
+                toast.success(t("Rule deleted permanently"));
                 const currentValues = form.getValues();
-                fetchStoriesData(currentValues);
+                fetchRulesData(currentValues);
             } catch (error) {
-                console.error("Error deleting story:", error);
-                toast.error(t("Failed to delete story"));
+                console.error("Error deleting rule:", error);
+                toast.error(t("Failed to delete rule"));
             }
         }
     };
 
     const handleConfirmRestore = async () => {
-        if (storyToRestore) {
+        if (ruleToRestore) {
             try {
-                await storyService.restoreStory(storyToRestore._id);
-                toast.success(t("Story restored"));
+                await ruleService.restoreRule(ruleToRestore._id);
+                toast.success(t("Rule restored"));
                 const currentValues = form.getValues();
-                fetchStoriesData(currentValues);
+                fetchRulesData(currentValues);
             } catch (error) {
-                console.error("Error restoring story:", error);
-                toast.error(t("Failed to restore story"));
+                console.error("Error restoring rule:", error);
+                toast.error(t("Failed to restore rule"));
             }
         }
     };
@@ -284,7 +271,7 @@ export default function DataInfoPage() {
             {error ? (
                 <div className="p-8 text-center">
                     <p className="text-red-500">{error}</p>
-                    <Button onClick={() => fetchStoriesData({ page: 1, limit: 10, deleted: false, sort: "DESC" })} className="mt-4">{t("Retry")}</Button>
+                    <Button onClick={() => fetchRulesData({ page: 1, limit: 10, deleted: false, sort: "DESC" })} className="mt-4">{t("Retry")}</Button>
                 </div>
             ) : (
                 <DataTable
@@ -313,22 +300,22 @@ export default function DataInfoPage() {
                                 </Button>
                             ),
                             cell: ({ row }) => {
-                                const story = row.original as IStory;
-                                const isDeleted = story.deleted || false;
-                                return <span className={cn("font-medium", isDeleted && "line-through text-muted-foreground")}>{story.name}</span>;
+                                const rule = row.original as IRule;
+                                const isDeleted = rule.deleted || false;
+                                return <span className={cn("font-medium", isDeleted && "line-through text-muted-foreground")}>{rule.name}</span>;
                             },
                         },
                         {
                             accessorKey: "description",
                             header: t("Description"),
-                            cell: ({ row }) => <span className="text-sm text-muted-foreground">{(row.original as IStory).description || "-"}</span>,
+                            cell: ({ row }) => <span className="text-sm text-muted-foreground">{(row.original as IRule).description || "-"}</span>,
                         },
                         {
                             accessorKey: "intents",
                             header: t("Intents"),
                             cell: ({ row }) => {
-                                const story = row.original as IStory;
-                                const intentsCount = Array.isArray(story.intents) ? story.intents.length : 0;
+                                const rule = row.original as IRule;
+                                const intentsCount = Array.isArray(rule.intents) ? rule.intents.length : 0;
                                 return <span className="text-sm">{intentsCount > 0 ? `${intentsCount} intent${intentsCount > 1 ? "s" : ""}` : t("Không có intent")}</span>;
                             },
                         },
@@ -336,8 +323,8 @@ export default function DataInfoPage() {
                             accessorKey: "action",
                             header: t("Actions"),
                             cell: ({ row }) => {
-                                const story = row.original as IStory;
-                                const actionsCount = Array.isArray(story.action) ? story.action.length : 0;
+                                const rule = row.original as IRule;
+                                const actionsCount = Array.isArray(rule.action) ? rule.action.length : 0;
                                 return <span className="text-sm">{actionsCount > 0 ? `${actionsCount} action${actionsCount > 1 ? "s" : ""}` : t("Không có action")}</span>;
                             },
                         },
@@ -345,8 +332,8 @@ export default function DataInfoPage() {
                             accessorKey: "responses",
                             header: t("Responses"),
                             cell: ({ row }) => {
-                                const story = row.original as IStory;
-                                const responsesCount = Array.isArray(story.responses) ? story.responses.length : 0;
+                                const rule = row.original as IRule;
+                                const responsesCount = Array.isArray(rule.responses) ? rule.responses.length : 0;
                                 return <span className="text-sm">{responsesCount > 0 ? `${responsesCount} phản hồi` : t("Không có phản hồi")}</span>;
                             },
                         },
@@ -358,32 +345,32 @@ export default function DataInfoPage() {
                                     <ArrowUpDown className="ml-2 h-4 w-4" />
                                 </Button>
                             ),
-                            cell: ({ row }) => <span className="text-sm">{new Date((row.original as IStory).createdAt).toLocaleDateString("vi-VN")}</span>,
+                            cell: ({ row }) => <span className="text-sm">{new Date((row.original as IRule).createdAt).toLocaleDateString("vi-VN")}</span>,
                         },
                         {
                             id: "actions",
                             header: t("Thao tác"),
                             cell: ({ row }) => {
-                                const story = row.original as IStory;
-                                const isDeleted = story.deleted || false;
+                                const rule = row.original as IRule;
+                                const isDeleted = rule.deleted || false;
 
                                 return (
                                     <div className="flex items-center gap-2">
-                                        <Button onClick={() => handleViewDetails(story)} size="sm" className="bg-green-600 hover:bg-green-700">
+                                        <Button onClick={() => handleViewDetails(rule)} size="sm" className="bg-green-600 hover:bg-green-700">
                                             <Eye className="h-4 w-4" />
                                         </Button>
                                         {/* Edit button intentionally removed for Data Info (non-technical view) */}
                                         {isDeleted ? (
                                             <>
-                                                <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleAskRestoreStory(story)} title={t("Restore from trash")}>
+                                                <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleAskRestoreRule(rule)} title={t("Restore from trash")}>
                                                     <RotateCcw className="h-4 w-4" />
                                                 </Button>
-                                                <Button size="sm" className="bg-red-700 hover:bg-red-800" onClick={() => handleAskDeleteStory(story)} title={t("Delete permanently")}>
+                                                <Button size="sm" className="bg-red-700 hover:bg-red-800" onClick={() => handleAskDeleteRule(rule)} title={t("Delete permanently")}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </>
                                         ) : (
-                                            <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => handleAskDeleteStory(story)} title={t("Move to trash")}>
+                                            <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => handleAskDeleteRule(rule)} title={t("Move to trash")}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         )}
@@ -392,7 +379,7 @@ export default function DataInfoPage() {
                             },
                         },
                     ]}
-                    data={storiesData}
+                    data={rulesData}
                     meta={pagination}
                     onChangePage={handlePageChange}
                     isLoading={isDataLoading}

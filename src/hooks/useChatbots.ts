@@ -43,7 +43,7 @@ export const useChatbots = () => {
 
       // Auto-select first chatbot if none selected
       if (chatbotList.length > 0 && !selectedBotId) {
-        setSelectedBotId(chatbotList[0]._id);
+        setSelectedBotId(chatbotList[0].botId);
       }
 
       return chatbotList;

@@ -27,6 +27,7 @@ const CreateRulePageSimple = lazy(() => import("@/features/rules").then((module)
 const EditRulePageNew = lazy(() => import("@/features/rules").then((module) => ({ default: module.EditRulePageNew })));
 const CreateDataPage = lazy(() => import("@/features/data-entry").then((module) => ({ default: module.CreateDataPage })));
 const ImportIntentPage = lazy(() => import("@/features/data-entry").then((module) => ({ default: module.ImportIntentPage })));
+const ImportBatchesPage = lazy(() => import("@/features/data-entry").then((module) => ({ default: module.ImportBatchesPage })));
 const ChatBotManagement = lazy(() => import("@/features/chatbot").then((module) => ({ default: module.ChatBotManagement })));
 const HomeChatDemo = lazy(() => import("@/features/chat/pages/HomeChatPageDemo").then((module) => ({ default: module.HomeChatDemo })));
 const RagChatPage = lazy(() => import("@/features/chat/pages/RagChatPage").then((module) => ({ default: module.RagChatPage })));
@@ -103,6 +104,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: withSuspense(<CreateDataPage />) },
           { path: "import", element: withSuspense(<ImportIntentPage />) },
+          { path: "batches", element: withSuspense(<ImportBatchesPage />) },
         ],
       },
       { path: "chat_bot", element: withSuspense(<ChatBotManagement />) },

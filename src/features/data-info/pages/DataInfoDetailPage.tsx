@@ -13,22 +13,24 @@ import {
   BookOpen,
   Check,
 } from "lucide-react";
-import { storyService } from "@/features/stories/api/service";
+import { ruleService } from "@/features/rules/api/service";
 import { intentService } from "@/features/intents/api/service";
 import { responseService } from "@/features/reponses/api/service";
 import { actionService } from "@/features/action/api/service";
-import { IStory } from "@/interfaces/story.interface";
+import { IRule } from "@/interfaces/rule.interface";
 import { IMyResponse } from "@/interfaces/response.interface";
 import { IntentDetailResponse } from "@/features/intents/api/dto/IntentResponse";
+import { useChatbotStore } from "@/store/chatbot";
 import toast from "react-hot-toast";
 
 export default function DataInfoDetailPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
   const [searchParams] = useSearchParams();
-  const storyId = searchParams.get("id");
+  const ruleId = searchParams.get("id");
 
-  const [story, setStory] = useState<IStory | null>(null);
+  const [rule, setRule] = useState<IRule | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -54,19 +56,30 @@ export default function DataInfoDetailPage() {
 
   useEffect(() => {
     const load = async () => {
-      if (!storyId) {
-        setLoadError(t("Story ID not found"));
+      if (!ruleId) {
+        setLoadError(t("Rule ID not found"));
         setIsLoading(false);
         return;
       }
 
       try {
         setIsLoading(true);
-        const res = await storyService.getStoryById(storyId);
-        const s = res.data;
-        setStory(s);
+        const r = await ruleService.getRuleById(ruleId);
+        const ruleBotId = (r as any)?.botId as string | undefined;
 
-        const intentPromises = (s.intents || []).map((itOrId: any) => {
+        const scopedBotId = selectedBotId && selectedBotId !== "global" ? selectedBotId : null;
+        if (scopedBotId && ruleBotId && ruleBotId !== scopedBotId && ruleBotId !== "global") {
+          setLoadError(t("Bạn không có quyền xem dữ liệu của chatbot khác"));
+          setRule(null);
+          setIntents([]);
+          setResponses([]);
+          setActions([]);
+          return;
+        }
+
+        setRule(r);
+
+        const intentPromises = (r.intents || []).map((itOrId: any) => {
           if (!itOrId) return Promise.resolve(null);
           if (typeof itOrId === "string") {
             return intentService
@@ -80,7 +93,7 @@ export default function DataInfoDetailPage() {
           });
         });
 
-        const responsePromises = (s.responses || []).map((rOrId: any) => {
+        const responsePromises = (r.responses || []).map((rOrId: any) => {
           if (!rOrId) return Promise.resolve(null);
           if (typeof rOrId === "string") {
             return responseService
@@ -90,7 +103,7 @@ export default function DataInfoDetailPage() {
           return Promise.resolve(rOrId as any);
         });
 
-        const actionPromises = (s.action || []).map((aOrId: any) => {
+        const actionPromises = (r.action || []).map((aOrId: any) => {
           if (!aOrId) return Promise.resolve(null);
           if (typeof aOrId === "string") {
             return actionService
@@ -114,16 +127,16 @@ export default function DataInfoDetailPage() {
         setResponses(loadedResponses || []);
         setActions(loadedActions || []);
       } catch (error) {
-        console.error("Error loading story details:", error);
-        setLoadError(t("Failed to load story"));
-        toast.error(t("Failed to load story"));
+        console.error("Error loading rule details:", error);
+        setLoadError(t("Failed to load rule"));
+        toast.error(t("Failed to load rule"));
       } finally {
         setIsLoading(false);
       }
     };
 
     load();
-  }, [storyId, t]);
+  }, [ruleId, selectedBotId, t]);
 
   const handleSaveIntent = async (intentId: string) => {
     const intent = intents.find((i) => i._id === intentId);
@@ -140,7 +153,22 @@ export default function DataInfoDetailPage() {
     const newDefine = `- intent: ${
       (intent as any).name
     }\n  examples: |\n    - ${lines.join("\n    - ")}`;
-    const updatedIntent = { ...intent, define: newDefine };
+    const updatedIntent = {
+      _id: intent._id,
+      name: intent.name,
+      description: intent.description,
+      define: newDefine,
+      label: intent.label,
+      botId: (intent as any).botId || (selectedBotId && selectedBotId !== "global" ? selectedBotId : "global"),
+      entities: (intent.entities || []).map((entity: any) =>
+        typeof entity === "string" ? entity : entity._id
+      ),
+      roles: intent.roles || [],
+      deleted: !!intent.deleted,
+      createdAt: intent.createdAt,
+      updatedAt: intent.updatedAt,
+      deletedAt: intent.deletedAt,
+    };
 
     setSavingIntentId(intentId);
     try {
@@ -172,14 +200,14 @@ export default function DataInfoDetailPage() {
   };
 
   const handleSaveDescription = async () => {
-    if (!story || !storyId) return;
+    if (!rule || !ruleId) return;
 
     setSavingDescription(true);
     try {
-      const updatedStory = { ...story, description: descriptionText };
-      await storyService.updateStory(storyId, updatedStory as any);
+      const updatedRule = { ...rule, description: descriptionText };
+      await ruleService.updateRule(ruleId, updatedRule as any);
       
-      setStory(updatedStory);
+      setRule(updatedRule);
       setEditingDescription(false);
       
       toast.success("Cập nhật mô tả thành công!", {
@@ -209,7 +237,21 @@ export default function DataInfoDetailPage() {
     const newDefine = `${
       (resp as any).name
     }:\n  - text: |\n      ${text.replace(/\n/g, "\n      ")}`;
-    const updatedResponse = { ...resp, define: newDefine };
+    const updatedResponse = {
+      _id: resp._id,
+      name: resp.name,
+      description: resp.description,
+      define: newDefine,
+      label: resp.label,
+      botId: (resp as any).botId || (selectedBotId && selectedBotId !== "global" ? selectedBotId : "global"),
+      roles: resp.roles || [],
+      likeCount: resp.likeCount ?? 0,
+      dislikeCount: resp.dislikeCount ?? 0,
+      deleted: !!resp.deleted,
+      createdAt: resp.createdAt,
+      updatedAt: resp.updatedAt,
+      deletedAt: resp.deletedAt,
+    };
 
     setSavingResponseId(responseId);
     try {
@@ -248,7 +290,7 @@ export default function DataInfoDetailPage() {
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
               <span className="font-medium text-muted-foreground">
-                {t("Loading story...")}
+                {t("Loading rule...")}
               </span>
             </div>
           </div>
@@ -257,7 +299,7 @@ export default function DataInfoDetailPage() {
     );
   }
 
-  if (loadError || !story) {
+  if (loadError || !rule) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <div className="px-3 py-3 pr-6 max-w-6xl mx-auto">
@@ -274,7 +316,7 @@ export default function DataInfoDetailPage() {
           </div>
           <div className="surface-card text-center py-12">
             <p className="text-red-500 mb-4 text-lg">
-              {loadError || t("Story not found")}
+              {loadError || t("Rule not found")}
             </p>
             <Button
               onClick={() => navigate(-1)}
@@ -306,7 +348,7 @@ export default function DataInfoDetailPage() {
             <div className="flex items-center gap-2 flex-1">
               <BookOpen className="h-6 w-6 text-violet-600" />
               <div className="flex-1">
-                <h1 className="text-xl font-bold text-violet-900 dark:text-violet-200">{story.name}</h1>
+                <h1 className="text-xl font-bold text-violet-900 dark:text-violet-200">{rule.name}</h1>
                 {editingDescription ? (
                   <div className="flex items-center gap-2 mt-1">
                     <input
@@ -353,7 +395,7 @@ export default function DataInfoDetailPage() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 mt-0.5">
-                    <p className="text-xs text-violet-600 dark:text-violet-300">{story.description || t("No description provided")}</p>
+                    <p className="text-xs text-violet-600 dark:text-violet-300">{rule.description || t("No description provided")}</p>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -361,7 +403,7 @@ export default function DataInfoDetailPage() {
                           variant="ghost"
                           onClick={() => {
                             setEditingDescription(true);
-                            setDescriptionText(story.description || "");
+                            setDescriptionText(rule.description || "");
                           }}
                           className="h-5 px-1 hover:bg-violet-100 dark:hover:bg-slate-800"
                         >
@@ -379,12 +421,12 @@ export default function DataInfoDetailPage() {
       </div>
 
       <div className="px-3 py-3 pr-6 max-w-6xl mx-auto">
-        {/* Story Info Card */}
+        {/* Rule Info Card */}
         <div className="mb-3">
           <div className="surface-card p-3">
             <div className="flex items-center gap-3">
               <div className="text-xs font-semibold text-violet-600 uppercase tracking-wide">
-                {t("Story Details")}
+                {t("Rule Details")}
               </div>
               <div className="flex gap-2">
                 <div className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 dark:border-indigo-500/40 dark:bg-indigo-950/30">
@@ -455,7 +497,7 @@ export default function DataInfoDetailPage() {
                 return defineText;
               };
 
-              const steps = parseStepsFromDefine(story.define);
+              const steps = parseStepsFromDefine(rule.define);
               const pairs: Array<{
                 intent: any | null;
                 nextKind?: "action" | "response";

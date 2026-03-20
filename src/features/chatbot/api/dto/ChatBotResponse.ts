@@ -35,6 +35,8 @@ export interface ModelDetail {
   description?: string;
   createdAt?: string;
   chatbotId?: string;
+  intents?: string[];
+  responses?: string[];
 }
 
 export interface ModelsListResponse {

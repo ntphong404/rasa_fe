@@ -22,12 +22,14 @@ import {
 import { ArrowLeft, FileCode, Search, X, AlertCircle, Eye, Plus, Code2, FormInput } from "lucide-react";
 import { intentService } from "../api/service";
 import { IEntity } from "@/interfaces/entity.interface";
+import { useChatbotStore } from "@/store/chatbot";
 import { toast } from "sonner";
 
 export function EditIntentPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Get intent data from navigation state
@@ -37,6 +39,7 @@ export function EditIntentPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [yamlDefine, setYamlDefine] = useState("");
+  const [label, setLabel] = useState<string | null>(null);
   const [selectedEntities, setSelectedEntities] = useState<IEntity[]>([]);
 
   // Entity search
@@ -105,6 +108,7 @@ export function EditIntentPage() {
     setName(intentData.name || "");
     setDescription(intentData.description || "");
     setYamlDefine(intentData.define || "");
+    setLabel(intentData.label || null);
     setSelectedEntities(intentData.entities || []);
     
     // Parse examples from YAML for normal mode
@@ -334,11 +338,17 @@ ${exampleLines || "    - example1"}`;
     try {
       setIsSubmitting(true);
       await intentService.updateIntent(intentData._id, {
-        ...intentData,
+        _id: intentData._id,
         name: sanitizedName,
+        botId: selectedBotId || intentData.botId || "global",
+        label: label || undefined,
         description: description.trim(),
         define: finalYaml,
         entities: selectedEntities.map((e) => e._id),
+        roles: intentData.roles || [],
+        deleted: !!intentData.deleted,
+        createdAt: intentData.createdAt,
+        updatedAt: intentData.updatedAt,
       });
 
       toast.success(t("Intent updated successfully"));
@@ -474,6 +484,22 @@ ${exampleLines || "    - example1"}`;
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t("Describe what this intent is for")}
             rows={3}
+          />
+        </div>
+
+        <div className="space-y-3 rounded-lg border p-4">
+          <div className="space-y-1">
+            <Label htmlFor="label">{t("Label")}</Label>
+            <p className="text-xs text-muted-foreground">
+              {t("Organize intents by label/category (e.g., sheet name)")}
+            </p>
+          </div>
+
+          <Input
+            id="label"
+            value={label || ""}
+            onChange={(e) => setLabel(e.target.value || null)}
+            placeholder={t("e.g., Biện pháp khác phục hậu quả")}
           />
         </div>
 

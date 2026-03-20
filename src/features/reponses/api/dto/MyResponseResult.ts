@@ -3,6 +3,9 @@ export interface MyResponseResult {
     name: string;
     description: string;
     define: string;
+    label?: string;
+    botIds?: string[];
+    botId?: string;
     roles: string[];
     deleted: boolean;
     deletedAt: Date;

@@ -16,11 +16,11 @@ export interface IntentDetailResponse {
   _id: string
   name: string
   description: string
-  define: string // yalm text
+  define: string // yaml text
+  label?: string
+  botId?: string
   entities: IEntity[]
-
   roles: string[]
-
   createdAt: Date
   updatedAt: Date
   deleted: boolean

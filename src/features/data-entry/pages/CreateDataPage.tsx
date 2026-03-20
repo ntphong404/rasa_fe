@@ -14,17 +14,24 @@ import { toast } from "sonner";
 import { HelpCircle, X } from "lucide-react";
 import { intentService } from "@/features/intents/api/service";
 import { responseService } from "@/features/reponses/api/service";
-import { storyService } from "@/features/stories/api/service";
+import { ruleService } from "@/features/rules/api/service";
+import { useChatbots } from "@/hooks/useChatbots";
+import { useChatbotStore } from "@/store/chatbot";
 
 export function CreateDataPage() {
     const [showHelp, setShowHelp] = useState(false);
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const { chatbots } = useChatbots();
+    const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+    const availableChatbots = useMemo(() => chatbots.filter((bot) => bot.botId !== "global"), [chatbots]);
+    const [selectedBotIds, setSelectedBotIds] = useState<string[]>([]);
     const [searchParams] = useSearchParams();
     const [intentName, setIntentName] = useState("");
     const [initialExample, setInitialExample] = useState("");
     const [examples, setExamples] = useState<string[]>([]);
     const [responseText, setResponseText] = useState("");
+    const [label, setLabel] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [step, setStep] = useState<'form' | 'examples'>('form');
     const [errors, setErrors] = useState<{ intentName?: string; initialExample?: string; responseText?: string; examples?: string }>({});
@@ -41,6 +48,33 @@ export function CreateDataPage() {
         }
     }, [searchParams]);
 
+    useEffect(() => {
+        setSelectedBotIds((prev) => {
+            const validSet = new Set(availableChatbots.map((b) => b.botId));
+            const filtered = prev.filter((id) => validSet.has(id));
+
+            if (selectedBotId && selectedBotId !== "global" && validSet.has(selectedBotId)) {
+                return filtered.includes(selectedBotId) ? filtered : [...filtered, selectedBotId];
+            }
+
+            return filtered;
+        });
+    }, [availableChatbots, selectedBotId]);
+
+    const toggleChatbot = useCallback((botId: string) => {
+        setSelectedBotIds((prev) =>
+            prev.includes(botId) ? prev.filter((id) => id !== botId) : [...prev, botId]
+        );
+    }, []);
+
+    const selectAllChatbots = useCallback(() => {
+        setSelectedBotIds(availableChatbots.map((bot) => bot.botId));
+    }, [availableChatbots]);
+
+    const clearSelectedChatbots = useCallback(() => {
+        setSelectedBotIds([]);
+    }, []);
+
     const handleCancel = () => navigate("/");
 
     // normalize intent name to lowercase_with_underscores
@@ -56,9 +90,9 @@ export function CreateDataPage() {
         return cleaned;
     }
 
-    function buildStoryDefine(storyName: string, steps: Array<{ intentId?: string; actionId?: string }>) {
+    function buildRuleDefine(ruleName: string, steps: Array<{ intentId?: string; actionId?: string }>) {
         const lines: string[] = [];
-        lines.push(`- story: ${storyName}`);
+        lines.push(`- rule: ${ruleName}`);
         lines.push(`  steps:`);
         steps.forEach((s) => {
             if (s.intentId) {
@@ -232,6 +266,12 @@ export function CreateDataPage() {
             }
             return toast.error(msg);
         }
+
+        const targetBotIds = selectedBotIds.filter(Boolean);
+        if (targetBotIds.length === 0) {
+            return toast.error(t("Please select at least one chatbot"));
+        }
+
         setIsSubmitting(true);
         try {
             // create intent
@@ -240,7 +280,9 @@ export function CreateDataPage() {
                 name: formattedIntent || formatIntentName(intentName.trim()),
                 description: "",
                 define: buildIntentDefine(formattedIntent || formatIntentName(intentName.trim()), examples),
+                label: label.trim() || undefined,
                 entities: [],
+                botIds: targetBotIds,
             };
 
             const createdIntent = await intentService.createIntent(intentPayload as any);
@@ -252,32 +294,32 @@ export function CreateDataPage() {
                     name: respName,
                     description: "",
                     define: buildResponseDefine(respName, responseText || intentName.trim()),
+                    label: label.trim() || undefined,
+                    botIds: targetBotIds,
                 };
                 createdResponse = await responseService.createResponse(responsePayload as any);
             }
 
-            // create story linking intent and response (if response created)
+            // create rule linking intent and response (if response created)
             if (createdResponse) {
-                const storyName = `story_for_${formattedIntent || formatIntentName(intentName.trim())}`;
+                const ruleName = `rule_for_${formattedIntent || formatIntentName(intentName.trim())}`;
                 const steps = [{ intentId: createdIntent._id } as { intentId?: string; actionId?: string }];
                 if (createdResponse) {
                     steps.push({ actionId: createdResponse._id });
                 }
 
-                const storyPayload = {
-                    name: storyName,
+                const rulePayload = {
+                    name: ruleName,
                     description: "",
-                    define: buildStoryDefine(storyName, steps),
+                    define: buildRuleDefine(ruleName, steps),
                     intents: [createdIntent._id],
                     responses: createdResponse ? [createdResponse._id] : [],
-                    // Other fields should exist but be empty arrays per backend expectations
+                    botIds: targetBotIds,
                     action: [],
-                    entities: [],
-                    slots: [],
                     roles: [],
                 };
 
-                await storyService.createStory(storyPayload as any);
+                await ruleService.createRule(rulePayload as any);
             }
 
             toast.success(t("Data created successfully"));
@@ -286,6 +328,7 @@ export function CreateDataPage() {
             setInitialExample("");
             setExamples([]);
             setResponseText("");
+            setLabel("");
             setStep('form');
             setErrors({});
             // Focus back to intent name input
@@ -326,6 +369,45 @@ export function CreateDataPage() {
                             {errors.intentName && <div className="absolute left-0 top-full mt-1 text-sm text-red-600 whitespace-nowrap z-10">{errors.intentName}</div>}
                         </div>
                         <div className="text-sm text-muted-foreground">{t("Normalized name")}: <span className="ml-2 font-mono text-sm text-indigo-700 dark:text-indigo-300">{formattedIntent || <span className="text-slate-400 dark:text-slate-500">{t("(auto-generated)")}</span>}</span></div>
+                    </div>
+
+                    <div>
+                        <label className="mb-2 block text-base font-medium text-foreground">{t("Label")}</label>
+                        <Input
+                            className="h-12 text-base"
+                            value={label}
+                            onChange={(e) => setLabel(e.target.value)}
+                            placeholder={t("Example: pccc")}
+                        />
+                    </div>
+
+                    <div className="rounded-lg border p-4">
+                        <div className="mb-3 flex items-center justify-between gap-2">
+                            <div>
+                                <label className="block text-base font-medium text-foreground">{t("Applicable Chatbots")}</label>
+                                <p className="text-xs text-muted-foreground">{t("Select one or more chatbots to create this data")}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button type="button" size="sm" variant="outline" onClick={selectAllChatbots}>{t("Select all")}</Button>
+                                <Button type="button" size="sm" variant="ghost" onClick={clearSelectedChatbots}>{t("Clear")}</Button>
+                            </div>
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                            {availableChatbots.map((bot) => (
+                                <label key={bot._id} className="flex items-center gap-2 rounded-md border p-2 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        className="accent-indigo-600"
+                                        checked={selectedBotIds.includes(bot.botId)}
+                                        onChange={() => toggleChatbot(bot.botId)}
+                                    />
+                                    <span>{bot.name}</span>
+                                </label>
+                            ))}
+                        </div>
+                        {selectedBotIds.length === 0 && (
+                            <p className="mt-2 text-xs text-red-500">{t("Please select at least one chatbot")}</p>
+                        )}
                     </div>
 
                     {step === 'form' ? (

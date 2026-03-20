@@ -9,6 +9,7 @@ export interface TrainQuery {
   page?: number;
   limit?: number;
   chatbotId?: string;
+  botId?: string;
 }
 
 const createTrainQuery = (query: TrainQuery): string => {
@@ -17,6 +18,7 @@ const createTrainQuery = (query: TrainQuery): string => {
   if (query.page) params.append("page", query.page.toString());
   if (query.limit) params.append("limit", query.limit.toString());
   if (query.chatbotId) params.append("chatbotId", query.chatbotId);
+  if (query.botId) params.append("botId", query.botId);
 
   return params.toString();
 };
@@ -30,6 +32,19 @@ export const trainingService = {
     );
     return response.data;
   },
+
+  // Train all isActiveForTraining=true items (optionally filtered by importBatchIds)
+  trainActive: async (
+    chatbotId: string,
+    options?: { firetune?: boolean; importBatchIds?: string[] }
+  ): Promise<ITrainResponse> => {
+    const response = await axiosInstance.post(
+      ENDPOINTS.TRAINING_ENDPOINTS.TRAIN_ACTIVE(chatbotId),
+      options ?? {}
+    );
+    return response.data;
+  },
+
 
   // Get models list
   getModels: async (query: TrainQuery): Promise<IModelsListResponse> => {
@@ -48,17 +63,17 @@ export const trainingService = {
   },
 
   // Get all rules for selection
-  getAllRules: async (): Promise<{ data: IRule[] }> => {
+  getAllRules: async (botId?: string): Promise<{ data: IRule[] }> => {
     const response = await axiosInstance.get(
-      `${ENDPOINTS.RULE_ENDPOINTS.GET_ALL_PAGINATED}?limit=1000&page=1`
+      `${ENDPOINTS.RULE_ENDPOINTS.GET_ALL_PAGINATED}?${createTrainQuery({ limit: 1000, page: 1, botId })}`
     );
     return response.data;
   },
 
   // Get all stories for selection
-  getAllStories: async (): Promise<{ data: IStory[] }> => {
+  getAllStories: async (botId?: string): Promise<{ data: IStory[] }> => {
     const response = await axiosInstance.get(
-      `${ENDPOINTS.STORY_ENDPOINTS.GET_ALL_PAGINATED}?limit=1000&page=1`
+      `${ENDPOINTS.STORY_ENDPOINTS.GET_ALL_PAGINATED}?${createTrainQuery({ limit: 1000, page: 1, botId })}`
     );
     return response.data;
   },

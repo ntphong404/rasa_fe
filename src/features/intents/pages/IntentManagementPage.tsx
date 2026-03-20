@@ -45,14 +45,21 @@ import { z } from "zod";
 import { IIntent } from "@/interfaces/intent.interface";
 import { intentService } from "../api/service";
 import { ListIntentResponse } from "../api/dto/IntentResponse";
+import { IntentQuery } from "../api/dto/IntentQuery";
 import { ConfirmSoftDeleteDialog, ConfirmHardDeleteDialog } from "@/components/confirm-delete-dialog";
 import { ConfirmRestoreDialog } from "@/components/confirm-restore-dialog";
 import { Command } from "@/components/ui/command";
 import IntentDetailsDialog from "../components/IntentDetailsDialog";
 import { useChatbotStore } from "@/store/chatbot";
+import { Badge } from "@/components/ui/badge";
+import { myModelService } from "@/features/chatbot/api/service";
+import { ModelDetail } from "@/features/chatbot/api/dto/ChatBotResponse";
 
 const filterSchema = z.object({
   search: z.string().optional(),
+  label: z.string().optional(),
+  trained: z.string().optional(),
+  modelId: z.string().optional(),
   deleted: z.boolean().optional(),
   page: z.number().optional(),
   limit: z.number().optional(),
@@ -64,6 +71,8 @@ const filterSchema = z.object({
 export function IntentManagementPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const chatbots = useChatbotStore((state) => state.chatbots);
   const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
   const [rowSelection, setRowSelection] = useState({});
   const [intentsData, setIntentsData] = useState<IIntent[]>([]);
@@ -76,6 +85,7 @@ export function IntentManagementPage() {
   const [confirmRestoreOpen, setConfirmRestoreOpen] = useState(false);
   const [intentToDelete, setIntentToDelete] = useState<IIntent | null>(null);
   const [intentToRestore, setIntentToRestore] = useState<IIntent | null>(null);
+  const [models, setModels] = useState<ModelDetail[]>([]);
 
   const [pagination, setPagination] = useState({
     total: 0,
@@ -88,6 +98,9 @@ export function IntentManagementPage() {
     resolver: zodResolver(filterSchema),
     defaultValues: {
       search: "",
+      label: "",
+      trained: "all",
+      modelId: "",
       deleted: false,
       page: 1,
       limit: 10,
@@ -97,14 +110,54 @@ export function IntentManagementPage() {
     },
   });
 
-  const fetchIntentsData = async (filters?: z.infer<typeof filterSchema>) => {
+  const selectedChatbot = chatbots.find((bot) => bot.botId === selectedBotId);
+  const effectiveBotId = selectedBotId && selectedBotId !== "global" ? selectedBotId : undefined;
+
+  const getTrainedModelsForIntent = (intentId: string): ModelDetail[] => {
+    return models.filter((model) =>
+      Array.isArray(model.intents) && model.intents.includes(intentId)
+    );
+  };
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      if (!selectedChatbot?._id) {
+        setModels([]);
+        return;
+      }
+
+      try {
+        const response = await myModelService.getPaginate({
+          page: 1,
+          limit: 200,
+          chatbotId: selectedChatbot._id,
+          deleted: false,
+        });
+        setModels(response.data || []);
+      } catch (err) {
+        console.error("Error fetching models for intents:", err);
+        setModels([]);
+      }
+    };
+
+    fetchModels();
+  }, [selectedChatbot?._id]);
+
+  const fetchIntentsData = async (filters?: IntentQuery) => {
     try {
       setIsDataLoading(true);
       
-      const queryParams = filters || {
+      const queryParams: IntentQuery = filters || {
         page: pagination.page,
         limit: pagination.limit,
         search: form.getValues("search"),
+        botId: effectiveBotId,
+        label: form.getValues("label") || undefined,
+        trained:
+          form.getValues("trained") && form.getValues("trained") !== "all"
+            ? form.getValues("trained")
+            : undefined,
+        modelId: form.getValues("modelId") || undefined,
         deleted: form.getValues("deleted"),
         sort: form.getValues("sort"),
         startDate: form.getValues("startDate"),
@@ -139,7 +192,7 @@ export function IntentManagementPage() {
   useEffect(() => {
     fetchIntentsData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.limit, refreshTrigger]);
+  }, [pagination.page, pagination.limit, refreshTrigger, selectedBotId]);
 
   const onSubmit = (data: z.infer<typeof filterSchema>) => {
     setPagination((prev) => ({ ...prev, page: 1 }));
@@ -147,6 +200,10 @@ export function IntentManagementPage() {
       page: 1,
       limit: data.limit || pagination.limit,
       search: data.search,
+      botId: effectiveBotId,
+      label: data.label || undefined,
+      trained: data.trained && data.trained !== "all" ? data.trained : undefined,
+      modelId: data.modelId || undefined,
       deleted: data.deleted,
       sort: data.sort,
       startDate: data.startDate,
@@ -285,6 +342,157 @@ export function IntentManagementPage() {
                   <DrawerTitle>{t("Filter Intents")}</DrawerTitle>
                 </DrawerHeader>
                 <div className="grid gap-4 p-4">
+                  <FormField
+                    control={form.control}
+                    name="label"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">
+                              {t("Label")}
+                            </label>
+                            <Input
+                              placeholder={t("Filter by label")}
+                              {...field}
+                              value={field.value || ""}
+                            />
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="trained"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">
+                              {t("Training Status")}
+                            </label>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className="w-full justify-between"
+                                >
+                                  {field.value === "true"
+                                    ? t("Trained")
+                                    : field.value === "false"
+                                    ? t("Not trained")
+                                    : t("All training statuses")}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-full p-0">
+                                <Command>
+                                  <CommandList>
+                                    <CommandGroup>
+                                      {[
+                                        { value: "all", label: t("All training statuses") },
+                                        { value: "true", label: t("Trained") },
+                                        { value: "false", label: t("Not trained") },
+                                      ].map((option) => (
+                                        <CommandItem
+                                          key={option.value}
+                                          value={option.value}
+                                          onSelect={() => {
+                                            form.setValue("trained", option.value);
+                                          }}
+                                        >
+                                          {option.label}
+                                          <Check
+                                            className={cn(
+                                              "ml-auto",
+                                              option.value === field.value
+                                                ? "opacity-100"
+                                                : "opacity-0"
+                                            )}
+                                          />
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="modelId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">
+                              {t("Model")}
+                            </label>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className="w-full justify-between"
+                                >
+                                  {field.value
+                                    ? models.find((m) => m._id === field.value)?.name || t("Model")
+                                    : t("All models")}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-full p-0">
+                                <Command>
+                                  <CommandList>
+                                    <CommandGroup>
+                                      <CommandItem
+                                        value="all-models"
+                                        onSelect={() => form.setValue("modelId", "")}
+                                      >
+                                        {t("All models")}
+                                        <Check
+                                          className={cn(
+                                            "ml-auto",
+                                            !field.value ? "opacity-100" : "opacity-0"
+                                          )}
+                                        />
+                                      </CommandItem>
+                                      {models.map((model) => (
+                                        <CommandItem
+                                          key={model._id}
+                                          value={model.name}
+                                          onSelect={() => form.setValue("modelId", model._id)}
+                                        >
+                                          {model.name}
+                                          <Check
+                                            className={cn(
+                                              "ml-auto",
+                                              model._id === field.value
+                                                ? "opacity-100"
+                                                : "opacity-0"
+                                            )}
+                                          />
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
                   <FormField
                     control={form.control}
                     name="deleted"
@@ -569,6 +777,48 @@ export function IntentManagementPage() {
                   {row.getValue("description") || t("No description")}
                 </div>
               ),
+            },
+            {
+              id: "label",
+              header: t("Label"),
+              cell: ({ row }) => {
+                const intent = row.original;
+                return intent.label ? (
+                  <Badge variant="outline">{intent.label}</Badge>
+                ) : (
+                  <span className="text-muted-foreground">-</span>
+                );
+              },
+            },
+            {
+              id: "training",
+              header: t("Training Status"),
+              cell: ({ row }) => {
+                const intent = row.original;
+                const trainedModels = getTrainedModelsForIntent(intent._id);
+
+                if (trainedModels.length === 0) {
+                  return (
+                    <Badge variant="secondary" className="bg-slate-100 text-slate-700">
+                      {t("Not trained")}
+                    </Badge>
+                  );
+                }
+
+                return (
+                  <div className="flex flex-wrap gap-1">
+                    <Badge className="bg-green-600">{t("Trained")}</Badge>
+                    {trainedModels.slice(0, 2).map((model) => (
+                      <Badge key={model._id} variant="outline">
+                        {model.name}
+                      </Badge>
+                    ))}
+                    {trainedModels.length > 2 && (
+                      <Badge variant="outline">+{trainedModels.length - 2}</Badge>
+                    )}
+                  </div>
+                );
+              },
             },
             {
               accessorKey: "createdAt",

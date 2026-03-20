@@ -51,26 +51,24 @@ export function TrainModelDialog({
   // Load data on mount
   useEffect(() => {
     if (open) {
-      loadData();
+      loadChatbots();
     }
   }, [open]);
 
-  const loadData = async () => {
+  const loadChatbots = async () => {
     try {
       setIsLoading(true);
-      const [chatbotsRes, rulesRes, storiesRes] = await Promise.all([
-        trainingService.getAllChatbots(),
-        trainingService.getAllRules(),
-        trainingService.getAllStories(),
-      ]);
+      const chatbotsRes = await trainingService.getAllChatbots();
 
       setChatbots(chatbotsRes.data || []);
-      setRules(rulesRes.data || []);
-      setStories(storiesRes.data || []);
 
       // Auto select first chatbot if available
       if (chatbotsRes.data && chatbotsRes.data.length > 0) {
         setSelectedChatbot(chatbotsRes.data[0]._id);
+      } else {
+        setSelectedChatbot("");
+        setRules([]);
+        setStories([]);
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -79,6 +77,37 @@ export function TrainModelDialog({
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!open || !selectedChatbot) {
+      return;
+    }
+
+    const loadTrainItemsByChatbot = async () => {
+      try {
+        setIsLoading(true);
+        const chatbot = chatbots.find((item) => item._id === selectedChatbot);
+        const botId = chatbot?.botId;
+
+        const [rulesRes, storiesRes] = await Promise.all([
+          trainingService.getAllRules(botId),
+          trainingService.getAllStories(botId),
+        ]);
+
+        setRules(rulesRes.data || []);
+        setStories(storiesRes.data || []);
+        setSelectedRules([]);
+        setSelectedStories([]);
+      } catch (error) {
+        console.error("Error loading train items by chatbot:", error);
+        toast.error("Không thể tải Rules/Stories theo chatbot");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTrainItemsByChatbot();
+  }, [open, selectedChatbot, chatbots]);
 
   const handleRuleToggle = (ruleId: string) => {
     setSelectedRules((prev) =>
@@ -102,13 +131,8 @@ export function TrainModelDialog({
       return;
     }
 
-    if (selectedRules.length === 0) {
-      toast.error("Vui lòng chọn ít nhất một Rule");
-      return;
-    }
-
-    if (selectedStories.length === 0) {
-      toast.error("Vui lòng chọn ít nhất một Story");
+    if (selectedRules.length === 0 && selectedStories.length === 0) {
+      toast.error("Vui lòng chọn ít nhất một Rule hoặc một Story");
       return;
     }
 
@@ -317,7 +341,7 @@ export function TrainModelDialog({
               </Button>
               <Button
                 onClick={handleTrain}
-                disabled={isTraining || !selectedChatbot || selectedRules.length === 0 || selectedStories.length === 0}
+                disabled={isTraining || !selectedChatbot || (selectedRules.length === 0 && selectedStories.length === 0)}
                 className="bg-green-600 hover:bg-green-700 text-white px-6"
               >
                 {isTraining ? (

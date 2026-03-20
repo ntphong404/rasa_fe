@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { intentService } from "@/features/intents/api/service";
 import { responseService } from "@/features/reponses/api/service";
-import { storyService } from "@/features/stories/api/service";
+import { ruleService } from "@/features/rules/api/service";
+import { useChatbotStore } from "@/store/chatbot";
+import { useChatbots } from "@/hooks/useChatbots";
 import { parseFile, formatIntentName, type ParsedRow, parseYAML, parseResponseYAML, mergeNLUWithResponses, type ResponseMap } from "../utils/fileParser";
 import { generateTemplate } from "../utils/templateGenerator";
 
@@ -23,7 +25,10 @@ type Row = ParsedRow;
 export function ImportIntentPage() {
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const [importMode, setImportMode] = useState<'excel' | 'yaml'>('excel'); // Track import mode
+    const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+    const { chatbots } = useChatbots();
+    const [selectedImportBotIds, setSelectedImportBotIds] = useState<string[]>([]);
+    const [importMode, setImportMode] = useState<'excel' | 'yaml'>('excel');
     const [file, setFile] = useState<File | null>(null);
     const [nluFile, setNluFile] = useState<File | null>(null); // For YAML mode
     const [domainFile, setDomainFile] = useState<File | null>(null); // For YAML mode
@@ -41,12 +46,51 @@ export function ImportIntentPage() {
     const [editExampleText, setEditExampleText] = useState("");
     const [generatingRowIdx, setGeneratingRowIdx] = useState<number | null>(null);
     const [hasImported, setHasImported] = useState(false);
+    const [duplicateStrategy, setDuplicateStrategy] = useState<"skip" | "overwrite" | "fail">("overwrite");
+    const [commonImportLabel, setCommonImportLabel] = useState("");
     const inputRef = useRef<HTMLInputElement | null>(null);
     const nluInputRef = useRef<HTMLInputElement | null>(null);
     const domainInputRef = useRef<HTMLInputElement | null>(null);
 
+    const availableImportBots = chatbots.filter((bot) => bot.botId !== "global");
+
+    const toggleImportBot = (botId: string) => {
+        setSelectedImportBotIds((prev) =>
+            prev.includes(botId) ? prev.filter((id) => id !== botId) : [...prev, botId]
+        );
+    };
+
+    const clearImportBots = () => {
+        setSelectedImportBotIds([]);
+    };
+
+    const selectAllImportBots = () => {
+        setSelectedImportBotIds(availableImportBots.map((bot) => bot.botId));
+    };
+
     // Back should return to the Create Data page
     const handleCancel = () => navigate("/add-data");
+
+    // Default selected import bot follows current selector, except global.
+    // When global is selected, keep user's explicit tickbox selections.
+    // Also remove stale bot ids when chatbot list changes.
+    const syncSelectedImportBots = () => {
+        setSelectedImportBotIds((prev) => {
+            const validSet = new Set(availableImportBots.map((b) => b.botId));
+            const filtered = prev.filter((id) => validSet.has(id));
+
+            if (selectedBotId && selectedBotId !== "global" && validSet.has(selectedBotId)) {
+                return filtered.includes(selectedBotId) ? filtered : [...filtered, selectedBotId];
+            }
+
+            return filtered;
+        });
+    };
+
+    useEffect(() => {
+        syncSelectedImportBots();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedBotId, chatbots.length]);
 
     const handleParseYAMLDualFile = async (nlu: File, domain: File) => {
         setNluFile(nlu);
@@ -87,9 +131,9 @@ export function ImportIntentPage() {
         }
     };
 
-    function buildStoryDefine(storyName: string, steps: Array<{ intentId?: string; actionId?: string }>) {
+    function buildRuleDefine(ruleName: string, steps: Array<{ intentId?: string; actionId?: string }>) {
         const lines: string[] = [];
-        lines.push(`- story: ${storyName}`);
+        lines.push(`- rule: ${ruleName}`);
         lines.push(`  steps:`);
         steps.forEach((s) => {
             if (s.intentId) lines.push(`  - intent: [${s.intentId}]`);
@@ -384,7 +428,109 @@ export function ImportIntentPage() {
         return lines.join("\n");
     }
 
+    const isDuplicateKeyError = (err: any) => {
+        const msg = err?.response?.data?.message || err?.message || "";
+        return /E11000\s+duplicate key error/i.test(String(msg));
+    };
+
+    const normalizeForCompare = (input?: string) =>
+        String(input || "")
+            .replace(/\r\n/g, "\n")
+            .replace(/[ \t]+/g, " ")
+            .trim();
+
+    const formatImportError = (err: any, row: Row) => {
+        const raw = String(err?.response?.data?.message || err?.message || t("Unknown error"));
+        const status = Number(err?.response?.status || 0);
+        const requestUrl = String(err?.response?.config?.url || "");
+        const duplicateName = raw.match(/dup key:\s*\{\s*name:\s*"([^"]+)"\s*\}/i)?.[1];
+
+        if (status === 401) {
+            return t("Phiên đăng nhập đã hết hạn hoặc bạn không có quyền. Vui lòng đăng nhập lại.");
+        }
+
+        if (status === 409) {
+            if (requestUrl.includes("/intent")) {
+                return t("Intent đã bị trùng tên{{name}}.", {
+                    name: duplicateName ? `: ${duplicateName}` : `: ${row.name}`,
+                });
+            }
+            if (requestUrl.includes("/my-response")) {
+                const fallbackResp = row.responseName?.trim() || `utter_${row.name}`;
+                return t("Response đã bị trùng tên{{name}}.", {
+                    name: duplicateName ? `: ${duplicateName}` : `: ${fallbackResp}`,
+                });
+            }
+            return t("Dữ liệu bị trùng. Vui lòng kiểm tra lại tên intent/response.");
+        }
+
+        if (raw.includes("ERR_CONNECTION_TIMED_OUT") || raw.includes("Network Error")) {
+            return t("Không kết nối được tới máy chủ. Vui lòng kiểm tra mạng hoặc thử lại sau.");
+        }
+
+        if (isDuplicateKeyError(err)) {
+            if (/myresponses/i.test(raw)) {
+                const respName = row.responseName?.trim() || `utter_${row.name}`;
+                return t("Response đã bị trùng tên: {{name}}.", { name: duplicateName || respName });
+            }
+            if (/intents/i.test(raw)) {
+                return t("Intent đã bị trùng tên: {{name}}.", { name: duplicateName || row.name });
+            }
+            if (/stories/i.test(raw)) {
+                return t("Story đã tồn tại cho intent này.");
+            }
+            return t("Dữ liệu bị trùng. Vui lòng kiểm tra lại tên intent/response.");
+        }
+
+        if (/E11000\s+duplicate key error/i.test(raw)) {
+            return t("Dữ liệu bị trùng. Vui lòng kiểm tra lại tên intent/response.");
+        }
+
+        return t("Không thể import dòng này. Vui lòng kiểm tra dữ liệu và thử lại.");
+    };
+
+    const findExistingIntentByName = async (name: string, botId: string) => {
+        const limit = 100;
+        let page = 1;
+        let totalPages = 1;
+
+        while (page <= totalPages && page <= 20) {
+            const res = await intentService.fetchIntents({ page, limit, search: name, botId });
+            const found = (res.data || []).find((it: any) => it?.name === name);
+            if (found) return found;
+
+            totalPages = res.meta?.totalPages || 1;
+            page += 1;
+        }
+
+        return null;
+    };
+
+    const findExistingResponseByName = async (name: string, botId: string) => {
+        const limit = 100;
+        let page = 1;
+        let totalPages = 1;
+
+        while (page <= totalPages && page <= 20) {
+            const query = `page=${page}&limit=${limit}&search=${encodeURIComponent(name)}&botId=${encodeURIComponent(botId)}`;
+            const res = await responseService.fetchResponses(query);
+            const found = (res.data || []).find((it: any) => it?.name === name);
+            if (found) return found;
+
+            totalPages = res.meta?.totalPages || 1;
+            page += 1;
+        }
+
+        return null;
+    };
+
     const handleImport = async () => {
+        const importBotIds = selectedImportBotIds.filter(Boolean);
+        const sharedLabel = importMode === "yaml" ? commonImportLabel.trim() : "";
+        if (importBotIds.length === 0) {
+            return toast.error(t("Vui lòng chọn ít nhất 1 chatbot để import"));
+        }
+
         const toImport = rows.filter((_, i) => selected[i] && rows[i].status !== 'success');
         if (toImport.length === 0) return toast.error(t("No rows selected for import"));
 
@@ -461,50 +607,144 @@ export function ImportIntentPage() {
             const row = rows[i];
             try {
                 const formattedName = row.name;
-
+                const resolvedLabel = importMode === "yaml"
+                    ? (sharedLabel || undefined)
+                    : (row.label?.trim() || undefined);
                 // Use all examples from the row
                 const examplesArr: string[] = row.examples.filter(ex => ex.trim());
 
-                // Create intent with all examples
-                const intentPayload = {
-                    name: formattedName,
-                    description: "",
-                    define: buildIntentDefine(formattedName, examplesArr),
-                    entities: [],
-                };
-                const createdIntent = await intentService.createIntent(intentPayload as any);
-
-                // Create response with answer text
-                let createdResponse = null;
-                if (row.response && row.response.trim()) {
-                    const respName = `utter_${formattedName}`;
-                    const responsePayload = {
-                        name: respName,
+                try {
+                    // Create intent with all examples and all selected bots
+                    const intentPayload = {
+                        name: formattedName,
                         description: "",
-                        define: buildResponseDefine(respName, row.response.trim()),
-                    };
-                    createdResponse = await responseService.createResponse(responsePayload as any);
-                }
-
-                // Create story linking the created intent and response
-                if (createdResponse) {
-                    const storyName = `story_for_${formattedName}`;
-                    const steps: Array<{ intentId?: string; actionId?: string }> = [{ intentId: createdIntent._id }];
-                    steps.push({ actionId: createdResponse._id });
-
-                    const storyPayload = {
-                        name: storyName,
-                        description: "",
-                        define: buildStoryDefine(storyName, steps),
-                        intents: [createdIntent._id],
-                        responses: [createdResponse._id],
-                        action: [],
+                        define: buildIntentDefine(formattedName, examplesArr),
+                        label: resolvedLabel,
+                        botIds: importBotIds,
                         entities: [],
-                        slots: [],
-                        roles: [],
                     };
+                    const intentDefine = intentPayload.define;
+                    let createdIntent: any = null;
+                    try {
+                        createdIntent = await intentService.createIntent(intentPayload as any);
+                    } catch (intentErr: any) {
+                        if (!isDuplicateKeyError(intentErr)) {
+                            throw intentErr;
+                        }
+                        const existingIntent = await findExistingIntentByName(formattedName, importBotIds[0]);
+                        if (!existingIntent?._id) {
+                            throw intentErr;
+                        }
 
-                    await storyService.createStory(storyPayload as any);
+                        if (duplicateStrategy === "fail") {
+                            throw new Error(t("Intent already exists: {{name}}", { name: formattedName }));
+                        }
+
+                        const sameContent =
+                            normalizeForCompare(existingIntent.define) === normalizeForCompare(intentDefine);
+                        const labelChanged = Boolean(resolvedLabel) && existingIntent.label !== resolvedLabel;
+                        const missingBots = importBotIds.filter(bid => !existingIntent.botIds?.includes(bid));
+
+                        if (duplicateStrategy === "overwrite" && (!sameContent || labelChanged || missingBots.length > 0)) {
+                            await intentService.updateIntent(existingIntent._id, {
+                                ...existingIntent,
+                                name: formattedName,
+                                description: existingIntent.description || "",
+                                define: intentDefine,
+                                label: resolvedLabel || existingIntent.label,
+                                botIds: Array.from(new Set([...(existingIntent.botIds || []), ...importBotIds])),
+                                entities: existingIntent.entities || [],
+                                roles: existingIntent.roles || [],
+                                deleted: !!existingIntent.deleted,
+                                createdAt: existingIntent.createdAt,
+                                updatedAt: existingIntent.updatedAt,
+                                deletedAt: existingIntent.deletedAt,
+                            } as any);
+                        }
+
+                        createdIntent = existingIntent;
+                    }
+
+                    // Create response with answer text
+                    let createdResponse = null;
+                    if (row.response && row.response.trim()) {
+                        const respName = row.responseName?.trim() || `utter_${formattedName}`;
+                        const responsePayload = {
+                            name: respName,
+                            description: "",
+                            define: buildResponseDefine(respName, row.response.trim()),
+                            label: resolvedLabel,
+                            botIds: importBotIds,
+                        };
+                        const responseDefine = responsePayload.define;
+                        try {
+                            createdResponse = await responseService.createResponse(responsePayload as any);
+                        } catch (responseErr: any) {
+                            if (!isDuplicateKeyError(responseErr)) {
+                                throw responseErr;
+                            }
+                            const existingResponse = await findExistingResponseByName(respName, importBotIds[0]);
+                            if (!existingResponse?._id) {
+                                throw responseErr;
+                            }
+
+                            if (duplicateStrategy === "fail") {
+                                throw new Error(t("Response already exists: {{name}}", { name: respName }));
+                            }
+
+                            const sameContent =
+                                normalizeForCompare(existingResponse.define) === normalizeForCompare(responseDefine);
+                            const labelChanged = Boolean(resolvedLabel) && existingResponse.label !== resolvedLabel;
+                            const missingBots = importBotIds.filter(bid => !existingResponse.botIds?.includes(bid));
+
+                            if (duplicateStrategy === "overwrite" && (!sameContent || labelChanged || missingBots.length > 0)) {
+                                await responseService.updateResponse(existingResponse._id, {
+                                    ...existingResponse,
+                                    name: respName,
+                                    description: existingResponse.description || "",
+                                    define: responseDefine,
+                                    label: resolvedLabel || existingResponse.label,
+                                    botIds: Array.from(new Set([...(existingResponse.botIds || []), ...importBotIds])),
+                                    roles: existingResponse.roles || [],
+                                    deleted: !!existingResponse.deleted,
+                                    createdAt: existingResponse.createdAt,
+                                    updatedAt: existingResponse.updatedAt,
+                                    deletedAt: existingResponse.deletedAt,
+                                } as any);
+                            }
+
+                            createdResponse = existingResponse;
+                        }
+                    }
+
+                    // Create rule linking the created intent and response
+                    if (createdResponse) {
+                        const ruleName = `rule_for_${formattedName}`;
+                        const steps: Array<{ intentId?: string; actionId?: string }> = [{ intentId: createdIntent._id }];
+                        steps.push({ actionId: createdResponse._id });
+
+                        const rulePayload = {
+                            name: ruleName,
+                            description: "",
+                            define: buildRuleDefine(ruleName, steps),
+                            botIds: importBotIds,
+                            intents: [createdIntent._id],
+                            responses: [createdResponse._id],
+                            action: [],
+                            roles: [],
+                        };
+
+                        try {
+                            await ruleService.createRule(rulePayload as any);
+                        } catch (ruleErr: any) {
+                            // Rule name can collide on re-import; keep import idempotent.
+                            if (!isDuplicateKeyError(ruleErr)) {
+                                throw ruleErr;
+                            }
+                        }
+                    }
+                } catch (err: any) {
+                    throw err;
                 }
 
                 // Mark as success
@@ -515,8 +755,10 @@ export function ImportIntentPage() {
                 });
                 successCount++;
             } catch (err: any) {
-                console.error("Row import error", row, err);
-                const errorMsg = err?.response?.data?.message || err?.message || t("Unknown error");
+                const rootErr = err?.original || err;
+                const botPrefix = err?.botId ? `[${err.botId}] ` : "";
+                const errorMsg = `${botPrefix}${formatImportError(rootErr, row)}`;
+
                 setRows((prev) => {
                     const updated = [...prev];
                     updated[i] = { ...updated[i], status: 'error', error: errorMsg };
@@ -531,8 +773,18 @@ export function ImportIntentPage() {
 
         if (failCount === 0) {
             toast.success(t("Imported rows successfully", { count: successCount }));
-            // Auto navigate after 2s if all successful
-            setTimeout(() => navigate("/"), 2000);
+            // Stay on current import mode and reset form for next import batch.
+            setRows([]);
+            setSelected({});
+            setExpandedRows({});
+            setEditingRow(null);
+            setEditingExample(null);
+            setHasImported(false);
+            setProgress({ done: 0, total: 0 });
+            setFile(null);
+            setNluFile(null);
+            setDomainFile(null);
+            setCommonImportLabel("");
         } else {
             toast.error(t("Import result: {{success}} succeeded, {{failed}} failed. Please check errors below.", { success: successCount, failed: failCount }));
         }
@@ -588,7 +840,7 @@ export function ImportIntentPage() {
                                 <FileUp className="h-6 w-6 text-indigo-600 dark:text-indigo-300" />
                                 <div>
                                     <h1 className="text-xl font-bold text-indigo-900 dark:text-indigo-200">{t("Import question groups from file")}</h1>
-                                    <p className="text-xs text-indigo-600 dark:text-indigo-300">{t("Import intents and create stories automatically")}</p>
+                                    <p className="text-xs text-indigo-600 dark:text-indigo-300">{t("Import intents and create rules automatically")}</p>
                                 </div>
                             </div>
                             <div className="ml-auto">
@@ -651,9 +903,63 @@ export function ImportIntentPage() {
                         </div>
                     )}
 
-                    {/* Excel Upload Area */}
+                    {rows.length === 0 && (
+                        <div className="max-w-3xl mx-auto mb-4 rounded-lg border bg-card p-4">
+                            <div className="flex items-center justify-between gap-2 mb-3">
+                                <div>
+                                    <div className="text-sm font-semibold">{t("Applicable Chatbots")}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {t("Chọn một hoặc nhiều chatbot để import dữ liệu")}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button type="button" size="sm" variant="outline" onClick={selectAllImportBots}>
+                                        {t("Select all")}
+                                    </Button>
+                                    <Button type="button" size="sm" variant="ghost" onClick={clearImportBots}>
+                                        {t("Clear")}
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="grid gap-2 sm:grid-cols-2">
+                                {availableImportBots.map((bot) => (
+                                    <label key={bot._id} className="flex items-center gap-2 rounded-md border p-2 text-sm">
+                                        <input
+                                            type="checkbox"
+                                            className="accent-indigo-600"
+                                            checked={selectedImportBotIds.includes(bot.botId)}
+                                            onChange={() => toggleImportBot(bot.botId)}
+                                        />
+                                        <span>{bot.name}</span>
+                                    </label>
+                                ))}
+                            </div>
+                            {importMode === 'yaml' && (
+                                <div className="mt-3 space-y-2">
+                                    <label className="text-sm font-medium">
+                                        {t("Nhãn chung cho file import")}
+                                    </label>
+                                    <Input
+                                        value={commonImportLabel}
+                                        onChange={(e) => setCommonImportLabel(e.target.value)}
+                                        placeholder={t("Ví dụ: pccc_faq_03_2026")}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        {t("Nhãn này sẽ áp dụng cho toàn bộ intent/response được import từ file YAML hiện tại")}
+                                    </p>
+                                </div>
+                            )}
+                            {selectedImportBotIds.length === 0 && (
+                                <p className="mt-2 text-xs text-red-500">
+                                    {t("Vui lòng chọn ít nhất 1 chatbot trước khi import")}
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Excel Upload Area (existing flow) */}
                     {rows.length === 0 && importMode === 'excel' && (
-                        <div className="max-w-3xl mx-auto">
+                        <div className="max-w-3xl mx-auto space-y-3">
                             <div
                                 onDrop={handleDrop}
                                 onDragOver={(e) => e.preventDefault()}
@@ -682,6 +988,7 @@ export function ImportIntentPage() {
                                     <p>{t("Excel guide: Download template and fill data manually")}</p>
                                 </div>
                             </div>
+
                         </div>
                     )}
 
@@ -752,6 +1059,7 @@ export function ImportIntentPage() {
                             </div>
                         </div>
                     )}
+
 
                     {isParsing && (
                         <div className="text-center py-8">
@@ -1006,7 +1314,7 @@ export function ImportIntentPage() {
                                                     <tr key={`${i}-error`} className="bg-red-50">
                                                         <td colSpan={5} className="px-4 py-2">
                                                             <div className="text-red-600 text-sm">
-                                                                <strong>{t("API error")}:</strong> {r.error}
+                                                                <strong>{t("Error")}:</strong> {r.error}
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -1038,6 +1346,19 @@ export function ImportIntentPage() {
                         </div>
 
                             <div className="flex flex-shrink-0 gap-3 border-t bg-gray-50 px-3 py-3 dark:border-white/10 dark:bg-slate-900/70">
+                                <div className="flex items-center gap-2 rounded border bg-white px-3 py-1.5 dark:bg-slate-900">
+                                    <span className="text-sm text-slate-600 dark:text-slate-300">{t("Duplicate handling")}</span>
+                                    <select
+                                        className="text-sm border rounded px-2 py-1 bg-white dark:bg-slate-900"
+                                        value={duplicateStrategy}
+                                        onChange={(e) => setDuplicateStrategy(e.target.value as "skip" | "overwrite" | "fail")}
+                                        disabled={isImporting}
+                                    >
+                                        <option value="overwrite">{t("Overwrite if content differs")}</option>
+                                        <option value="skip">{t("Skip duplicates")}</option>
+                                        <option value="fail">{t("Stop and report duplicates")}</option>
+                                    </select>
+                                </div>
                                 <Button 
                                     onClick={handleImport} 
                                     disabled={isImporting} 
@@ -1054,7 +1375,7 @@ export function ImportIntentPage() {
                                 )}
                                 <Button 
                                     variant="ghost" 
-                                    onClick={() => { setRows([]); setFile(null); setSelected({}); setHasImported(false); }}
+                                    onClick={() => { setRows([]); setFile(null); setSelected({}); setHasImported(false); setCommonImportLabel(""); }}
                                     className="gap-2"
                                 >
                                     <X className="h-4 w-4" />

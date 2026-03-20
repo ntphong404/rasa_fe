@@ -5,6 +5,8 @@ export interface IStory {
   name: string;
   description: string;
   define: string; // yaml text
+  botIds?: string[];
+  botId?: string;
   intents: string[];
   responses: string[];
   action: string[];
@@ -21,6 +23,8 @@ export interface ICreateStory {
   name: string;
   description: string;
   define: string;
+  botIds?: string[];
+  botId?: string;
   intents: string[];
   responses: string[];
   action: string[];

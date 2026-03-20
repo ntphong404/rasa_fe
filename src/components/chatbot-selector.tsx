@@ -33,6 +33,7 @@ export function ChatbotSelector() {
           <SelectValue placeholder={t('Select chatbot...')} />
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value="global">{t('Global (All chatbots)')}</SelectItem>
           {chatbots.map((bot) => (
             <SelectItem key={bot._id} value={bot.botId}>
               {bot.name}

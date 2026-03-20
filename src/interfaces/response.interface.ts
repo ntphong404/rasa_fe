@@ -3,6 +3,9 @@ export interface IMyResponse {
   name: string
   description: string
   define: string // yalm text
+  label?: string
+  botIds?: string[]
+  botId?: string
   roles: string[]
   likeCount?: number
   dislikeCount?: number

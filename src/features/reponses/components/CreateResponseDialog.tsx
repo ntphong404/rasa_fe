@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,10 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "react-i18next";
 import { FileCode, FileText, Plus, Eye, EyeOff } from "lucide-react";
 import { responseService } from "../api/service";
 import { ModuleHelpPopover } from "@/components/module-help-popover";
+import { useChatbotStore } from "@/store/chatbot";
+import { useChatbots } from "@/hooks/useChatbots";
 import { toast } from "sonner";
 
 interface CreateResponseDialogProps {
@@ -29,10 +32,14 @@ export default function CreateResponseDialog({
   onResponseCreated,
 }: CreateResponseDialogProps) {
   const { t } = useTranslation();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const { chatbots } = useChatbots();
   
   // Common fields
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [label, setLabel] = useState("");
+  const [applicableBotIds, setApplicableBotIds] = useState<string[]>([]);
   
   // Validation errors
   const [nameError, setNameError] = useState("");
@@ -63,6 +70,20 @@ export default function CreateResponseDialog({
   const [responseText, setResponseText] = useState("");
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Default to current selected chatbot so new data appears in active scope.
+  useEffect(() => {
+    if (!selectedBotId || selectedBotId === "global") return;
+    setApplicableBotIds((prev) =>
+      prev.includes(selectedBotId) ? prev : [...prev, selectedBotId]
+    );
+  }, [selectedBotId]);
+
+  const handleToggleApplicableBot = (botId: string) => {
+    setApplicableBotIds((prev) =>
+      prev.includes(botId) ? prev.filter((id) => id !== botId) : [...prev, botId]
+    );
+  };
 
   const validateName = (value: string): boolean => {
     if (!value.trim()) {
@@ -173,8 +194,19 @@ export default function CreateResponseDialog({
 
     try {
       setIsSubmitting(true);
+      const targetBotIds = selectedBotId && selectedBotId !== "global"
+        ? [selectedBotId]
+        : applicableBotIds;
+
+      if (targetBotIds.length === 0) {
+        toast.error(t("Please select at least one chatbot"));
+        return;
+      }
+
       await responseService.createResponse({
         name: sanitizedName,
+        botIds: targetBotIds,
+        label: label.trim() || undefined,
         description: description.trim(),
         define: finalDefine,
       });
@@ -182,6 +214,8 @@ export default function CreateResponseDialog({
       // Reset form
       setName("");
       setDescription("");
+      setLabel("");
+      setApplicableBotIds([]);
       setYamlDefine("");
       setResponseText("");
       setExpertMode(false);
@@ -251,6 +285,42 @@ export default function CreateResponseDialog({
                 rows={2}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="response-label">{t("Label")}</Label>
+              <Input
+                id="response-label"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder={t("Organize by label/category (e.g., sheet name)")}
+              />
+            </div>
+
+            {chatbots.length > 0 && (
+              <div className="space-y-3 rounded-lg border p-4">
+                <div className="space-y-1">
+                  <Label>{t("Applicable Chatbots")}</Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t("Select one or more chatbots this response belongs to")}
+                  </p>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {chatbots.filter((bot) => bot.botId !== "global").map((bot) => (
+                    <label
+                      key={bot._id}
+                      className="flex items-center gap-2 rounded-md border p-2 text-sm"
+                    >
+                      <Checkbox
+                        checked={applicableBotIds.includes(bot.botId)}
+                        onCheckedChange={() => handleToggleApplicableBot(bot.botId)}
+                      />
+                      <span>{bot.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
 
           {/* Mode Switch */}

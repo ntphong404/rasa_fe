@@ -16,6 +16,7 @@ import { FileCode, FileText, Edit, Eye, EyeOff } from "lucide-react";
 import { responseService } from "../api/service";
 import { IMyResponse } from "@/interfaces/response.interface";
 import { ModuleHelpPopover } from "@/components/module-help-popover";
+import { useChatbotStore } from "@/store/chatbot";
 import { toast } from "sonner";
 
 interface EditResponseDialogProps {
@@ -32,10 +33,12 @@ export default function EditResponseDialog({
   onResponseUpdated,
 }: EditResponseDialogProps) {
   const { t } = useTranslation();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
   
   // Common fields
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [label, setLabel] = useState("");
   
   // Validation errors
   const [nameError, setNameError] = useState("");
@@ -72,6 +75,7 @@ export default function EditResponseDialog({
     if (response && open) {
       setName(response.name);
       setDescription(response.description || "");
+      setLabel(response.label || "");
       setYamlDefine(response.define || "");
       
       // Try to extract text from YAML for normal mode
@@ -202,10 +206,18 @@ export default function EditResponseDialog({
     try {
       setIsSubmitting(true);
       await responseService.updateResponse(response._id, {
-        ...response,
+        _id: response._id,
         name: sanitizedName,
+        botId: selectedBotId || response.botId || "global",
+        label: label.trim() || undefined,
         description: description.trim(),
         define: finalDefine,
+        roles: response.roles || [],
+        likeCount: response.likeCount ?? 0,
+        dislikeCount: response.dislikeCount ?? 0,
+        deleted: !!response.deleted,
+        createdAt: response.createdAt,
+        updatedAt: response.updatedAt,
       });
       
       onResponseUpdated();
@@ -274,6 +286,17 @@ export default function EditResponseDialog({
                 rows={2}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="response-label">{t("Label")}</Label>
+              <Input
+                id="response-label"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder={t("Organize by label/category (e.g., sheet name)")}
+              />
+            </div>
+
           </div>
 
           {/* Mode Switch */}

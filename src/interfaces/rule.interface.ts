@@ -7,12 +7,11 @@ export interface IRule {
   name: string;
   description: string;
   define: string; // yaml text
+  botIds: string[];
   intents: IIntent[] | string[]; // Can be populated or just IDs
   responses: IMyResponse[] | string[]; // Can be populated or just IDs
   action: IAction[] | string[]; // Backend uses singular 'action', can be populated or just IDs
-
   roles: string[];
-
   createdAt: Date;
   updatedAt: Date;
   deleted: boolean;

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Command,
   CommandEmpty,
@@ -28,17 +29,23 @@ import {
 import { ArrowLeft, FileCode, Search, X, AlertCircle, Eye, Plus, Code2, FormInput, HelpCircle } from "lucide-react";
 import { intentService } from "../api/service";
 import { IEntity } from "@/interfaces/entity.interface";
+import { useChatbotStore } from "@/store/chatbot";
+import { useChatbots } from "@/hooks/useChatbots";
 import { toast } from "sonner";
 
 export function CreateIntentPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const { chatbots } = useChatbots();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Form fields
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [yamlDefine, setYamlDefine] = useState("");
+  const [label, setLabel] = useState<string | null>(null);
+  const [applicableBotIds, setApplicableBotIds] = useState<string[]>([]);
   const [selectedEntities, setSelectedEntities] = useState<IEntity[]>([]);
 
   // Entity search
@@ -94,6 +101,20 @@ export function CreateIntentPage() {
       setEntitySearchResults([]);
     }
   }, [entitySearchQuery]);
+
+  // Default to current selected chatbot so new data appears in active scope.
+  useEffect(() => {
+    if (!selectedBotId || selectedBotId === "global") return;
+    setApplicableBotIds((prev) =>
+      prev.includes(selectedBotId) ? prev : [...prev, selectedBotId]
+    );
+  }, [selectedBotId]);
+
+  const handleToggleApplicableBot = (botId: string) => {
+    setApplicableBotIds((prev) =>
+      prev.includes(botId) ? prev.filter((id) => id !== botId) : [...prev, botId]
+    );
+  };
 
   // Generate template
   const generateTemplate = () => {
@@ -340,8 +361,19 @@ ${exampleLines || "    - example1"}`;
 
     try {
       setIsSubmitting(true);
+      const targetBotIds = selectedBotId && selectedBotId !== "global"
+        ? [selectedBotId]
+        : applicableBotIds;
+
+      if (targetBotIds.length === 0) {
+        toast.error(t("Please select at least one chatbot"));
+        return;
+      }
+
       await intentService.createIntent({
         name: sanitizedName,
+        botIds: targetBotIds,
+        label: label || undefined,
         description: description.trim(),
         define: finalYaml,
         entities: selectedEntities.map((e) => e._id),
@@ -626,6 +658,47 @@ ${exampleLines || "    - example1"}`;
             rows={3}
           />
         </div>
+
+        <div className="space-y-3 rounded-lg border p-4">
+          <div className="space-y-1">
+            <Label htmlFor="label">{t("Label")}</Label>
+            <p className="text-xs text-muted-foreground">
+              {t("Organize intents by label/category (e.g., sheet name)")}
+            </p>
+          </div>
+
+          <Input
+            id="label"
+            value={label || ""}
+            onChange={(e) => setLabel(e.target.value || null)}
+            placeholder={t("e.g., Biện pháp khác phục hậu quả")}
+          />
+        </div>
+
+        {chatbots.length > 0 && (
+          <div className="space-y-3 rounded-lg border p-4">
+            <div className="space-y-1">
+              <Label>{t("Applicable Chatbots")}</Label>
+              <p className="text-xs text-muted-foreground">
+                {t("Select one or more chatbots this intent belongs to")}
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {chatbots.filter((bot) => bot.botId !== "global").map((bot) => (
+                <label
+                  key={bot._id}
+                  className="flex items-center gap-2 rounded-md border p-2 text-sm"
+                >
+                  <Checkbox
+                    checked={applicableBotIds.includes(bot.botId)}
+                    onCheckedChange={() => handleToggleApplicableBot(bot.botId)}
+                  />
+                  <span>{bot.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Selected Entities - CLICKABLE */}
         {selectedEntities.length > 0 && (

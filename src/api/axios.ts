@@ -46,14 +46,16 @@ axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
   // Add botId to query params if it exists and not already present
   const selectedBotId = useChatbotStore.getState().selectedBotId;
-  if (selectedBotId) {
+  const scopedBotId = selectedBotId && selectedBotId !== 'global' ? selectedBotId : null;
+  if (scopedBotId) {
+    const hasBotIdInUrl = typeof config.url === 'string' && /[?&]botId=/.test(config.url);
     // Initialize params if it doesn't exist
     if (!config.params) {
       config.params = {};
     }
     // Only add botId if it's not already present (to allow override)
-    if (!config.params.botId) {
-      config.params.botId = selectedBotId;
+    if (!hasBotIdInUrl && !config.params.botId) {
+      config.params.botId = scopedBotId;
     }
 
     // Add botId to request body for POST, PUT, PATCH, DELETE methods
@@ -63,18 +65,18 @@ axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
       if (config.data) {
         // Handle FormData separately
         if (config.data instanceof FormData) {
-          if (!config.data.has('botId')) {
-            config.data.append('botId', selectedBotId);
+          if (!config.data.has('botId') && !config.data.has('botIds')) {
+            config.data.append('botId', scopedBotId);
           }
         } else if (typeof config.data === 'object') {
           // For regular objects, add botId if not present
-          if (!config.data.botId) {
-            config.data.botId = selectedBotId;
+          if (!config.data.botId && !config.data.botIds) {
+            config.data.botId = scopedBotId;
           }
         }
       } else {
         // Initialize data with botId if no body exists
-        config.data = { botId: selectedBotId };
+        config.data = { botId: scopedBotId };
       }
     }
   }

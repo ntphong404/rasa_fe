@@ -22,6 +22,8 @@ export interface CreateStoryRequest {
   name: string;
   description?: string;
   define?: string;
+  botIds?: string[];
+  botId?: string;
   intents: string[];
   responses: string[];
   action: string[];

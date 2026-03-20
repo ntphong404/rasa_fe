@@ -2,6 +2,7 @@ type ParsedRow = {
   rawName?: string;
   name: string;
   examples: string[];
+  label?: string;
   response?: string;
   responseContent?: string;
   status?: "pending" | "success" | "error";
@@ -18,7 +19,10 @@ type WorkerResponse =
   | { id: string; success: true; data: ArrayBuffer }
   | { id: string; success: false; error: string };
 
-const ctx = self as any;
+const ctx = self as unknown as {
+  postMessage: (message: WorkerResponse, transfer?: Transferable[]) => void;
+  onmessage: ((event: MessageEvent<WorkerRequest>) => void) | null;
+};
 
 const formatIntentName = (input?: string): string => {
   if (!input) return "";
@@ -31,28 +35,80 @@ const formatIntentName = (input?: string): string => {
     .toLowerCase();
 };
 
+const normalizeCellValue = (value: unknown): string => {
+  if (value == null) return "";
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value).trim();
+  }
+
+  if (typeof value === "object") {
+    const obj = value as {
+      w?: string;
+      v?: unknown;
+      richText?: Array<{ text?: string }>;
+    };
+
+    if (Array.isArray(obj.richText)) {
+      return obj.richText.map((part) => part?.text ?? "").join("").trim();
+    }
+    if (typeof obj.w === "string") return obj.w.trim();
+    if (obj.v != null) return String(obj.v).trim();
+  }
+
+  return String(value).trim();
+};
+
+const parseSheetRows = (raw: unknown[][], sheetLabel: string): ParsedRow[] => {
+  // Some files have 2 header rows, others only 1; pick the start row that yields most valid data.
+  const candidates = [2, 1, 0];
+  let best: ParsedRow[] = [];
+
+  for (const startIndex of candidates) {
+    const current: ParsedRow[] = [];
+
+    for (let i = startIndex; i < raw.length; i++) {
+      const row = raw[i] as unknown[] | undefined;
+      const rawColB = normalizeCellValue(row?.[1]);
+      const rawColC = normalizeCellValue(row?.[2]);
+
+      if (!rawColB && !rawColC) continue;
+
+      current.push({
+        rawName: rawColB,
+        name: formatIntentName(rawColB || rawColC || ""),
+        examples: [rawColB],
+        label: sheetLabel || undefined,
+        response: rawColC,
+      });
+    }
+
+    if (current.length > best.length) {
+      best = current;
+    }
+  }
+
+  return best;
+};
+
 const parseXlsxFromBuffer = async (arrayBuffer: ArrayBuffer): Promise<ParsedRow[]> => {
-  const ExcelJS = await import("exceljs");
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(arrayBuffer);
-  const worksheet = workbook.worksheets[0];
+  const XLSX = await import("xlsx");
+  const workbook = XLSX.read(arrayBuffer, { type: "array" });
 
   const out: ParsedRow[] = [];
-  worksheet.eachRow((row: any, rowNumber: number) => {
-    if (rowNumber <= 2) return;
+  for (const sheetName of workbook.SheetNames) {
+    const ws = workbook.Sheets[sheetName];
+    if (!ws) continue;
 
-    const rawColB = (row.getCell(2).value ?? "").toString().trim();
-    const rawColC = (row.getCell(3).value ?? "").toString().trim();
+    const raw = XLSX.utils.sheet_to_json(ws, {
+      header: 1,
+      defval: null,
+      blankrows: true,
+    }) as unknown[][];
 
-    if (!rawColB && !rawColC) return;
-
-    out.push({
-      rawName: rawColB,
-      name: formatIntentName(rawColB || rawColC || ""),
-      examples: [rawColB],
-      response: rawColC,
-    });
-  });
+    const sheetLabel = String(sheetName ?? "").trim();
+    out.push(...parseSheetRows(raw, sheetLabel));
+  }
 
   return out;
 };

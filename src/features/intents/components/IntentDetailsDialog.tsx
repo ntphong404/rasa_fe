@@ -239,6 +239,20 @@ export default function IntentDetailsDialog({
                 </div>
               </div>
 
+              <div className="surface-card-strong p-5">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-foreground mb-3">
+                  <Tag className="h-4 w-4 text-cyan-600" />
+                  {t("Label")}
+                </h3>
+                {intent.label ? (
+                  <Badge variant="outline" className="text-base px-3 py-1">
+                    {intent.label}
+                  </Badge>
+                ) : (
+                  <p className="text-sm text-muted-foreground">-</p>
+                )}
+              </div>
+
               {/* Define (YAML) */}
               <div className="surface-card-strong p-5">
                 <h3 className="flex items-center gap-2 text-sm font-bold text-foreground mb-3">

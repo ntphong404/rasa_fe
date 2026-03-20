@@ -60,6 +60,16 @@ export default function ResponseDetailsDialog({
                     <p className="text-sm text-foreground">{response.description}</p>
                   </div>
                 )}
+                <div>
+                  <h3 className="text-xs font-semibold text-orange-600 uppercase tracking-wide mb-1">
+                    {t("Label")}
+                  </h3>
+                  {response.label ? (
+                    <Badge variant="outline">{response.label}</Badge>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">-</p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -102,6 +112,7 @@ export default function ResponseDetailsDialog({
                 </div>
               )}
             </div>
+
 
             {/* YAML Definition */}
             <div className="surface-card p-4">

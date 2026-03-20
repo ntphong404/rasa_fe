@@ -7,6 +7,8 @@ export type ParsedRow = {
     rawName?: string;
     name: string;
     examples: string[];
+    label?: string;
+    responseName?: string;
     response?: string;
     responseContent?: string;
     status?: 'pending' | 'success' | 'error';
@@ -121,9 +123,9 @@ export async function parseResponseYAML(text: string): Promise<ResponseMap> {
 
         if (!inResponsesSection) continue;
 
-        // Match utterance names (e.g., "utter_ask_program:", "utter_boi_duong_1:")
-        // Accept lowercase letters, digits (0-9), and underscores
-        if (trimmed.match(/^[a-z0-9_]+:$/) && trimmed.startsWith('utter_')) {
+        // Match utterance names (e.g., utter_ask_program, utter-faq-1).
+        // Accept letters, digits, underscores and dashes.
+        if (trimmed.match(/^[A-Za-z0-9_-]+:$/) && trimmed.startsWith('utter_')) {
             currentUtter = trimmed.slice(0, -1);
             continue;
         }
@@ -195,7 +197,8 @@ export async function parseYAML(text: string): Promise<ParsedRow[]> {
             if (currentIntent && currentExamples.length > 0) {
                 out.push({
                     rawName: currentIntent,
-                    name: formatIntentName(currentIntent),
+                    // Keep exact intent name from YAML instead of auto-normalizing.
+                    name: currentIntent,
                     examples: currentExamples,
                 });
             }
@@ -224,7 +227,7 @@ export async function parseYAML(text: string): Promise<ParsedRow[]> {
             if (currentIntent && currentExamples.length > 0) {
                 out.push({
                     rawName: currentIntent,
-                    name: formatIntentName(currentIntent),
+                    name: currentIntent,
                     examples: currentExamples,
                 });
                 currentIntent = null;
@@ -237,7 +240,7 @@ export async function parseYAML(text: string): Promise<ParsedRow[]> {
     if (currentIntent && currentExamples.length > 0) {
         out.push({
             rawName: currentIntent,
-            name: formatIntentName(currentIntent),
+            name: currentIntent,
             examples: currentExamples,
         });
     }
@@ -255,11 +258,16 @@ export async function parseYAML(text: string): Promise<ParsedRow[]> {
  */
 export function mergeNLUWithResponses(nlus: ParsedRow[], responses: ResponseMap): ParsedRow[] {
     return nlus.map((intent) => {
-        const utterName = `utter_${intent.name}`;
-        const responseContent = responses[utterName] || '';
+        const directUtterName = `utter_${intent.name}`;
+        const normalizedUtterName = `utter_${formatIntentName(intent.name)}`;
+        const matchedUtterName = responses[directUtterName]
+            ? directUtterName
+            : (responses[normalizedUtterName] ? normalizedUtterName : '');
+        const responseContent = matchedUtterName ? responses[matchedUtterName] : '';
         
         return {
             ...intent,
+            responseName: matchedUtterName || undefined,
             responseContent: responseContent,
         };
     });

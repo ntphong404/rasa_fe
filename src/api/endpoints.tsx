@@ -137,8 +137,15 @@ export default {
 
   TRAINING_ENDPOINTS: {
     TRAIN_MODEL: (chatbotId: string) => `/api/v1/chatbot/${chatbotId}/train`,
+    TRAIN_ACTIVE: (chatbotId: string) => `/api/v1/chatbot/${chatbotId}/train-active`,
     GET_MODELS: "/api/v1/my-model",
     GET_MODEL_BY_ID: (id: string) => `/api/v1/my-model/${id}`,
+  },
+  IMPORT_ENDPOINTS: {
+    GET_BATCHES: "/api/v1/import/batches",
+    TOGGLE_BATCH: (batchId: string) => `/api/v1/import/batches/${batchId}/activate`,
+    DELETE_BATCH: (batchId: string) => `/api/v1/import/batches/${batchId}`,
+    IMPORT_EXCEL: "/api/v1/import/excel",
   },
 
   CHAT_ENDPOINTS: {
