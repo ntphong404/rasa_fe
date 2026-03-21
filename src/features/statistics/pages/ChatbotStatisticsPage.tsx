@@ -5,8 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 
 export const ChatbotStatisticsPage = () => {
+  const { t } = useTranslation();
   const chatbots = useChatbotStatistics();
 
   const data = chatbots.data?.data;
@@ -14,7 +16,7 @@ export const ChatbotStatisticsPage = () => {
   if (chatbots.isLoading) {
     return (
       <div className="p-6 space-y-6">
-        <h1 className="text-3xl font-bold">Báo Cáo Chatbot</h1>
+        <h1 className="text-3xl font-bold">{t("Chatbot Report")}</h1>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-32" />
@@ -29,7 +31,7 @@ export const ChatbotStatisticsPage = () => {
       <div className="p-6">
         <Alert variant="destructive">
           <AlertDescription>
-            Không thể tải dữ liệu thống kê chatbot. Vui lòng thử lại sau.
+            {t("Failed to load chatbot statistics. Please try again later.")}
           </AlertDescription>
         </Alert>
       </div>
@@ -39,39 +41,39 @@ export const ChatbotStatisticsPage = () => {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Báo Cáo Chatbot</h1>
+        <h1 className="text-3xl font-bold">{t("Chatbot Report")}</h1>
         <p className="text-muted-foreground">
-          Thông tin về các chatbot trong hệ thống
+          {t("Information about chatbots in the system")}
         </p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <StatsCard
-          title="Tổng Chatbot"
+          title={t("Total Chatbots")}
           value={data?.totalChatbots || 0}
           icon={Bot}
-          description="Chatbot trong hệ thống"
+          description={t("Chatbots in system")}
         />
         <StatsCard
           title="Rasa Servers"
           value={data?.chatbots?.filter(cb => cb.rasaPort).length || 0}
           icon={Server}
-          description="Server Rasa đang chạy"
+          description={t("Running Rasa servers")}
         />
         <StatsCard
           title="Action Servers"
           value={data?.chatbots?.filter(cb => cb.flaskPort).length || 0}
           icon={Wifi}
-          description="Action server đang chạy"
+          description={t("Running Action servers")}
         />
       </div>
 
       {/* Chatbot List */}
       <Card>
         <CardHeader>
-          <CardTitle>Chi Tiết Chatbot</CardTitle>
-          <CardDescription>Danh sách và thông tin chi tiết các chatbot</CardDescription>
+          <CardTitle>{t("Chatbot Details")}</CardTitle>
+          <CardDescription>{t("List and details of chatbots")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -115,7 +117,7 @@ export const ChatbotStatisticsPage = () => {
             ))}
             {(!data?.chatbots || data.chatbots.length === 0) && (
               <div className="text-center py-8 text-muted-foreground">
-                Không có chatbot nào trong hệ thống
+                {t("No chatbots in the system")}
               </div>
             )}
           </div>

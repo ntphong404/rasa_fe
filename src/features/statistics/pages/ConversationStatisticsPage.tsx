@@ -10,7 +10,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { vi } from "date-fns/locale";
+import { vi, enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 import {
   BarChart,
   Bar,
@@ -26,6 +27,9 @@ import {
 import { cn } from "@/lib/utils";
 
 export const ConversationStatisticsPage = () => {
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "vi" ? vi : enUS;
+
   const [dateRange, setDateRange] = useState<{
     startDate?: Date;
     endDate?: Date;
@@ -41,7 +45,7 @@ export const ConversationStatisticsPage = () => {
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
-        <h1 className="text-3xl font-bold">Báo Cáo Cuộc Hội Thoại</h1>
+        <h1 className="text-3xl font-bold">{t("Conversation Report")}</h1>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-32" />
@@ -56,7 +60,7 @@ export const ConversationStatisticsPage = () => {
       <div className="p-6">
         <Alert variant="destructive">
           <AlertDescription>
-            Không thể tải dữ liệu thống kê cuộc hội thoại. Vui lòng thử lại sau.
+            {t("Failed to load conversation statistics. Please try again later.")}
           </AlertDescription>
         </Alert>
       </div>
@@ -69,9 +73,9 @@ export const ConversationStatisticsPage = () => {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Báo Cáo Cuộc Hội Thoại</h1>
+          <h1 className="text-3xl font-bold">{t("Conversation Report")}</h1>
           <p className="text-muted-foreground">
-            Thống kê về cuộc hội thoại và tin nhắn
+            {t("Statistics on conversations and messages")}
           </p>
         </div>
         <div className="flex gap-2">
@@ -80,9 +84,9 @@ export const ConversationStatisticsPage = () => {
               <Button variant="outline" className={cn("justify-start text-left font-normal")}>
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {dateRange.startDate ? (
-                  format(dateRange.startDate, "PPP", { locale: vi })
+                  format(dateRange.startDate, "PPP", { locale: dateLocale })
                 ) : (
-                  <span>Từ ngày</span>
+                  <span>{t("From date")}</span>
                 )}
               </Button>
             </PopoverTrigger>
@@ -99,9 +103,9 @@ export const ConversationStatisticsPage = () => {
               <Button variant="outline" className={cn("justify-start text-left font-normal")}>
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {dateRange.endDate ? (
-                  format(dateRange.endDate, "PPP", { locale: vi })
+                  format(dateRange.endDate, "PPP", { locale: dateLocale })
                 ) : (
-                  <span>Đến ngày</span>
+                  <span>{t("To date")}</span>
                 )}
               </Button>
             </PopoverTrigger>
@@ -118,7 +122,7 @@ export const ConversationStatisticsPage = () => {
               variant="ghost"
               onClick={() => setDateRange({})}
             >
-              Xóa bộ lọc
+              {t("Clear filters")}
             </Button>
           )}
         </div>
@@ -127,22 +131,22 @@ export const ConversationStatisticsPage = () => {
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatsCard
-          title="Tổng Cuộc Hội Thoại"
+          title={t("Total Conversations")}
           value={statsData?.totalConversations || 0}
           icon={MessageSquare}
-          description="Tất cả cuộc hội thoại"
+          description={t("All conversations")}
         />
         <StatsCard
-          title="Tin Nhắn Trung Bình"
+          title={t("Average Messages")}
           value={statsData?.avgMessagesPerConversation?.toFixed(1) || 0}
           icon={MessageCircle}
-          description="Mỗi cuộc hội thoại"
+          description={t("Per conversation")}
         />
         <StatsCard
-          title="Người Dùng Hoạt Động"
+          title={t("Active Users")}
           value={statsData?.topUsers?.length || 0}
           icon={Users}
-          description="Đang tương tác"
+          description={t("Currently interacting")}
         />
       </div>
 
@@ -151,8 +155,8 @@ export const ConversationStatisticsPage = () => {
         {/* Conversation Trend */}
         <Card>
           <CardHeader>
-            <CardTitle>Xu Hướng Cuộc Hội Thoại</CardTitle>
-            <CardDescription>Số lượng cuộc hội thoại và tin nhắn theo thời gian</CardDescription>
+            <CardTitle>{t("Conversation Trend")}</CardTitle>
+            <CardDescription>{t("Number of conversations and messages over time")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -168,14 +172,14 @@ export const ConversationStatisticsPage = () => {
                   type="monotone"
                   dataKey="count"
                   stroke="#8884d8"
-                  name="Cuộc hội thoại"
+                  name={t("Conversations")}
                 />
                 <Line
                   yAxisId="right"
                   type="monotone"
                   dataKey="totalMessages"
                   stroke="#82ca9d"
-                  name="Tin nhắn"
+                  name={t("Messages")}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -185,8 +189,8 @@ export const ConversationStatisticsPage = () => {
         {/* Top Users */}
         <Card>
           <CardHeader>
-            <CardTitle>Người Dùng Tích Cực Nhất</CardTitle>
-            <CardDescription>Top người dùng có nhiều cuộc hội thoại nhất</CardDescription>
+            <CardTitle>{t("Most Active Users")}</CardTitle>
+            <CardDescription>{t("Top users with the most conversations")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -211,8 +215,8 @@ export const ConversationStatisticsPage = () => {
                           <p className="text-sm text-muted-foreground">
                             {data.user?.[0]?.email}
                           </p>
-                          <p>Cuộc hội thoại: {data.count}</p>
-                          <p>Tin nhắn: {data.messages}</p>
+                          <p>{t("Conversations")}: {data.count}</p>
+                          <p>{t("Messages")}: {data.messages}</p>
                         </div>
                       );
                     }
@@ -220,8 +224,8 @@ export const ConversationStatisticsPage = () => {
                   }}
                 />
                 <Legend />
-                <Bar dataKey="count" fill="#8884d8" name="Cuộc hội thoại" />
-                <Bar dataKey="messages" fill="#82ca9d" name="Tin nhắn" />
+                <Bar dataKey="count" fill="#8884d8" name={t("Conversations")} />
+                <Bar dataKey="messages" fill="#82ca9d" name={t("Messages")} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

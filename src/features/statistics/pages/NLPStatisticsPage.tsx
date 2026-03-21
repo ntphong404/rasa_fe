@@ -17,16 +17,18 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { useTranslation } from "react-i18next";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export const NLPStatisticsPage = () => {
+  const { t } = useTranslation();
   const nlp = useNLPStatistics();
 
   if (nlp.isLoading) {
     return (
       <div className="p-6 space-y-6">
-        <h1 className="text-3xl font-bold">Báo Cáo NLP</h1>
+        <h1 className="text-3xl font-bold">{t("NLP Report")}</h1>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           {[1, 2, 3, 4, 5].map((i) => (
             <Skeleton key={i} className="h-32" />
@@ -41,7 +43,7 @@ export const NLPStatisticsPage = () => {
       <div className="p-6">
         <Alert variant="destructive">
           <AlertDescription>
-            Không thể tải dữ liệu thống kê NLP. Vui lòng thử lại sau.
+            {t("Failed to load NLP statistics. Please try again later.")}
           </AlertDescription>
         </Alert>
       </div>
@@ -61,9 +63,9 @@ export const NLPStatisticsPage = () => {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Báo Cáo NLP</h1>
+        <h1 className="text-3xl font-bold">{t("NLP Report")}</h1>
         <p className="text-muted-foreground">
-          Thống kê về các thành phần xử lý ngôn ngữ tự nhiên
+          {t("Statistics on natural language processing components")}
         </p>
       </div>
 
@@ -73,31 +75,31 @@ export const NLPStatisticsPage = () => {
           title="Intents"
           value={data?.totalIntents || 0}
           icon={Brain}
-          description="Tổng số ý định"
+          description={t("Total intents")}
         />
         <StatsCard
           title="Entities"
           value={data?.totalEntities || 0}
           icon={MessageSquareText}
-          description="Tổng số thực thể"
+          description={t("Total entities")}
         />
         <StatsCard
           title="Actions"
           value={data?.totalActions || 0}
           icon={Zap}
-          description="Tổng số hành động"
+          description={t("Total actions")}
         />
         <StatsCard
           title="Stories"
           value={data?.totalStories || 0}
           icon={BookOpen}
-          description="Tổng số câu chuyện"
+          description={t("Total stories")}
         />
         <StatsCard
           title="Responses"
           value={data?.totalResponses || 0}
           icon={MessageCircle}
-          description="Tổng số phản hồi"
+          description={t("Total responses")}
         />
       </div>
 
@@ -106,8 +108,8 @@ export const NLPStatisticsPage = () => {
         {/* Component Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Phân Bố Thành Phần NLP</CardTitle>
-            <CardDescription>Tỷ lệ các thành phần trong hệ thống</CardDescription>
+            <CardTitle>{t("NLP Component Distribution")}</CardTitle>
+            <CardDescription>{t("Proportion of components in system")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -135,8 +137,8 @@ export const NLPStatisticsPage = () => {
         {/* Component Comparison */}
         <Card>
           <CardHeader>
-            <CardTitle>So Sánh Thành Phần</CardTitle>
-            <CardDescription>Số lượng các thành phần NLP</CardDescription>
+            <CardTitle>{t("Component Comparison")}</CardTitle>
+            <CardDescription>{t("Quantity of NLP components")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -146,7 +148,7 @@ export const NLPStatisticsPage = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="value" fill="#8884d8" name="Số lượng" />
+                <Bar dataKey="value" fill="#8884d8" name={t("Count")} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -158,7 +160,7 @@ export const NLPStatisticsPage = () => {
         <Card>
           <CardHeader>
             <CardTitle>Top Intents</CardTitle>
-            <CardDescription>Các intent phổ biến nhất</CardDescription>
+            <CardDescription>{t("Most popular intents")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -190,7 +192,7 @@ export const NLPStatisticsPage = () => {
         <Card>
           <CardHeader>
             <CardTitle>Top Stories</CardTitle>
-            <CardDescription>Các story có nhiều intent nhất</CardDescription>
+            <CardDescription>{t("Stories with the most intents")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">

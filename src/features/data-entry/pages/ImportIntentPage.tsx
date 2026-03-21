@@ -446,47 +446,47 @@ export function ImportIntentPage() {
         const duplicateName = raw.match(/dup key:\s*\{\s*name:\s*"([^"]+)"\s*\}/i)?.[1];
 
         if (status === 401) {
-            return t("Phiên đăng nhập đã hết hạn hoặc bạn không có quyền. Vui lòng đăng nhập lại.");
+            return t("Session expired or unauthorized. Please log in again.");
         }
 
         if (status === 409) {
             if (requestUrl.includes("/intent")) {
-                return t("Intent đã bị trùng tên{{name}}.", {
+                return t("Intent name is duplicated{{name}}.", {
                     name: duplicateName ? `: ${duplicateName}` : `: ${row.name}`,
                 });
             }
             if (requestUrl.includes("/my-response")) {
                 const fallbackResp = row.responseName?.trim() || `utter_${row.name}`;
-                return t("Response đã bị trùng tên{{name}}.", {
+                return t("Response name is duplicated{{name}}.", {
                     name: duplicateName ? `: ${duplicateName}` : `: ${fallbackResp}`,
                 });
             }
-            return t("Dữ liệu bị trùng. Vui lòng kiểm tra lại tên intent/response.");
+            return t("Data is duplicated. Please check intent/response names.");
         }
 
         if (raw.includes("ERR_CONNECTION_TIMED_OUT") || raw.includes("Network Error")) {
-            return t("Không kết nối được tới máy chủ. Vui lòng kiểm tra mạng hoặc thử lại sau.");
+            return t("Cannot connect to server. Please check your network or try again later.");
         }
 
         if (isDuplicateKeyError(err)) {
             if (/myresponses/i.test(raw)) {
                 const respName = row.responseName?.trim() || `utter_${row.name}`;
-                return t("Response đã bị trùng tên: {{name}}.", { name: duplicateName || respName });
+                return t("Response name is duplicated: {{name}}.", { name: duplicateName || respName });
             }
             if (/intents/i.test(raw)) {
-                return t("Intent đã bị trùng tên: {{name}}.", { name: duplicateName || row.name });
+                return t("Intent name is duplicated: {{name}}.", { name: duplicateName || row.name });
             }
             if (/stories/i.test(raw)) {
-                return t("Story đã tồn tại cho intent này.");
+                return t("Story already exists for this intent.");
             }
-            return t("Dữ liệu bị trùng. Vui lòng kiểm tra lại tên intent/response.");
+            return t("Data is duplicated. Please check intent/response names.");
         }
 
         if (/E11000\s+duplicate key error/i.test(raw)) {
-            return t("Dữ liệu bị trùng. Vui lòng kiểm tra lại tên intent/response.");
+            return t("Data is duplicated. Please check intent/response names.");
         }
 
-        return t("Không thể import dòng này. Vui lòng kiểm tra dữ liệu và thử lại.");
+        return t("Cannot import this row. Please check data and try again.");
     };
 
     const findExistingIntentByName = async (name: string, botId: string) => {
@@ -528,7 +528,7 @@ export function ImportIntentPage() {
         const importBotIds = selectedImportBotIds.filter(Boolean);
         const sharedLabel = importMode === "yaml" ? commonImportLabel.trim() : "";
         if (importBotIds.length === 0) {
-            return toast.error(t("Vui lòng chọn ít nhất 1 chatbot để import"));
+            return toast.error(t("Please select at least 1 chatbot to import"));
         }
 
         const toImport = rows.filter((_, i) => selected[i] && rows[i].status !== 'success');
@@ -909,7 +909,7 @@ export function ImportIntentPage() {
                                 <div>
                                     <div className="text-sm font-semibold">{t("Applicable Chatbots")}</div>
                                     <div className="text-xs text-muted-foreground">
-                                        {t("Chọn một hoặc nhiều chatbot để import dữ liệu")}
+                                        {t("Select one or more chatbots to import this data")}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -937,21 +937,21 @@ export function ImportIntentPage() {
                             {importMode === 'yaml' && (
                                 <div className="mt-3 space-y-2">
                                     <label className="text-sm font-medium">
-                                        {t("Nhãn chung cho file import")}
+                                        {t("Common label for import file")}
                                     </label>
                                     <Input
                                         value={commonImportLabel}
                                         onChange={(e) => setCommonImportLabel(e.target.value)}
-                                        placeholder={t("Ví dụ: pccc_faq_03_2026")}
+                                        placeholder={t("Example: pccc_faq_03_2026")}
                                     />
                                     <p className="text-xs text-muted-foreground">
-                                        {t("Nhãn này sẽ áp dụng cho toàn bộ intent/response được import từ file YAML hiện tại")}
+                                        {t("This label applies to all intents/responses imported from the current YAML file")}
                                     </p>
                                 </div>
                             )}
                             {selectedImportBotIds.length === 0 && (
                                 <p className="mt-2 text-xs text-red-500">
-                                    {t("Vui lòng chọn ít nhất 1 chatbot trước khi import")}
+                                    {t("Please select at least 1 chatbot before importing")}
                                 </p>
                             )}
                         </div>

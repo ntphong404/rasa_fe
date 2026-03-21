@@ -1,27 +1,14 @@
-type ParsedRow = {
+export type ParsedRow = {
   rawName?: string;
   name: string;
   examples: string[];
   label?: string;
+  responseName?: string;
   response?: string;
   responseContent?: string;
   status?: "pending" | "success" | "error";
   error?: string;
   validationError?: string;
-};
-
-type WorkerRequest =
-  | { id: string; type: "parse-xlsx"; payload: { arrayBuffer: ArrayBuffer } }
-  | { id: string; type: "generate-template" };
-
-type WorkerResponse =
-  | { id: string; success: true; data: ParsedRow[] }
-  | { id: string; success: true; data: ArrayBuffer }
-  | { id: string; success: false; error: string };
-
-const ctx = self as unknown as {
-  postMessage: (message: WorkerResponse, transfer?: Transferable[]) => void;
-  onmessage: ((event: MessageEvent<WorkerRequest>) => void) | null;
 };
 
 const formatIntentName = (input?: string): string => {
@@ -91,7 +78,7 @@ const parseSheetRows = (raw: unknown[][], sheetLabel: string): ParsedRow[] => {
   return best;
 };
 
-const parseXlsxFromBuffer = async (arrayBuffer: ArrayBuffer): Promise<ParsedRow[]> => {
+export const parseXlsxFromBuffer = async (arrayBuffer: ArrayBuffer): Promise<ParsedRow[]> => {
   const XLSX = await import("xlsx");
   const workbook = XLSX.read(arrayBuffer, { type: "array" });
 
@@ -113,7 +100,7 @@ const parseXlsxFromBuffer = async (arrayBuffer: ArrayBuffer): Promise<ParsedRow[
   return out;
 };
 
-const generateTemplateWorkbook = async (): Promise<ArrayBuffer> => {
+export const generateTemplateWorkbook = async (): Promise<ArrayBuffer> => {
   const ExcelJS = await import("exceljs");
   const workbook = new ExcelJS.Workbook();
 
@@ -181,31 +168,8 @@ const generateTemplateWorkbook = async (): Promise<ArrayBuffer> => {
   instructions.forEach((r, i) => (readme.getRow(i + 1).values = r));
 
   const buffer = await workbook.xlsx.writeBuffer();
-  return buffer as ArrayBuffer;
-};
-
-ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
-  const req = event.data;
-
-  try {
-    if (req.type === "parse-xlsx") {
-      const rows = await parseXlsxFromBuffer(req.payload.arrayBuffer);
-      const res: WorkerResponse = { id: req.id, success: true, data: rows };
-      ctx.postMessage(res);
-      return;
-    }
-
-    if (req.type === "generate-template") {
-      const templateBuffer = await generateTemplateWorkbook();
-      const res: WorkerResponse = { id: req.id, success: true, data: templateBuffer };
-      ctx.postMessage(res, [templateBuffer]);
-    }
-  } catch (error) {
-    const res: WorkerResponse = {
-      id: req.id,
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-    ctx.postMessage(res);
+  if (buffer instanceof ArrayBuffer) {
+    return buffer;
   }
+  return new Uint8Array(buffer).buffer;
 };

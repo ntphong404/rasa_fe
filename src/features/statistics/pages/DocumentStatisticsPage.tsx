@@ -17,16 +17,18 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { useTranslation } from "react-i18next";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B9D'];
 
 export const DocumentStatisticsPage = () => {
+  const { t } = useTranslation();
   const documents = useDocumentStatistics();
 
   if (documents.isLoading) {
     return (
       <div className="p-6 space-y-6">
-        <h1 className="text-3xl font-bold">Báo Cáo Tài Liệu</h1>
+        <h1 className="text-3xl font-bold">{t("Document Report")}</h1>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-32" />
@@ -41,7 +43,7 @@ export const DocumentStatisticsPage = () => {
       <div className="p-6">
         <Alert variant="destructive">
           <AlertDescription>
-            Không thể tải dữ liệu thống kê tài liệu. Vui lòng thử lại sau.
+            {t("Failed to load document statistics. Please try again later.")}
           </AlertDescription>
         </Alert>
       </div>
@@ -59,50 +61,50 @@ export const DocumentStatisticsPage = () => {
   };
 
   const fileSizeData = [
-    { name: "Nhỏ (< 1MB)", value: data?.fileSizeStats?.smallFiles || 0 },
-    { name: "Trung bình (1-10MB)", value: data?.fileSizeStats?.mediumFiles || 0 },
-    { name: "Lớn (>= 10MB)", value: data?.fileSizeStats?.largeFiles || 0 },
+    { name: t("Small (< 1MB)"), value: data?.fileSizeStats?.smallFiles || 0 },
+    { name: t("Medium (1-10MB)"), value: data?.fileSizeStats?.mediumFiles || 0 },
+    { name: t("Large (>= 10MB)"), value: data?.fileSizeStats?.largeFiles || 0 },
   ];
 
   const accessData = [
-    { name: "Công khai", value: data?.accessStats?.public || 0 },
-    { name: "Riêng tư", value: data?.accessStats?.private || 0 },
+    { name: t("Public"), value: data?.accessStats?.public || 0 },
+    { name: t("Private"), value: data?.accessStats?.private || 0 },
   ];
 
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Báo Cáo Tài Liệu</h1>
+        <h1 className="text-3xl font-bold">{t("Document Report")}</h1>
         <p className="text-muted-foreground">
-          Thống kê về tài liệu trong hệ thống
+          {t("Statistics on documents in the system")}
         </p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title="Tổng Tài Liệu"
+          title={t("Total Documents")}
           value={data?.totalDocs || 0}
           icon={FileText}
-          description="Tất cả tài liệu"
+          description={t("All documents")}
         />
         <StatsCard
-          title="Tài Liệu Công Khai"
+          title={t("Public Documents")}
           value={data?.accessStats?.public || 0}
           icon={Globe}
-          description="Có thể truy cập công khai"
+          description={t("Publicly accessible")}
         />
         <StatsCard
-          title="Tài Liệu Riêng Tư"
+          title={t("Private Documents")}
           value={data?.accessStats?.private || 0}
           icon={Lock}
-          description="Chỉ nội bộ"
+          description={t("Internal only")}
         />
         <StatsCard
-          title="Tổng Dung Lượng"
+          title={t("Total Size")}
           value={formatBytes(data?.fileSizeStats?.totalSize || 0)}
           icon={File}
-          description="Dung lượng tất cả tài liệu"
+          description={t("Size of all documents")}
         />
       </div>
 
@@ -111,8 +113,8 @@ export const DocumentStatisticsPage = () => {
         {/* Document Types */}
         <Card>
           <CardHeader>
-            <CardTitle>Phân Bố Theo Loại File</CardTitle>
-            <CardDescription>Số lượng tài liệu theo định dạng</CardDescription>
+            <CardTitle>{t("Distribution by File Type")}</CardTitle>
+            <CardDescription>{t("Number of documents by format")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -140,8 +142,8 @@ export const DocumentStatisticsPage = () => {
         {/* File Sizes */}
         <Card>
           <CardHeader>
-            <CardTitle>Phân Bố Theo Kích Thước</CardTitle>
-            <CardDescription>Số lượng file theo kích thước</CardDescription>
+            <CardTitle>{t("Distribution by Size")}</CardTitle>
+            <CardDescription>{t("Number of files by size")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -151,7 +153,7 @@ export const DocumentStatisticsPage = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="value" fill="#8884d8" name="Số lượng" />
+                <Bar dataKey="value" fill="#8884d8" name={t("Count")} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -163,8 +165,8 @@ export const DocumentStatisticsPage = () => {
         {/* Access Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Phân Quyền Truy Cập</CardTitle>
-            <CardDescription>Tài liệu công khai vs riêng tư</CardDescription>
+            <CardTitle>{t("Access Rights Distribution")}</CardTitle>
+            <CardDescription>{t("Public vs private documents")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
@@ -192,8 +194,8 @@ export const DocumentStatisticsPage = () => {
         {/* Type Details */}
         <Card>
           <CardHeader>
-            <CardTitle>Chi Tiết Theo Loại File</CardTitle>
-            <CardDescription>Số lượng và dung lượng</CardDescription>
+            <CardTitle>{t("Details by File Type")}</CardTitle>
+            <CardDescription>{t("Quantity and size")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -221,7 +223,7 @@ export const DocumentStatisticsPage = () => {
               ))}
               {(!data?.docsByType || data.docsByType.length === 0) && (
                 <div className="text-center py-8 text-muted-foreground">
-                  Không có tài liệu nào
+                  {t("No documents found")}
                 </div>
               )}
             </div>

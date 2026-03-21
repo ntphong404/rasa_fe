@@ -340,7 +340,7 @@ ${exampleLines || "    - example1"}`;
       await intentService.updateIntent(intentData._id, {
         _id: intentData._id,
         name: sanitizedName,
-        botId: selectedBotId || intentData.botId || "global",
+        botIds: intentData.botIds || (selectedBotId ? [selectedBotId] : ["global"]),
         label: label || undefined,
         description: description.trim(),
         define: finalYaml,

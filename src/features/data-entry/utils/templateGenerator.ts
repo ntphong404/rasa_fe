@@ -3,38 +3,15 @@
  * Generates XLSX and CSV templates for intent import
  */
 
+import { generateTemplateWorkbook } from './excel.utils';
+
 /**
  * Generate Excel template file with proper formatting
  * Creates two sheets: template and README
  */
 export async function generateXLSXTemplate(): Promise<void> {
     try {
-        const worker = new Worker(new URL("../workers/excel.worker.ts", import.meta.url), {
-            type: "module",
-        });
-
-        const id = `generate-template-${Date.now()}`;
-        const buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-            worker.onmessage = (event: MessageEvent<any>) => {
-                const message = event.data;
-                if (!message || message.id !== id) return;
-
-                worker.terminate();
-                if (message.success) {
-                    resolve(message.data as ArrayBuffer);
-                } else {
-                    reject(new Error(message.error || "Template generation failed"));
-                }
-            };
-
-            worker.onerror = (error) => {
-                worker.terminate();
-                reject(error);
-            };
-
-            worker.postMessage({ id, type: "generate-template" });
-        });
-
+        const buffer = await generateTemplateWorkbook();
         const blob = new Blob([buffer], { type: 'application/octet-stream' });
         downloadFile(blob, 'intent_import_template.xlsx');
     } catch (err) {

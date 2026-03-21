@@ -316,7 +316,7 @@ export default function DataInfoPage() {
                             cell: ({ row }) => {
                                 const rule = row.original as IRule;
                                 const intentsCount = Array.isArray(rule.intents) ? rule.intents.length : 0;
-                                return <span className="text-sm">{intentsCount > 0 ? `${intentsCount} intent${intentsCount > 1 ? "s" : ""}` : t("Không có intent")}</span>;
+                                return <span className="text-sm">{intentsCount > 0 ? `${intentsCount} ${t("intents")}` : t("No intents")}</span>;
                             },
                         },
                         {
@@ -325,7 +325,7 @@ export default function DataInfoPage() {
                             cell: ({ row }) => {
                                 const rule = row.original as IRule;
                                 const actionsCount = Array.isArray(rule.action) ? rule.action.length : 0;
-                                return <span className="text-sm">{actionsCount > 0 ? `${actionsCount} action${actionsCount > 1 ? "s" : ""}` : t("Không có action")}</span>;
+                                return <span className="text-sm">{actionsCount > 0 ? `${actionsCount} ${t("actions")}` : t("No actions")}</span>;
                             },
                         },
                         {
@@ -334,22 +334,22 @@ export default function DataInfoPage() {
                             cell: ({ row }) => {
                                 const rule = row.original as IRule;
                                 const responsesCount = Array.isArray(rule.responses) ? rule.responses.length : 0;
-                                return <span className="text-sm">{responsesCount > 0 ? `${responsesCount} phản hồi` : t("Không có phản hồi")}</span>;
+                                return <span className="text-sm">{responsesCount > 0 ? `${responsesCount} ${t("responses")}` : t("No responses")}</span>;
                             },
                         },
                         {
                             accessorKey: "createdAt",
                             header: ({ column }) => (
                                 <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-                                    {t("Tạo lúc")}
+                                    {t("Created At")}
                                     <ArrowUpDown className="ml-2 h-4 w-4" />
                                 </Button>
                             ),
-                            cell: ({ row }) => <span className="text-sm">{new Date((row.original as IRule).createdAt).toLocaleDateString("vi-VN")}</span>,
+                            cell: ({ row }) => <span className="text-sm">{new Date((row.original as IRule).createdAt).toLocaleDateString()}</span>,
                         },
                         {
                             id: "actions",
-                            header: t("Thao tác"),
+                            header: t("Operations"),
                             cell: ({ row }) => {
                                 const rule = row.original as IRule;
                                 const isDeleted = rule.deleted || false;

@@ -19,16 +19,18 @@ import {
   LineChart,
   Line,
 } from "recharts";
+import { useTranslation } from "react-i18next";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export const UserStatisticsPage = () => {
+  const { t } = useTranslation();
   const users = useUserStatistics();
 
   if (users.isLoading) {
     return (
       <div className="p-6 space-y-6">
-        <h1 className="text-3xl font-bold">Báo Cáo Người Dùng</h1>
+        <h1 className="text-3xl font-bold">{t("User Report")}</h1>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-32" />
@@ -43,7 +45,7 @@ export const UserStatisticsPage = () => {
       <div className="p-6">
         <Alert variant="destructive">
           <AlertDescription>
-            Không thể tải dữ liệu thống kê người dùng. Vui lòng thử lại sau.
+            {t("Failed to load user statistics. Please try again later.")}
           </AlertDescription>
         </Alert>
       </div>
@@ -55,37 +57,37 @@ export const UserStatisticsPage = () => {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Báo Cáo Người Dùng</h1>
+        <h1 className="text-3xl font-bold">{t("User Report")}</h1>
         <p className="text-muted-foreground">
-          Tổng quan về người dùng trong hệ thống
+          {t("Overview of users in the system")}
         </p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-          title="Tổng Người Dùng"
+          title={t("Total Users")}
           value={data?.totalUsers || 0}
           icon={Users}
-          description="Tất cả người dùng"
+          description={t("All users")}
         />
         <StatsCard
-          title="Người Dùng Hoạt Động"
+          title={t("Active Users")}
           value={data?.activeUsers || 0}
           icon={UserCheck}
-          description="Đang hoạt động"
+          description={t("Active")}
         />
         <StatsCard
-          title="Người Dùng Bị Cấm"
+          title={t("Banned Users")}
           value={data?.bannedUsers || 0}
           icon={UserX}
-          description="Đã bị cấm"
+          description={t("Banned")}
         />
         <StatsCard
-          title="Người Dùng Không Hoạt Động"
+          title={t("Inactive Users")}
           value={data?.inactiveUsers || 0}
           icon={User}
-          description="Chưa kích hoạt"
+          description={t("Not activated")}
         />
       </div>
 
@@ -94,8 +96,8 @@ export const UserStatisticsPage = () => {
         {/* Gender Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Phân Bố Theo Giới Tính</CardTitle>
-            <CardDescription>Số lượng người dùng theo giới tính</CardDescription>
+            <CardTitle>{t("Gender Distribution")}</CardTitle>
+            <CardDescription>{t("Number of users by gender")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -123,8 +125,8 @@ export const UserStatisticsPage = () => {
         {/* User Creation Trend */}
         <Card>
           <CardHeader>
-            <CardTitle>Xu Hướng Đăng Ký</CardTitle>
-            <CardDescription>Số lượng người dùng mới theo thời gian</CardDescription>
+            <CardTitle>{t("Registration Trend")}</CardTitle>
+            <CardDescription>{t("Number of new users over time")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -138,7 +140,7 @@ export const UserStatisticsPage = () => {
                   type="monotone"
                   dataKey="count"
                   stroke="#8884d8"
-                  name="Người dùng mới"
+                  name={t("New users")}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -149,16 +151,16 @@ export const UserStatisticsPage = () => {
       {/* User Status Distribution */}
       <Card>
         <CardHeader>
-          <CardTitle>Phân Bố Trạng Thái Người Dùng</CardTitle>
-          <CardDescription>So sánh trạng thái người dùng</CardDescription>
+          <CardTitle>{t("User Status Distribution")}</CardTitle>
+          <CardDescription>{t("Comparison of user status")}</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart
               data={[
-                { name: "Hoạt động", value: data?.activeUsers || 0 },
-                { name: "Bị cấm", value: data?.bannedUsers || 0 },
-                { name: "Không hoạt động", value: data?.inactiveUsers || 0 },
+                { name: t("Active"), value: data?.activeUsers || 0 },
+                { name: t("Banned"), value: data?.bannedUsers || 0 },
+                { name: t("Inactive"), value: data?.inactiveUsers || 0 },
               ]}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -166,7 +168,7 @@ export const UserStatisticsPage = () => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="value" fill="#8884d8" name="Số lượng" />
+              <Bar dataKey="value" fill="#8884d8" name={t("Count")} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
