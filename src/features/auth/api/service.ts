@@ -64,5 +64,25 @@ export const authService = {
   updateMe: async (data: UpdateMeRequest): Promise<IUser> => {
     const response = await axiosInstance.put(ENDPOINTS.AUTH_ENDPOINTS.UPDATE_ME, data);
     return response.data.data;
-  }
+  },
+  updatePreferredChatbot: async (preferredChatbotId: string | null): Promise<IUser> => {
+    const response = await axiosInstance.patch(
+      ENDPOINTS.AUTH_ENDPOINTS.UPDATE_PREFERRED_CHATBOT,
+      { preferredChatbotId }
+    );
+    return response.data.data;
+  },
+  getSystemChatbot: async (): Promise<{ systemChatbotId: string | null }> => {
+    const response = await axiosInstance.get(ENDPOINTS.AUTH_ENDPOINTS.GET_SYSTEM_CHATBOT);
+    return response.data.data;
+  },
+  updateSystemChatbot: async (
+    preferredChatbotId: string | null
+  ): Promise<{ systemChatbotId: string | null }> => {
+    const response = await axiosInstance.patch(
+      ENDPOINTS.AUTH_ENDPOINTS.UPDATE_SYSTEM_CHATBOT,
+      { preferredChatbotId }
+    );
+    return response.data.data;
+  },
 }

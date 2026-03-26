@@ -17,6 +17,7 @@ import { responseService } from "@/features/reponses/api/service";
 import { ruleService } from "@/features/rules/api/service";
 import { useChatbots } from "@/hooks/useChatbots";
 import { useChatbotStore } from "@/store/chatbot";
+import { useAuthStore } from "@/store/auth";
 
 export function CreateDataPage() {
     const [showHelp, setShowHelp] = useState(false);
@@ -24,6 +25,14 @@ export function CreateDataPage() {
     const navigate = useNavigate();
     const { chatbots } = useChatbots();
     const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+    const user = useAuthStore((state) => state.user);
+    const isManager = useMemo(
+        () => Boolean(user?.roles?.some((role) => role.name?.toUpperCase() === "MANAGER")),
+        [user?.roles]
+    );
+    const managerAssignedBotId = useMemo(() => {
+        return user?.managedBotIds?.[0] || null;
+    }, [user?.managedBotIds]);
     const availableChatbots = useMemo(() => chatbots.filter((bot) => bot.botId !== "global"), [chatbots]);
     const [selectedBotIds, setSelectedBotIds] = useState<string[]>([]);
     const [searchParams] = useSearchParams();
@@ -49,6 +58,11 @@ export function CreateDataPage() {
     }, [searchParams]);
 
     useEffect(() => {
+        if (isManager) {
+            setSelectedBotIds(managerAssignedBotId ? [managerAssignedBotId] : []);
+            return;
+        }
+
         setSelectedBotIds((prev) => {
             const validSet = new Set(availableChatbots.map((b) => b.botId));
             const filtered = prev.filter((id) => validSet.has(id));
@@ -59,7 +73,7 @@ export function CreateDataPage() {
 
             return filtered;
         });
-    }, [availableChatbots, selectedBotId]);
+    }, [availableChatbots, isManager, managerAssignedBotId, selectedBotId]);
 
     const toggleChatbot = useCallback((botId: string) => {
         setSelectedBotIds((prev) =>
@@ -267,7 +281,11 @@ export function CreateDataPage() {
             return toast.error(msg);
         }
 
-        const targetBotIds = selectedBotIds.filter(Boolean);
+        const targetBotIds = isManager
+            ? managerAssignedBotId
+                ? [managerAssignedBotId]
+                : []
+            : selectedBotIds.filter(Boolean);
         if (targetBotIds.length === 0) {
             return toast.error(t("Please select at least one chatbot"));
         }
@@ -381,6 +399,7 @@ export function CreateDataPage() {
                         />
                     </div>
 
+                    {!isManager && (
                     <div className="rounded-lg border p-4">
                         <div className="mb-3 flex items-center justify-between gap-2">
                             <div>
@@ -409,6 +428,7 @@ export function CreateDataPage() {
                             <p className="mt-2 text-xs text-red-500">{t("Please select at least one chatbot")}</p>
                         )}
                     </div>
+                    )}
 
                     {step === 'form' ? (
                         <div>

@@ -4,18 +4,13 @@ import {
   Mic,
   MicOff,
   SendHorizonal,
-  Lightbulb,
-  Code,
-  Palette,
-  Bot,
-  User,
   Pencil,
   Copy,
   RotateCcw,
-  Plus,
   ArrowDown,
   ThumbsDown,
   ThumbsUp,
+  Loader2,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -29,27 +24,79 @@ import { useChatContext } from "@/features/chat/context/ChatContext";
 import { IngestedDocument } from "@/interfaces/rag.interface";
 import { ragService } from "@/features/chat/api/ragService";
 import { chatService } from "@/features/chat/api/service";
-import { responseService } from "@/features/reponses/api/service";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { MarkdownMessage } from "@/features/chat/components/MarkdownMessage";
+import { stripMarkdown } from "@/features/chat/utils/markdown";
+import ENDPOINTS from "@/api/endpoints";
 
-// List of available quick suggestions (stable reference)
-const QUICK_SUGGESTIONS = [
-  { icon: Lightbulb, text: "Chiều cao để xe chữa cháy di chuyển được là bao nhiêu?", color: "from-yellow-200 to-yellow-300" },
-  { icon: Code, text: "Các nội dung thẩm định thiết kế về phòng cháy và chữa cháy?", color: "from-red-200 to-red-300" },
-  { icon: Palette, text: "Hồ sơ đề nghị thẩm định thiết kế về phòng cháy và chữa cháy?", color: "from-orange-200 to-orange-300" },
-  { icon: MessageSquare, text: "Yêu cầu PCCC trong quy hoạch xây dựng", color: "from-blue-200 to-blue-300" },
-  { icon: Bot, text: "Thời hạn thẩm định thiết kế về PCCC bao lâu?", color: "from-emerald-200 to-emerald-300" },
-  { icon: User, text: "Phân loại bộ phân ngăn cháy", color: "from-indigo-200 to-indigo-300" },
-  { icon: Plus, text: "Quy định Chiều mở cửa thoát nạn", color: "from-pink-200 to-pink-300" },
-  { icon: Mic, text: "Quy định Nguồn điện cho hệ thống báo cháy tự động", color: "from-cyan-200 to-cyan-300" },
-  { icon: SendHorizonal, text: "Độ cao lắp đặt của hộp nút ấn báo cháy", color: "from-lime-200 to-lime-300" },
-  { icon: MessageSquare, text: "Số lượng bơm chữa cháy dự phòng", color: "from-sky-200 to-sky-300" },
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const FEEDBACK_DELAY_MS = 3 * 60 * 1000;
+const FEEDBACK_QUEUE_KEY = "chat_message_feedback_queue_v2";
+
+type MessageFeedback = "like" | "dislike";
+type PendingFeedbackAction = "upsert" | "remove";
+
+interface PendingFeedbackItem {
+  action: PendingFeedbackAction;
+  messageId: string;
+  chatbotId: string;
+  userId: string;
+  sourceType: 0 | 1;
+  questionText: string;
+  answerText: string;
+  vote: MessageFeedback;
+  queuedAt: number;
+}
+
+const DEFAULT_QUICK_SUGGESTIONS = [
+  "Chiều cao để xe chữa cháy di chuyển được là bao nhiêu?",
+  "Các nội dung thẩm định thiết kế về phòng cháy và chữa cháy?",
+  "Hồ sơ đề nghị thẩm định thiết kế về phòng cháy và chữa cháy?",
+  "Yêu cầu PCCC trong quy hoạch xây dựng",
+  "Thời hạn thẩm định thiết kế về PCCC bao lâu?",
+  "Phân loại bộ phận ngăn cháy",
+  "Quy định chiều mở cửa thoát nạn",
+  "Quy định nguồn điện cho hệ thống báo cháy tự động",
+  "Độ cao lắp đặt của hộp nút ấn báo cháy",
+  "Số lượng bơm chữa cháy dự phòng",
 ];
+
+const pickRandomSuggestions = (pool: string[], count: number) => {
+  if (pool.length <= count) return pool;
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+};
+
+// elapsedCs = centiseconds (1/100 giây, interval 50ms, cs = ms/10)
+const WAITING_STATUS_STEPS = [
+  { atCs: 0,    text: "Đang suy nghĩ..." },
+  { atCs: 300,  text: "Đang tìm kiếm tài liệu..." },
+  { atCs: 600,  text: "Đang tổng hợp thông tin..." },
+  { atCs: 1000, text: "Đang kiểm tra độ chính xác..." },
+  { atCs: 1500, text: "Đang hoàn thiện câu trả lời..." },
+  { atCs: 2000, text: "Vui lòng chờ thêm chút nhé..." },
+];
+
+const getWaitingStatusText = (elapsedCs: number): string => {
+  let result = WAITING_STATUS_STEPS[0].text;
+  for (const step of WAITING_STATUS_STEPS) {
+    if (elapsedCs >= step.atCs) result = step.text;
+    else break;
+  }
+  return result;
+};
+
+// Format: S,cs — ví dụ "3,07" (giây + centiseconds 2 chữ số)
+const formatElapsedTime = (cs: number): string => {
+  const seconds = Math.floor(cs / 100);
+  const centis = cs % 100;
+  return `${seconds},${centis.toString().padStart(2, "0")}`;
+};
 
 export function HomeChatDemo() {
   const { t } = useTranslation();
-  type MessageFeedback = "like" | "dislike";
   const [inputMessage, setInputMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -59,7 +106,15 @@ export function HomeChatDemo() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   // Visible pending messages shown as dimmed bubbles while bot is responding
   const [pendingQueue, setPendingQueue] = useState<string[]>([]);
+  const [loadingElapsedCs, setLoadingElapsedCs] = useState(0); // centiseconds (1/100s)
+  // Thời gian bị đóng băng khi streaming bắt đầu (bỏ tính), dạng "S,XX"
+  const [frozenElapsedLabel, setFrozenElapsedLabel] = useState<string | null>(null);
+  const [allSuggestions, setAllSuggestions] = useState<string[]>(DEFAULT_QUICK_SUGGESTIONS);
+  const [visibleSuggestions, setVisibleSuggestions] = useState<string[]>(() => DEFAULT_QUICK_SUGGESTIONS.slice(0, 4));
   const [messageFeedback, setMessageFeedback] = useState<Record<string, MessageFeedback | undefined>>({});
+  const feedbackFlushTimerRef = useRef<number | null>(null);
+  const pendingFeedbackRef = useRef<Record<string, PendingFeedbackItem>>({});
+  const syncedFeedbackRef = useRef<Record<string, MessageFeedback>>({});
   // State-based sending lock (reactive, triggers re-render correctly)
   const [isSending, setIsSending] = useState(false);
   // Ref-based guard only for synchronous double-submit (click race before rerender)
@@ -70,11 +125,12 @@ export function HomeChatDemo() {
   const prevConversationIdRef = useRef<string | null>(null);
   const userId = useCurrentUserId();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const { selectedBotId, chatbots } = useChatbotStore();
+  const { selectedChatBotId, chatbots } = useChatbotStore();
   
-  // Get the _id of selected chatbot
-  const selectedChatbot = chatbots.find((bot) => bot.botId === selectedBotId);
-  const chatbotId = selectedChatbot?._id || "";
+  // Chat conversation always uses the global system chatbot selection.
+  const chatScopeBotId = selectedChatBotId;
+  const selectedChatbot = chatbots.find((bot) => bot.botId === chatScopeBotId);
+  const chatbotId = selectedChatbot?._id || chatScopeBotId || "";
   
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -98,7 +154,7 @@ export function HomeChatDemo() {
 
   // Get chatHook from context or create default one
   const contextChat = useChatContext();
-  const fallbackChatHook = useChat(chatbotId);
+  const fallbackChatHook = useChat();
 
   const chatHook = contextChat.chatHook || fallbackChatHook;
   const {
@@ -116,6 +172,7 @@ export function HomeChatDemo() {
   } = chatHook;
   const showChatHeader = useChatHeaderStore((state) => state.showChatHeader);
   const hideChatHeader = useChatHeaderStore((state) => state.hideChatHeader);
+  const waitingStatusText = getWaitingStatusText(loadingElapsedCs);
 
   // Reset visible window and auto-scroll whenever the active conversation changes
   useEffect(() => { setVisibleCount(PAGE_SIZE); setShouldAutoScroll(true); }, [currentConversationId]);
@@ -123,6 +180,122 @@ export function HomeChatDemo() {
   // Fetch uploaded documents on mount
   useEffect(() => {
     fetchUploadedDocuments();
+  }, []);
+
+  const voteToNumber = (vote: MessageFeedback): 0 | 1 => (vote === "like" ? 1 : 0);
+
+  const persistFeedbackQueue = () => {
+    const queue = Object.values(pendingFeedbackRef.current);
+    localStorage.setItem(FEEDBACK_QUEUE_KEY, JSON.stringify(queue));
+  };
+
+  const sendFeedbackWithBeacon = (item: PendingFeedbackItem) => {
+    if (!navigator.sendBeacon) {
+      return false;
+    }
+
+    const url = `${window.location.origin}${ENDPOINTS.CHATBOT_ENDPOINTS.MESSAGE_FEEDBACK(item.chatbotId)}`;
+    const body = JSON.stringify({
+      messageId: item.messageId,
+      userId: item.userId,
+      sourceType: item.sourceType,
+      questionText: item.questionText,
+      answerText: item.answerText,
+      vote: voteToNumber(item.vote),
+    });
+
+    return navigator.sendBeacon(url, new Blob([body], { type: "application/json" }));
+  };
+
+  const flushPendingFeedback = async (useBeacon = false) => {
+    const queue = Object.values(pendingFeedbackRef.current);
+    if (queue.length === 0) {
+      return;
+    }
+
+    pendingFeedbackRef.current = {};
+    persistFeedbackQueue();
+
+    for (const item of queue) {
+      try {
+        if (useBeacon && sendFeedbackWithBeacon(item)) {
+          if (item.action === "upsert") {
+            syncedFeedbackRef.current[item.messageId] = item.vote;
+          } else {
+            delete syncedFeedbackRef.current[item.messageId];
+          }
+          continue;
+        }
+
+        await chatService.submitMessageFeedback(item.chatbotId, {
+          messageId: item.messageId,
+          userId: item.userId,
+          sourceType: item.sourceType,
+          questionText: item.questionText,
+          answerText: item.answerText,
+          vote: voteToNumber(item.vote),
+        });
+
+        if (item.action === "upsert") {
+          syncedFeedbackRef.current[item.messageId] = item.vote;
+        } else {
+          delete syncedFeedbackRef.current[item.messageId];
+        }
+      } catch {
+        pendingFeedbackRef.current[item.messageId] = item;
+      }
+    }
+
+    persistFeedbackQueue();
+  };
+
+  const scheduleFeedbackFlush = () => {
+    if (feedbackFlushTimerRef.current) {
+      window.clearTimeout(feedbackFlushTimerRef.current);
+    }
+
+    feedbackFlushTimerRef.current = window.setTimeout(() => {
+      void flushPendingFeedback(false);
+    }, FEEDBACK_DELAY_MS);
+  };
+
+  useEffect(() => {
+    const rawQueue = localStorage.getItem(FEEDBACK_QUEUE_KEY);
+    if (rawQueue) {
+      try {
+        const parsed = JSON.parse(rawQueue) as PendingFeedbackItem[];
+        parsed.forEach((item) => {
+          pendingFeedbackRef.current[item.messageId] = item;
+        });
+        if (parsed.length > 0) {
+          scheduleFeedbackFlush();
+        }
+      } catch {
+        localStorage.removeItem(FEEDBACK_QUEUE_KEY);
+      }
+    }
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        void flushPendingFeedback(true);
+      }
+    };
+
+    const handlePageHide = () => {
+      void flushPendingFeedback(true);
+    };
+
+    window.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("pagehide", handlePageHide);
+
+    return () => {
+      window.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("pagehide", handlePageHide);
+      if (feedbackFlushTimerRef.current) {
+        window.clearTimeout(feedbackFlushTimerRef.current);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto scroll to bottom khi có tin nhắn mới, nhưng không ép khi user đang xem tin nhắn cũ.
@@ -289,12 +462,13 @@ export function HomeChatDemo() {
   };
 
   const handleCopyMessage = async (text: string) => {
+    const plainText = stripMarkdown(text);
     try {
       if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(plainText);
       } else {
         const textArea = document.createElement("textarea");
-        textArea.value = text;
+        textArea.value = plainText;
         textArea.style.position = "fixed";
         textArea.style.left = "-9999px";
         textArea.style.top = "0";
@@ -309,7 +483,7 @@ export function HomeChatDemo() {
       }
       toast.success("Đã sao chép nội dung");
     } catch (err) {
-      const manual = window.prompt("Trình duyệt chặn sao chép tự động. Hãy sao chép thủ công nội dung bên dưới:", text);
+      const manual = window.prompt("Trình duyệt chặn sao chép tự động. Hãy sao chép thủ công nội dung bên dưới:", plainText);
       if (manual !== null) {
         toast.success("Đã mở chế độ sao chép thủ công");
       } else {
@@ -360,11 +534,114 @@ export function HomeChatDemo() {
       addMessage({ recipient_id: "bot", text: "" });
       const testResponse = "🧪 Test Mode Active\n\nĐây là một tin nhắn test để kiểm tra giao diện chat.\n\n✅ Không gửi đến Rasa chatbot server";
       let displayedText = "";
-      for (let i = 0; i < testResponse.length; i++) {
-        displayedText += testResponse[i];
+      let i = 0;
+      let lastTick = Date.now();
+      const delay = 30;
+      
+      while (i < testResponse.length) {
+        const now = Date.now();
+        const charsToPrint = Math.max(1, Math.floor((now - lastTick) / delay));
+        displayedText += testResponse.substring(i, i + charsToPrint);
+        i += charsToPrint;
+        lastTick = now;
+        
         updateLastMessage(displayedText);
-        await new Promise((resolve) => setTimeout(resolve, 30));
+        if (i < testResponse.length) await sleep(delay);
       }
+      setIsSending(false);
+      submitGuardRef.current = false;
+      return;
+    }
+
+
+    // Markdown test mode: simulate streaming with markdown content
+    if (text.toLowerCase() === "/testmd") {
+      setIsSending(true);
+      addMessage({ recipient_id: userId, text });
+      addMessage({ recipient_id: "bot", text: "" });
+      const testResponse =
+        "# Markdown Test\n\n" +
+        "This is *italic*, **bold**, and ***bold italic***.\n\n" +
+        "A link example: [OpenAI](https://openai.com).\n\n" +
+        "Inline code: `const x = 42`.\n\n" +
+        "List:\n" +
+        "- Item A\n" +
+        "- Item B\n" +
+        "- Item C\n\n" +
+        "Ordered list:\n" +
+        "1. First\n" +
+        "2. Second\n" +
+        "3. Third\n\n" +
+        "Blockquote:\n" +
+        "> This is a quote.\n\n" +
+        "Code block:\n" +
+        "```ts\n" +
+        "function sum(a: number, b: number) {\n" +
+        "  return a + b;\n" +
+        "}\n" +
+        "```\n\n" +
+        "Table:\n" +
+        "| Feature | Status |\n" +
+        "| --- | --- |\n" +
+        "| Markdown | OK |\n" +
+        "| Copy text | OK |\n";
+      let displayedText = "";
+      let i = 0;
+      let lastTick = Date.now();
+      const delay = 20;
+
+      while (i < testResponse.length) {
+        const now = Date.now();
+        const charsToPrint = Math.max(1, Math.floor((now - lastTick) / delay));
+        displayedText += testResponse.substring(i, i + charsToPrint);
+        i += charsToPrint;
+        lastTick = now;
+        
+        updateLastMessage(displayedText);
+        if (i < testResponse.length) await sleep(delay);
+      }
+      setIsSending(false);
+      submitGuardRef.current = false;
+      return;
+    }
+
+    // Loading indicator test mode: simulate delay before response
+    if (text.toLowerCase() === "/testload") {
+      setIsSending(true);
+      addMessage({ recipient_id: userId, text });
+
+      // Giả lập thời gian chờ AI (8 giây)
+      await sleep(8000);
+
+      // Response arrives — add bot message and start streaming
+      addMessage({ recipient_id: "bot", text: "", messageId: Math.random().toString() });
+
+      const testResponse =
+        "⏱️ **Loading Test Complete!**\n\n" +
+        "Đây là kết quả sau khi chatbot xử lý xong:\n\n" +
+        "- ✅ Indicator hiển thị phía **bot** (bên trái)\n" +
+        "- ✅ Spinner xoay và đồng hồ đếm centisecond (S,cs)\n" +
+        "- ✅ Text trạng thái thay đổi theo thời gian\n" +
+        "- ✅ Khi API trả về → indicator biến mất tức thời\n" +
+        "- ✅ Câu trả lời streaming từng ký tự một\n" +
+        "- ✅ Nút Copy / Like / Dislike xuất hiện sau khi stream xong";
+
+      let displayedText = "";
+      let i = 0;
+      let lastTick = Date.now();
+      const delay = 18;
+
+      while (i < testResponse.length) {
+        const now = Date.now();
+        const charsToPrint = Math.max(1, Math.floor((now - lastTick) / delay));
+        displayedText += testResponse.substring(i, i + charsToPrint);
+        i += charsToPrint;
+        lastTick = now;
+        
+        updateLastMessage(displayedText);
+        if (i < testResponse.length) await sleep(delay);
+      }
+
       setIsSending(false);
       submitGuardRef.current = false;
       return;
@@ -398,71 +675,178 @@ export function HomeChatDemo() {
     setShowFileUpload(!showFileUpload);
   };
 
+  useEffect(() => {
+    if (!(loading || isSending)) {
+      setLoadingElapsedCs(0);
+      return;
+    }
 
-  // show 4 random suggestions on mount
-  const [visibleSuggestions, setVisibleSuggestions] = useState(() => QUICK_SUGGESTIONS.slice(0, 4));
+    // Reset frozen label khi bắt đầu gửi mới
+    setFrozenElapsedLabel(null);
+    const startedAt = Date.now();
+    setLoadingElapsedCs(0);
+    // Cập nhật mỗi 50ms → centiseconds (1/100 giây)
+    const interval = window.setInterval(() => {
+      setLoadingElapsedCs(Math.floor((Date.now() - startedAt) / 10));
+    }, 50);
+
+    return () => window.clearInterval(interval);
+  }, [loading, isSending]);
+
+  // Detect khi bot bắt đầu trả lời (streaming bắt đầu) → đóng băng timer
+  useEffect(() => {
+    if (!(loading || isSending)) return;
+    if (frozenElapsedLabel !== null) return; // đã đóng băng rồi
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg && lastMsg.recipient_id !== userId && lastMsg.text && lastMsg.text.length > 0) {
+      // Bot bắt đầu có text → đóng băng thời gian
+      setFrozenElapsedLabel(formatElapsedTime(loadingElapsedCs) + "s");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, loading, isSending]);
+
+  const loadSuggestedQuestions = async () => {
+    if (!chatbotId) {
+      setAllSuggestions(DEFAULT_QUICK_SUGGESTIONS);
+      return;
+    }
+
+    try {
+      const response = await chatService.getSuggestedQuestions(16);
+      const items = Array.isArray(response?.data) ? response.data : [];
+      const fromApi: string[] = Array.from(
+        new Set(
+          items
+            .map((item: any) => (typeof item?.question === "string" ? item.question.trim() : ""))
+            .filter((q: string) => q.length > 0)
+        )
+      );
+
+      if (fromApi.length > 0) {
+        const merged = Array.from(
+          new Set([...fromApi, ...DEFAULT_QUICK_SUGGESTIONS])
+        );
+        setAllSuggestions(merged);
+      } else {
+        setAllSuggestions(DEFAULT_QUICK_SUGGESTIONS);
+      }
+    } catch {
+      setAllSuggestions(DEFAULT_QUICK_SUGGESTIONS);
+    }
+  };
 
   useEffect(() => {
-    const shuffled = [...QUICK_SUGGESTIONS].sort(() => Math.random() - 0.5);
-    setVisibleSuggestions(shuffled.slice(0, 4));
-    // run only on mount
-  }, []);
+    if (!(messages.length === 0 && contextChat.isNewChat)) {
+      return;
+    }
+
+    const delayedLoad = window.setTimeout(() => {
+      void loadSuggestedQuestions();
+    }, 700);
+
+    return () => window.clearTimeout(delayedLoad);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatbotId, messages.length, contextChat.isNewChat]);
+
+  useEffect(() => {
+    setVisibleSuggestions(pickRandomSuggestions(allSuggestions, 4));
+  }, [allSuggestions]);
 
   // Auto-rotate suggestions every 8 seconds while still on the new chat empty state
   useEffect(() => {
     if (!(messages.length === 0 && contextChat.isNewChat)) return;
     const id = setInterval(() => {
-      const shuffled = [...QUICK_SUGGESTIONS].sort(() => Math.random() - 0.5);
-      setVisibleSuggestions(shuffled.slice(0, 4));
+      setVisibleSuggestions(pickRandomSuggestions(allSuggestions, 4));
     }, 8000);
     return () => clearInterval(id);
-  }, [messages.length, contextChat.isNewChat]);
+  }, [messages.length, contextChat.isNewChat, allSuggestions]);
 
   const visibleStartIndex = Math.max(messages.length - visibleCount, 0);
 
-  const getFeedbackKey = (absoluteIndex: number) => {
+  const getFeedbackKey = (message: { messageId?: string }, absoluteIndex: number) => {
+    if (message.messageId) return message.messageId;
     return `${currentConversationId ?? conversationIdFromUrl ?? "draft"}:${absoluteIndex}`;
+  };
+
+  const getQuestionForBotMessage = (absoluteIndex: number) => {
+    for (let i = absoluteIndex - 1; i >= 0; i -= 1) {
+      const candidate = messages[i];
+      if (candidate?.recipient_id === userId && candidate?.text?.trim()) {
+        return candidate.text.trim();
+      }
+    }
+    return "Unknown question";
   };
 
   const toggleMessageFeedback = async (
     messageKey: string,
-    message: { responseId?: string },
-    feedback: MessageFeedback
+    message: { messageId?: string },
+    feedback: MessageFeedback,
+    absoluteIndex: number,
+    answerText: string,
+    sourceType?: "rasa" | "rag" | "system" | "unknown"
   ) => {
-    const current = messageFeedback[messageKey];
-    const next = current === feedback ? undefined : feedback;
+    const previousVote = messageFeedback[messageKey];
+    const nextVote = previousVote === feedback ? undefined : feedback;
 
     setMessageFeedback((prev) => {
-      const next = { ...prev };
+      const draft = { ...prev };
 
-      if (next[messageKey] === feedback) {
-        delete next[messageKey];
+      if (nextVote) {
+        draft[messageKey] = nextVote;
       } else {
-        next[messageKey] = feedback;
+        delete draft[messageKey];
       }
 
-      return next;
+      return draft;
     });
 
-    if (!message.responseId) {
-      toast.error("Phản hồi này chưa có responseId nên chưa gửi được đánh giá");
+    if (!message.messageId) {
+      toast.error("Tin nhắn này chưa có messageId nên chưa gửi được đánh giá");
       return;
     }
 
-    try {
-      await responseService.submitResponseFeedback(message.responseId, next ?? null);
-    } catch (error) {
-      setMessageFeedback((prev) => {
-        const rollback = { ...prev };
-        if (current) {
-          rollback[messageKey] = current;
-        } else {
-          delete rollback[messageKey];
-        }
-        return rollback;
-      });
-      toast.error(t("Unable to record feedback right now"));
+    if (!chatbotId) {
+      toast.error("Chưa chọn chatbot để ghi nhận đánh giá");
+      return;
     }
+
+    const questionText = getQuestionForBotMessage(absoluteIndex);
+    const normalizedSourceType: 0 | 1 = sourceType === "rag" ? 1 : 0;
+
+    if (nextVote) {
+      pendingFeedbackRef.current[message.messageId] = {
+        action: "upsert",
+        messageId: message.messageId,
+        chatbotId,
+        userId,
+        sourceType: normalizedSourceType,
+        questionText,
+        answerText,
+        vote: nextVote,
+        queuedAt: Date.now(),
+      };
+    } else {
+      const syncedVote = syncedFeedbackRef.current[message.messageId];
+      if (syncedVote) {
+        pendingFeedbackRef.current[message.messageId] = {
+          action: "remove",
+          messageId: message.messageId,
+          chatbotId,
+          userId,
+          sourceType: normalizedSourceType,
+          questionText,
+          answerText,
+          vote: syncedVote,
+          queuedAt: Date.now(),
+        };
+      } else {
+        delete pendingFeedbackRef.current[message.messageId];
+      }
+    }
+
+    persistFeedbackQueue();
+    scheduleFeedbackFlush();
   };
 
   return (
@@ -508,28 +892,38 @@ export function HomeChatDemo() {
                       </span>
                     </div>
                   )}
-                  {messages.slice(visibleStartIndex).map((message, index) => {
+                  {messages.slice(visibleStartIndex).map((message, index, arr) => {
                     const isUser = message.recipient_id === userId;
-                    const canVote = !!message.responseId;
+                    const canVote = !!message.messageId;
                     const absoluteIndex = visibleStartIndex + index;
-                    const feedbackKey = getFeedbackKey(absoluteIndex);
+                    const feedbackKey = getFeedbackKey(message, absoluteIndex);
                     const feedback = messageFeedback[feedbackKey];
+                    const isLastMessage = index === arr.length - 1;
+                    // Check if this is the last user message (for loading indicator positioning)
+                    const isLastUserMessage = isUser && !arr.slice(index + 1).some(m => m.recipient_id === userId);
+                    // Streaming đã bắt đầu khi bot đã có text (dùng để ẩn loading indicator)
+                    const hasStartedStreaming = arr[arr.length - 1]?.recipient_id !== userId &&
+                      arr[arr.length - 1]?.text && arr[arr.length - 1].text.length > 0;
 
                     return (
+                      <>
                       <div
                         key={feedbackKey}
                         className={`group flex ${isUser ? "justify-end" : "justify-start"}`}
                       >
                         <div className={`flex min-w-[120px] flex-col ${isUser ? "max-w-[78%]" : "max-w-[90%]"}`}>
-                          <div className={`mb-1 text-[11px] font-medium uppercase tracking-wide ${isUser ? "text-right text-slate-500 dark:text-slate-400" : "text-slate-600 dark:text-slate-300"}`}>
+                          <div className={`mb-0.5 flex items-baseline gap-2 text-[11px] font-medium uppercase tracking-wide ${isUser ? "text-right text-slate-500 dark:text-slate-400" : "text-slate-600 dark:text-slate-300"}`}>
                             {isUser ? "Bạn" : "Trợ lý"}
+                            {!isUser && isLastMessage && frozenElapsedLabel && !message.isStreaming && message.text && (
+                              <span className="normal-case tracking-normal font-mono text-xs text-slate-400 dark:text-slate-500">
+                                {frozenElapsedLabel}
+                              </span>
+                            )}
                           </div>
                           <div
-                            className={`relative rounded-lg p-4 ${isUser ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100" : "bg-transparent text-foreground"}`}
+                            className={`relative rounded-lg ${isUser ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100 p-4" : "bg-transparent text-foreground pt-1 px-4 pb-4"}`}
                           >
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                              {message.text}
-                            </p>
+                            <MarkdownMessage content={message.text} />
                             
                             {/* Message Buttons */}
                             {message.buttons && message.buttons.length > 0 && (
@@ -553,6 +947,7 @@ export function HomeChatDemo() {
                                 ))}
                               </div>
                             )}
+
                             {!message.isStreaming && <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                               <span>
                                 {new Date().toLocaleTimeString("vi-VN", {
@@ -571,7 +966,7 @@ export function HomeChatDemo() {
                                 {!isUser && (
                                   <>
                                     <button
-                                      onClick={() => void toggleMessageFeedback(feedbackKey, message, "like")}
+                                      onClick={() => void toggleMessageFeedback(feedbackKey, message, "like", absoluteIndex, message.text, message.sourceType)}
                                       disabled={!canVote}
                                       aria-pressed={feedback === "like"}
                                       className={`rounded px-2 py-1 transition-colors ${feedback === "like" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"} ${!canVote ? "cursor-not-allowed opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
@@ -580,7 +975,7 @@ export function HomeChatDemo() {
                                       <ThumbsUp className="h-3.5 w-3.5" />
                                     </button>
                                     <button
-                                      onClick={() => void toggleMessageFeedback(feedbackKey, message, "dislike")}
+                                      onClick={() => void toggleMessageFeedback(feedbackKey, message, "dislike", absoluteIndex, message.text, message.sourceType)}
                                       disabled={!canVote}
                                       aria-pressed={feedback === "dislike"}
                                       className={`rounded px-2 py-1 transition-colors ${feedback === "dislike" ? "bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-500/15 dark:text-rose-300" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"} ${!canVote ? "cursor-not-allowed opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
@@ -614,30 +1009,29 @@ export function HomeChatDemo() {
                           </div>
                         </div>
                       </div>
+                      {/* Loading indicator: chỉ hiển khi chưa bắt đầu streaming */}
+                      {isUser && isLastUserMessage && (loading || isSending) && !hasStartedStreaming && (
+                        <div className="flex justify-start mt-3 animate-fadeInUp">
+                          <div className="flex min-w-[120px] max-w-[90%] flex-col">
+                            {/* Không có label — để chỉ hiển 1 cái "Trợ lý" từ message thực */}
+                            <div className="inline-flex items-center gap-2 px-1 py-1">
+                              {/* Spinner */}
+                              <div className="h-4 w-4 flex-shrink-0 rounded-full border-2 border-blue-200 border-t-blue-500 animate-spin dark:border-slate-600 dark:border-t-blue-400" />
+                              {/* Status text */}
+                              <span className="text-xs text-slate-600 dark:text-slate-300">
+                                {waitingStatusText}
+                              </span>
+                              {/* Timer */}
+                              <span className="text-xs text-slate-600 dark:text-slate-300">
+                                {formatElapsedTime(loadingElapsedCs)}s
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      </>
                     );
                   })}
-                  {loading && (
-                    <div className="flex gap-3 justify-start animate-fadeInUp">
-                      <div className="max-w-[90%] rounded-lg bg-transparent p-2">
-                        <div className="flex space-x-2 items-center">
-                          <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></div>
-                            <div
-                              className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
-                              style={{ animationDelay: "0.1s" }}
-                            ></div>
-                            <div
-                              className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
-                              style={{ animationDelay: "0.2s" }}
-                            ></div>
-                          </div>
-                          <span className="text-sm font-medium text-muted-foreground">
-                            Bot đang soạn tin...
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                   {/* Pending (queued) messages shown dimmed while bot is busy */}
                   {pendingQueue.map((text, i) => (
                     <div key={`pending-${i}`} className="flex justify-end opacity-40">
@@ -682,12 +1076,12 @@ export function HomeChatDemo() {
                   return (
                     <button
                       key={index}
-                      onClick={() => handleQuickSuggestion(suggestion.text)}
+                      onClick={() => handleQuickSuggestion(suggestion)}
                       className="surface-card relative rounded-2xl border border-slate-200/80 bg-slate-50/95 px-4 py-3.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-800/80 dark:hover:border-white/20 dark:hover:bg-slate-800"
                       style={{ animation: `fadeInUp 0.5s ease-out ${0.06 * index}s backwards` }}
                     >
                       <div className="text-sm font-medium leading-relaxed text-foreground">
-                        {suggestion.text}
+                        {suggestion}
                       </div>
                     </button>
                   );
@@ -827,3 +1221,7 @@ export function HomeChatDemo() {
     </div>
   );
 }
+
+
+
+

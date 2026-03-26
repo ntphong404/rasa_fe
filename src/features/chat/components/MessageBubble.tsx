@@ -1,6 +1,7 @@
 import { ChatMessage, ContextChunk } from "@/interfaces/rag.interface";
 import { cn } from "@/lib/utils";
 import { Bot, User } from "lucide-react";
+import { MarkdownMessage } from "./MarkdownMessage";
 import { useState } from "react";
 import {
   Dialog,
@@ -62,7 +63,7 @@ export function MessageBubble({ message, sources, timestamp }: MessageBubbleProp
               : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-none"
           )}
         >
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          <MarkdownMessage content={message.content} />
         </div>
 
         {/* Timestamp */}
@@ -103,3 +104,5 @@ export function MessageBubble({ message, sources, timestamp }: MessageBubbleProp
     </div>
   );
 }
+
+

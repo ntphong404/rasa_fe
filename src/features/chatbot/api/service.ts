@@ -26,8 +26,47 @@ import { createChatBotQuery } from "./dto/ChatBotQuery";
 
 export const chatBotService = {
   fetchChatBots: async (query: ChatBotQuery): Promise<ListChatBotResponse> => {
-    const response = await axiosInstance.get(`${ENDPOINTS.CHATBOT_ENDPOINTS.GET_ALL_PAGINATED}?${createChatBotQuery(query)}`);
-    return response.data;
+    try {
+      const response = await axiosInstance.get(`${ENDPOINTS.CHATBOT_ENDPOINTS.GET_ALL_PAGINATED}?${createChatBotQuery(query)}`);
+      return response.data;
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const code = error?.response?.data?.code;
+      if (status !== 403 && code !== 403) {
+        throw error;
+      }
+
+      // Fallback for non-management users: fetch public chatbot list instead.
+      const publicResponse = await axiosInstance.get(ENDPOINTS.CHATBOT_ENDPOINTS.GET_PUBLIC_LIST);
+      const publicData: ChatBot[] = Array.isArray(publicResponse.data?.data)
+        ? publicResponse.data.data
+        : [];
+
+      const searchText = (query.search || '').trim().toLowerCase();
+      const filtered = searchText
+        ? publicData.filter((bot) => {
+            const name = String(bot.name || '').toLowerCase();
+            const botId = String(bot.botId || '').toLowerCase();
+            return name.includes(searchText) || botId.includes(searchText);
+          })
+        : publicData;
+
+      const page = Number(query.page) > 0 ? Number(query.page) : 1;
+      const limit = Number(query.limit) > 0 ? Number(query.limit) : filtered.length || 10;
+      const start = (page - 1) * limit;
+      const paged = filtered.slice(start, start + limit);
+
+      return {
+        success: true,
+        data: paged,
+        meta: {
+          total: filtered.length,
+          page,
+          limit,
+          totalPages: Math.max(1, Math.ceil(filtered.length / limit)),
+        },
+      };
+    }
   },
 
   createChatBot: async (data: CreateChatBotRequest): Promise<ChatBot> => {

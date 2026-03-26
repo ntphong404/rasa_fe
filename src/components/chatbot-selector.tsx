@@ -12,7 +12,7 @@ import { Loader2 } from 'lucide-react';
 
 export function ChatbotSelector() {
   const { t } = useTranslation();
-  const { chatbots, loading, selectedBotId, setSelectedBotId } = useChatbots();
+  const { chatbots, loading, selectedManagementBotId, setSelectedManagementBotId } = useChatbots();
 
   if (loading && chatbots.length === 0) {
     return (
@@ -28,7 +28,7 @@ export function ChatbotSelector() {
       <label className="text-sm font-medium text-muted-foreground min-w-fit">
         {t('Chatbot')}:
       </label>
-      <Select value={selectedBotId || ''} onValueChange={setSelectedBotId}>
+      <Select value={selectedManagementBotId || ''} onValueChange={setSelectedManagementBotId}>
         <SelectTrigger className="w-48">
           <SelectValue placeholder={t('Select chatbot...')} />
         </SelectTrigger>

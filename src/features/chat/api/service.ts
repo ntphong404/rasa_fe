@@ -11,11 +11,10 @@ import {
 
 export const chatService = {
   sendMessage: async (
-    chatbotId: string,
     data: ISendMessageRequest
   ): Promise<ISendMessageResponse> => {
     const response = await axiosInstance.post(
-      ENDPOINTS.CHAT_ENDPOINTS.SEND_MESSAGE(chatbotId),
+      ENDPOINTS.CHAT_ENDPOINTS.SEND_MESSAGE_SYSTEM,
       data
     );
     return response.data;
@@ -122,6 +121,73 @@ export const chatService = {
   ): Promise<IShareConversationResponse> => {
     const response = await axiosInstance.post(
       ENDPOINTS.CHAT_ENDPOINTS.SHARE_CONVERSATION(conversationId)
+    );
+    return response.data;
+  },
+
+  submitMessageFeedback: async (
+    chatbotId: string,
+    payload: {
+      messageId: string;
+      userId: string;
+      sourceType: 0 | 1;
+      questionText: string;
+      answerText: string;
+      vote: 0 | 1;
+    }
+  ): Promise<any> => {
+    const response = await axiosInstance.post(
+      ENDPOINTS.CHATBOT_ENDPOINTS.MESSAGE_FEEDBACK(chatbotId),
+      payload
+    );
+    return response.data;
+  },
+
+  getMessageFeedbackList: async (
+    chatbotId: string,
+    params?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      sort?: "asc" | "desc";
+      sourceType?: string;
+      startDate?: string;
+      endDate?: string;
+    }
+  ): Promise<any> => {
+    const response = await axiosInstance.get(
+      ENDPOINTS.CHATBOT_ENDPOINTS.MESSAGE_FEEDBACK_LIST(chatbotId),
+      { params }
+    );
+    return response.data;
+  },
+
+  getMessageFeedbackById: async (
+    chatbotId: string,
+    feedbackId: string
+  ): Promise<any> => {
+    const response = await axiosInstance.get(
+      ENDPOINTS.CHATBOT_ENDPOINTS.MESSAGE_FEEDBACK_DETAIL(chatbotId, feedbackId)
+    );
+    return response.data;
+  },
+
+  hardDeleteMessageFeedback: async (
+    chatbotId: string,
+    feedbackId: string
+  ): Promise<any> => {
+    const response = await axiosInstance.delete(
+      ENDPOINTS.CHATBOT_ENDPOINTS.MESSAGE_FEEDBACK_HARD_DELETE(chatbotId, feedbackId)
+    );
+    return response.data;
+  },
+
+  getSuggestedQuestions: async (
+    limit = 8
+  ): Promise<any> => {
+    const response = await axiosInstance.get(
+      ENDPOINTS.CHATBOT_ENDPOINTS.GET_SUGGESTIONS_SYSTEM,
+      { params: { limit } }
     );
     return response.data;
   }

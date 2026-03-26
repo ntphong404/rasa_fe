@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 import { IChatbot } from '@/interfaces/chatbot.interface';
 
 interface ChatbotState {
+  selectedManagementBotId: string | null;
+  selectedChatBotId: string | null;
   selectedBotId: string | null;
   chatbots: IChatbot[];
   isLoading: boolean;
@@ -10,7 +12,9 @@ interface ChatbotState {
   refreshTrigger: number;
   
   // Actions
-  setSelectedBotId: (botId: string) => void;
+  setSelectedManagementBotId: (botId: string | null) => void;
+  setSelectedChatBotId: (botId: string) => void;
+  setSelectedBotId: (botId: string | null) => void;
   setChatbots: (chatbots: IChatbot[]) => void;
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
@@ -20,14 +24,32 @@ interface ChatbotState {
 export const useChatbotStore = create<ChatbotState>()(
   persist(
     (set) => ({
+      selectedManagementBotId: null,
+      selectedChatBotId: null,
       selectedBotId: null,
       chatbots: [],
       isLoading: false,
       error: null,
       refreshTrigger: 0,
 
-      setSelectedBotId: (botId: string) => {
-        set((state) => ({ selectedBotId: botId, refreshTrigger: state.refreshTrigger + 1 }));
+      setSelectedManagementBotId: (botId: string | null) => {
+        set((state) => ({
+          selectedManagementBotId: botId,
+          selectedBotId: botId,
+          refreshTrigger: state.refreshTrigger + 1,
+        }));
+      },
+
+      setSelectedChatBotId: (botId: string) => {
+        set({ selectedChatBotId: botId });
+      },
+
+      setSelectedBotId: (botId: string | null) => {
+        set((state) => ({
+          selectedManagementBotId: botId,
+          selectedBotId: botId,
+          refreshTrigger: state.refreshTrigger + 1,
+        }));
       },
 
       setChatbots: (chatbots: IChatbot[]) => {
@@ -44,6 +66,8 @@ export const useChatbotStore = create<ChatbotState>()(
 
       reset: () => {
         set({
+          selectedManagementBotId: null,
+          selectedChatBotId: null,
           selectedBotId: null,
           chatbots: [],
           isLoading: false,
@@ -55,6 +79,8 @@ export const useChatbotStore = create<ChatbotState>()(
     {
       name: 'chatbot-storage',
       partialize: (state) => ({
+        selectedManagementBotId: state.selectedManagementBotId,
+        selectedChatBotId: state.selectedChatBotId,
         selectedBotId: state.selectedBotId,
         chatbots: state.chatbots,
       }),

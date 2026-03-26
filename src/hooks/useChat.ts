@@ -3,8 +3,7 @@ import { chatService } from "@/features/chat/api/service";
 import { IChatMessage, ISendMessageRequest, IConversation, IChatHistoryMessage } from "@/interfaces/chat.interface";
 import { generateConversationId } from "@/lib/uuid";
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 export type UseChatReturn = {
   messages: IChatMessage[];
   loading: boolean;
@@ -20,7 +19,7 @@ export type UseChatReturn = {
   updateLastMessage: (text: string) => void;
 };
 
-export const useChat = (chatbotId: string): UseChatReturn => {
+export const useChat = (): UseChatReturn => {
   const [messages, setMessages] = useState<IChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -90,7 +89,7 @@ export const useChat = (chatbotId: string): UseChatReturn => {
       setMessages(prev => [...prev, userMessage]);
 
       // Gửi tin nhắn đến API
-      const response = await chatService.sendMessage(chatbotId, completeMessageData);
+      const response = await chatService.sendMessage(completeMessageData);
       
       if (response.success && response.data) {
         // Stop loading indicator once first response is available, then render bot text progressively.
@@ -121,8 +120,19 @@ export const useChat = (chatbotId: string): UseChatReturn => {
           // Keep per-character typing feel while making long messages reasonably fast.
           const delay = fullText.length > 600 ? 4 : fullText.length > 300 ? 8 : 14;
           let displayed = "";
-          for (let i = 0; i < fullText.length; i++) {
-            displayed += fullText[i];
+          let i = 0;
+          let lastTick = Date.now();
+
+          while (i < fullText.length) {
+            const now = Date.now();
+            // Nếu tab ẩn, browser throttle setTimeout => (now - lastTick) sẽ lớn
+            // Tính số lượng ký tự bù tốc độ để kịp tiến độ (ít nhất 1)
+            const charsToPrint = Math.max(1, Math.floor((now - lastTick) / delay));
+            
+            displayed += fullText.substring(i, i + charsToPrint);
+            i += charsToPrint;
+            lastTick = now;
+
             setMessages((prev) => {
               if (prev.length === 0) return prev;
               const updated = [...prev];
@@ -133,7 +143,10 @@ export const useChat = (chatbotId: string): UseChatReturn => {
               };
               return updated;
             });
-            await sleep(delay);
+
+            if (i < fullText.length) {
+              await sleep(delay);
+            }
           }
 
           // Mark streaming done so action buttons appear
@@ -155,7 +168,7 @@ export const useChat = (chatbotId: string): UseChatReturn => {
     } finally {
       setLoading(false);
     }
-  }, [chatbotId, currentConversationId]);
+  }, [currentConversationId]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);

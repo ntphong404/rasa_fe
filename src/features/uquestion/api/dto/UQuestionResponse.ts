@@ -3,6 +3,10 @@ export interface UQuestion {
   _id: string;
   question: string;
   chatbotId: string | { _id: string; name?: string };
+  reason?: string;
+  isInDomain?: boolean;
+  count?: number;
+  lastSeenAt?: string;
   createdAt: string;
   updatedAt: string;
 }

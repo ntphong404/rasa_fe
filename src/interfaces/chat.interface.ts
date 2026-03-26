@@ -8,8 +8,9 @@ export interface IChatMessage {
   recipient_id: string;
   text: string;
   buttons?: IRasaButton[];
-  responseId?: string;
-  responseName?: string;
+  messageId?: string;
+  sourceType?: "rasa" | "rag" | "system" | "unknown";
+  answerKey?: string;
   isStreaming?: boolean;
 }
 

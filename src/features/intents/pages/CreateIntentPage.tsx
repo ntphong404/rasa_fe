@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -32,13 +32,22 @@ import { IEntity } from "@/interfaces/entity.interface";
 import { useChatbotStore } from "@/store/chatbot";
 import { useChatbots } from "@/hooks/useChatbots";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/auth";
 
 export function CreateIntentPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const user = useAuthStore((state) => state.user);
   const { chatbots } = useChatbots();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isManager = useMemo(
+    () => Boolean(user?.roles?.some((role) => role.name?.toUpperCase() === "MANAGER")),
+    [user?.roles]
+  );
+  const managerAssignedBotId = useMemo(() => {
+    return user?.managedBotIds?.[0] || null;
+  }, [user?.managedBotIds]);
 
   // Form fields
   const [name, setName] = useState("");
@@ -104,11 +113,16 @@ export function CreateIntentPage() {
 
   // Default to current selected chatbot so new data appears in active scope.
   useEffect(() => {
+    if (isManager) {
+      setApplicableBotIds(managerAssignedBotId ? [managerAssignedBotId] : []);
+      return;
+    }
+
     if (!selectedBotId || selectedBotId === "global") return;
     setApplicableBotIds((prev) =>
       prev.includes(selectedBotId) ? prev : [...prev, selectedBotId]
     );
-  }, [selectedBotId]);
+  }, [isManager, managerAssignedBotId, selectedBotId]);
 
   const handleToggleApplicableBot = (botId: string) => {
     setApplicableBotIds((prev) =>
@@ -361,9 +375,13 @@ ${exampleLines || "    - example1"}`;
 
     try {
       setIsSubmitting(true);
-      const targetBotIds = selectedBotId && selectedBotId !== "global"
-        ? [selectedBotId]
-        : applicableBotIds;
+      const targetBotIds = isManager
+        ? managerAssignedBotId
+          ? [managerAssignedBotId]
+          : []
+        : selectedBotId && selectedBotId !== "global"
+          ? [selectedBotId]
+          : applicableBotIds;
 
       if (targetBotIds.length === 0) {
         toast.error(t("Please select at least one chatbot"));
@@ -675,7 +693,7 @@ ${exampleLines || "    - example1"}`;
           />
         </div>
 
-        {chatbots.length > 0 && (
+        {!isManager && chatbots.length > 0 && (
           <div className="space-y-3 rounded-lg border p-4">
             <div className="space-y-1">
               <Label>{t("Applicable Chatbots")}</Label>

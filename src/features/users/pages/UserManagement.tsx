@@ -71,6 +71,7 @@ import { ConfirmUnbanUserDialog } from "./ConfirmUnbanDialog";
 import { CreateUserDialog } from "./CreateUserDialog";
 import { BulkCreateUsersDialog } from "./BulkCreateUsersDialog";
 import { SetRoleDialog } from "./SetRoleDialog";
+import { SetManagedChatbotsDialog } from "./SetManagedChatbotsDialog";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -103,6 +104,8 @@ export const UserManagement = () => {
   const [bulkCreateOpen, setBulkCreateOpen] = useState(false);
   const [setRoleOpen, setSetRoleOpen] = useState(false);
   const [userForRole, setUserForRole] = useState<User | null>(null);
+  const [setManagedBotsOpen, setSetManagedBotsOpen] = useState(false);
+  const [userForManagedBots, setUserForManagedBots] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
@@ -223,6 +226,11 @@ export const UserManagement = () => {
   const handleSetRole = (user: User) => {
     setUserForRole(user);
     setSetRoleOpen(true);
+  };
+
+  const handleSetManagedBots = (user: User) => {
+    setUserForManagedBots(user);
+    setSetManagedBotsOpen(true);
   };
 
   const refreshUsers = () => {
@@ -533,6 +541,15 @@ export const UserManagement = () => {
                         <Settings className="h-4 w-4" />
                       </Button>
 
+                      <Button
+                        size="sm"
+                        className="bg-cyan-600 hover:bg-cyan-700"
+                        onClick={() => handleSetManagedBots(row.original)}
+                        title={t("Assign managed chatbots")}
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+
                       {/* Ban/Unban */}
                       <Button
                         size="sm"
@@ -614,6 +631,13 @@ export const UserManagement = () => {
         user={userForRole}
         open={setRoleOpen}
         onOpenChange={setSetRoleOpen}
+        onSuccess={fetchUsers}
+      />
+
+      <SetManagedChatbotsDialog
+        user={userForManagedBots}
+        open={setManagedBotsOpen}
+        onOpenChange={setSetManagedBotsOpen}
         onSuccess={fetchUsers}
       />
 

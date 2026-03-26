@@ -11,6 +11,9 @@ export default {
     RESET_PASSWORD: "/api/v1/auth/reset-password",
     ME: "/api/v1/auth/me",
     UPDATE_ME: "/api/v1/auth/me",
+    UPDATE_PREFERRED_CHATBOT: "/api/v1/auth/me/preferred-chatbot",
+    GET_SYSTEM_CHATBOT: "/api/v1/auth/system-chatbot",
+    UPDATE_SYSTEM_CHATBOT: "/api/v1/auth/system-chatbot",
   },
   USER_ENDPOINTS: {
     PROFILE: "/api/v1/user/profile",
@@ -21,6 +24,8 @@ export default {
     UNBAN_USER: (id: string) => `/api/v1/user/${id}/unban`,
     DELETE_USER: (id: string) => `/api/v1/user/${id}`,
     SET_ROLE: (id: string) => `/api/v1/user/${id}/set-role`,
+    SET_MANAGED_CHATBOTS: (id: string) => `/api/v1/user/${id}/managed-chatbots`,
+    SET_PREFERRED_CHATBOT: (id: string) => `/api/v1/user/${id}/preferred-chatbot`,
   },
   ROLE_ENDPOINTS: {
     GET_ALL: "/api/v1/role/all",
@@ -112,6 +117,12 @@ export default {
     GET_MY_MODELS: (id: string) => `/api/v1/chatbot/${id}/my-models`,
     GET_RASA_ACTIONS_LIST: (id: string) => `/api/v1/chatbot/${id}/actions`,
     RUN_ACTION: (id: string) => `/api/v1/chatbot/${id}/run-actions`,
+    GET_SUGGESTIONS_SYSTEM: "/api/v1/chatbot/suggestions",
+    GET_SUGGESTIONS: (id: string) => `/api/v1/chatbot/${id}/suggestions`,
+    MESSAGE_FEEDBACK: (id: string) => `/api/v1/chatbot/${id}/messages/feedback`,
+    MESSAGE_FEEDBACK_LIST: (id: string) => `/api/v1/chatbot/${id}/messages/feedback`,
+    MESSAGE_FEEDBACK_DETAIL: (id: string, feedbackId: string) => `/api/v1/chatbot/${id}/messages/feedback/${feedbackId}`,
+    MESSAGE_FEEDBACK_HARD_DELETE: (id: string, feedbackId: string) => `/api/v1/chatbot/${id}/messages/feedback/${feedbackId}/hard`,
 
   },
 
@@ -149,6 +160,7 @@ export default {
   },
 
   CHAT_ENDPOINTS: {
+    SEND_MESSAGE_SYSTEM: "/api/v1/chatbot/chat",
     SEND_MESSAGE: (id: string) => `/api/v1/chatbot/${id}/chat`,
     GET_CONVERSATIONS: (userId: string) =>
       `/api/v1/conversation/user/${userId}`,

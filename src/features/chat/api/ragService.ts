@@ -1,16 +1,70 @@
 import axios from "axios";
-import { RAG_ENDPOINTS } from "@/api/rag.endpoints";
+import { RAG_BASE_URL, RAG_ENDPOINTS } from "@/api/rag.endpoints";
 import {
   ChatCompletionRequest,
   ChatCompletionResponse,
   ChunkSearchRequest,
   ChunkSearchResponse,
+  IngestedDocument,
   IngestedDocumentsResponse,
+  LightRagDocActionResponse,
+  LightRagDocumentsStatusesResponse,
+  LightRagPipelineStatusResponse,
 } from "@/interfaces/rag.interface";
 
 const ragAxios = axios.create({
+  baseURL: RAG_BASE_URL,
   timeout: 60000, // 60s timeout for LLM responses
 });
+
+type LightRagDocument = {
+  id: string;
+  file_path?: string;
+  metadata?: Record<string, unknown>;
+};
+
+type LightRagDocumentsResponse = {
+  statuses?: Record<string, LightRagDocument[]>;
+};
+
+const shouldFallbackToLegacyIngestApi = (error: unknown): boolean => {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  const status = error.response?.status;
+  return status === 404 || status === 405;
+};
+
+const fileNameFromPath = (filePath: string): string => {
+  const normalized = filePath.replace(/\\/g, "/");
+  const segments = normalized.split("/").filter(Boolean);
+  return segments[segments.length - 1] || filePath;
+};
+
+const mapLightRagDocument = (doc: LightRagDocument): IngestedDocument => {
+  const metadata = doc.metadata || {};
+  const metadataFileName = typeof metadata.file_name === "string" ? metadata.file_name : undefined;
+
+  return {
+    object: "ingest.document",
+    doc_id: doc.id,
+    doc_metadata: {
+      file_name: metadataFileName || (doc.file_path ? fileNameFromPath(doc.file_path) : doc.id),
+    },
+  };
+};
+
+const mapLightRagDocumentsResponse = (response: LightRagDocumentsResponse): IngestedDocumentsResponse => {
+  const statuses = response.statuses || {};
+  const documents = Object.values(statuses).flat().map(mapLightRagDocument);
+
+  return {
+    object: "list",
+    model: "lightrag",
+    data: documents,
+  };
+};
 
 export const ragService = {
   /**
@@ -43,10 +97,21 @@ export const ragService = {
    * List all ingested documents
    */
   listIngestedDocuments: async (): Promise<IngestedDocumentsResponse> => {
-    const response = await ragAxios.get<IngestedDocumentsResponse>(
-      RAG_ENDPOINTS.INGEST_LIST
-    );
-    return response.data;
+    try {
+      const response = await ragAxios.get<LightRagDocumentsResponse>(
+        RAG_ENDPOINTS.DOCUMENTS_LIST
+      );
+      return mapLightRagDocumentsResponse(response.data);
+    } catch (error) {
+      if (!shouldFallbackToLegacyIngestApi(error)) {
+        throw error;
+      }
+
+      const response = await ragAxios.get<IngestedDocumentsResponse>(
+        RAG_ENDPOINTS.INGEST_LIST
+      );
+      return response.data;
+    }
   },
 
   /**
@@ -55,17 +120,39 @@ export const ragService = {
   ingestFile: async (file: File): Promise<IngestedDocumentsResponse> => {
     const formData = new FormData();
     formData.append('file', file);
-    
-    const response = await ragAxios.post<IngestedDocumentsResponse>(
-      RAG_ENDPOINTS.INGEST_FILE,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+
+    try {
+      const response = await ragAxios.post<LightRagDocActionResponse>(
+        RAG_ENDPOINTS.DOCUMENTS_UPLOAD,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      if (response.data.status && response.data.status !== "success") {
+        throw new Error(response.data.message || "Upload failed");
       }
-    );
-    return response.data;
+
+      return await ragService.listIngestedDocuments();
+    } catch (error) {
+      if (!shouldFallbackToLegacyIngestApi(error)) {
+        throw error;
+      }
+
+      const response = await ragAxios.post<IngestedDocumentsResponse>(
+        RAG_ENDPOINTS.INGEST_FILE,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data;
+    }
   },
 
   /**
@@ -89,7 +176,118 @@ export const ragService = {
    * Delete an ingested document
    */
   deleteDocument: async (docId: string): Promise<void> => {
-    await ragAxios.delete(RAG_ENDPOINTS.INGEST_DELETE(docId));
+    try {
+      const response = await ragAxios.delete<LightRagDocActionResponse>(
+        RAG_ENDPOINTS.DOCUMENTS_DELETE,
+        {
+          data: {
+            doc_ids: [docId],
+            delete_file: false,
+            delete_llm_cache: false,
+          },
+        }
+      );
+
+      if (response.data.status === "busy" || response.data.status === "not_allowed") {
+        throw new Error(response.data.message || "Delete request was rejected by server");
+      }
+      return;
+    } catch (error) {
+      if (!shouldFallbackToLegacyIngestApi(error)) {
+        throw error;
+      }
+
+      await ragAxios.delete(RAG_ENDPOINTS.INGEST_DELETE(docId));
+    }
+  },
+
+  listDocumentsStatuses: async (): Promise<LightRagDocumentsStatusesResponse> => {
+    try {
+      const response = await ragAxios.get<LightRagDocumentsStatusesResponse>(
+        RAG_ENDPOINTS.DOCUMENTS_LIST
+      );
+      return response.data;
+    } catch (error) {
+      if (!shouldFallbackToLegacyIngestApi(error)) {
+        throw error;
+      }
+
+      const legacyResponse = await ragService.listIngestedDocuments();
+      return {
+        statuses: {
+          processed: legacyResponse.data.map((doc) => ({
+            id: doc.doc_id,
+            content_summary: doc.doc_metadata?.file_name || doc.doc_id,
+            content_length: 0,
+            status: "processed",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            file_path: doc.doc_metadata?.file_name || doc.doc_id,
+          })),
+        },
+      };
+    }
+  },
+
+  scanDocuments: async (): Promise<LightRagDocActionResponse> => {
+    const response = await ragAxios.post<LightRagDocActionResponse>(
+      RAG_ENDPOINTS.DOCUMENTS_SCAN
+    );
+    return response.data;
+  },
+
+  reprocessFailedDocuments: async (): Promise<LightRagDocActionResponse> => {
+    const response = await ragAxios.post<LightRagDocActionResponse>(
+      RAG_ENDPOINTS.DOCUMENTS_REPROCESS_FAILED
+    );
+    return response.data;
+  },
+
+  getPipelineStatus: async (): Promise<LightRagPipelineStatusResponse> => {
+    const response = await ragAxios.get<LightRagPipelineStatusResponse>(
+      RAG_ENDPOINTS.DOCUMENTS_PIPELINE_STATUS
+    );
+    return response.data;
+  },
+
+  cancelPipeline: async (): Promise<LightRagDocActionResponse> => {
+    const response = await ragAxios.post<LightRagDocActionResponse>(
+      RAG_ENDPOINTS.DOCUMENTS_CANCEL_PIPELINE
+    );
+    return response.data;
+  },
+
+  deleteDocuments: async (
+    docIds: string[],
+    deleteFile: boolean = false,
+    deleteLlmCache: boolean = false
+  ): Promise<LightRagDocActionResponse> => {
+    const response = await ragAxios.delete<LightRagDocActionResponse>(
+      RAG_ENDPOINTS.DOCUMENTS_DELETE,
+      {
+        data: {
+          doc_ids: docIds,
+          delete_file: deleteFile,
+          delete_llm_cache: deleteLlmCache,
+        },
+      }
+    );
+    return response.data;
+  },
+
+  clearDocuments: async (): Promise<LightRagDocActionResponse> => {
+    const response = await ragAxios.delete<LightRagDocActionResponse>(
+      RAG_ENDPOINTS.DOCUMENTS_CLEAR
+    );
+    return response.data;
+  },
+
+  clearCache: async (): Promise<{ status: string; message: string }> => {
+    const response = await ragAxios.post<{ status: string; message: string }>(
+      RAG_ENDPOINTS.DOCUMENTS_CLEAR_CACHE,
+      {}
+    );
+    return response.data;
   },
 
   /**

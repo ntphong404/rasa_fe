@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ import { ModuleHelpPopover } from "@/components/module-help-popover";
 import { useChatbotStore } from "@/store/chatbot";
 import { useChatbots } from "@/hooks/useChatbots";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/auth";
 
 interface CreateResponseDialogProps {
   open: boolean;
@@ -33,7 +34,15 @@ export default function CreateResponseDialog({
 }: CreateResponseDialogProps) {
   const { t } = useTranslation();
   const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const user = useAuthStore((state) => state.user);
   const { chatbots } = useChatbots();
+  const isManager = useMemo(
+    () => Boolean(user?.roles?.some((role) => role.name?.toUpperCase() === "MANAGER")),
+    [user?.roles]
+  );
+  const managerAssignedBotId = useMemo(() => {
+    return user?.managedBotIds?.[0] || null;
+  }, [user?.managedBotIds]);
   
   // Common fields
   const [name, setName] = useState("");
@@ -73,11 +82,16 @@ export default function CreateResponseDialog({
 
   // Default to current selected chatbot so new data appears in active scope.
   useEffect(() => {
+    if (isManager) {
+      setApplicableBotIds(managerAssignedBotId ? [managerAssignedBotId] : []);
+      return;
+    }
+
     if (!selectedBotId || selectedBotId === "global") return;
     setApplicableBotIds((prev) =>
       prev.includes(selectedBotId) ? prev : [...prev, selectedBotId]
     );
-  }, [selectedBotId]);
+  }, [isManager, managerAssignedBotId, selectedBotId]);
 
   const handleToggleApplicableBot = (botId: string) => {
     setApplicableBotIds((prev) =>
@@ -194,9 +208,13 @@ export default function CreateResponseDialog({
 
     try {
       setIsSubmitting(true);
-      const targetBotIds = selectedBotId && selectedBotId !== "global"
-        ? [selectedBotId]
-        : applicableBotIds;
+      const targetBotIds = isManager
+        ? managerAssignedBotId
+          ? [managerAssignedBotId]
+          : []
+        : selectedBotId && selectedBotId !== "global"
+          ? [selectedBotId]
+          : applicableBotIds;
 
       if (targetBotIds.length === 0) {
         toast.error(t("Please select at least one chatbot"));
@@ -296,7 +314,7 @@ export default function CreateResponseDialog({
               />
             </div>
 
-            {chatbots.length > 0 && (
+            {!isManager && chatbots.length > 0 && (
               <div className="space-y-3 rounded-lg border p-4">
                 <div className="space-y-1">
                   <Label>{t("Applicable Chatbots")}</Label>

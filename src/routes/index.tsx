@@ -1,6 +1,7 @@
 import { Suspense, lazy, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Navigate, createBrowserRouter, RouterProvider } from "react-router-dom";
+import { useAuthStore } from "@/store/auth";
 
 const NotFoundPage = lazy(() => import("@/pages").then((module) => ({ default: module.NotFoundPage })));
 const HomeDirectorPage = lazy(() => import("@/pages").then((module) => ({ default: module.HomeDirectorPage })));
@@ -51,6 +52,9 @@ const ConversationStatisticsPage = lazy(() => import("@/features/statistics").th
 const ChatbotStatisticsPage = lazy(() => import("@/features/statistics").then((module) => ({ default: module.ChatbotStatisticsPage })));
 const NLPStatisticsPage = lazy(() => import("@/features/statistics").then((module) => ({ default: module.NLPStatisticsPage })));
 const DocumentStatisticsPage = lazy(() => import("@/features/statistics").then((module) => ({ default: module.DocumentStatisticsPage })));
+const MessageFeedbackManagementPage = lazy(() =>
+  import("@/features/message-feedback").then((module) => ({ default: module.MessageFeedbackManagementPage }))
+);
 
 function RouteLoader() {
   return (
@@ -65,6 +69,19 @@ function RouteLoader() {
 
 function withSuspense(element: ReactNode) {
   return <Suspense fallback={<RouteLoader />}>{element}</Suspense>;
+}
+
+function AdminOnlyRoute({ children }: { children: ReactNode }) {
+  const user = useAuthStore((state) => state.user);
+  const isAdmin = Boolean(
+    user?.roles?.some((role) => role.name?.toUpperCase() === "ADMIN")
+  );
+
+  if (!isAdmin) {
+    return <Navigate to="/home_chat" replace />;
+  }
+
+  return <>{children}</>;
 }
 
 const router = createBrowserRouter([
@@ -107,8 +124,16 @@ const router = createBrowserRouter([
           { path: "batches", element: withSuspense(<ImportBatchesPage />) },
         ],
       },
-      { path: "chat_bot", element: withSuspense(<ChatBotManagement />) },
+      {
+        path: "chat_bot",
+        element: withSuspense(
+          <AdminOnlyRoute>
+            <ChatBotManagement />
+          </AdminOnlyRoute>
+        ),
+      },
       { path: "uquestion", element: withSuspense(<UQuestionManagement />) },
+      { path: "message-feedback", element: withSuspense(<MessageFeedbackManagementPage />) },
       {
         path: "stories",
         children: [

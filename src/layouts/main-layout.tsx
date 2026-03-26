@@ -12,9 +12,15 @@ import { ThemeModeToggle } from "@/components/theme-mode-toggle";
 import { GlobalHelpPopover } from "@/components/global-help-popover";
 import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
 import { AppChatHeaderInfo } from "@/features/chat/components/AppChatHeaderInfo";
+import { useChatbots } from "@/hooks/useChatbots";
 
 export function MainLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
+  useChatbots();
+  const isAdmin = Boolean(
+    user?.roles?.some((role) => role.name?.toUpperCase() === "ADMIN")
+  );
 
   // Yêu cầu quyền hiển thị Notification khi load lần đầu
   useEffect(() => {
@@ -37,7 +43,7 @@ export function MainLayout() {
           <div className="min-w-0 flex-1">
             <AppChatHeaderInfo />
           </div>
-          {isAuthenticated && <ChatbotSelector />}
+          {isAuthenticated && isAdmin && <ChatbotSelector />}
           <GlobalHelpPopover />
           <ThemeModeToggle />
           {/* <LanguageSwicher />

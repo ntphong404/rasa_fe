@@ -78,5 +78,21 @@ export const userService = {
             { roleId }
         );
         return response.data.data;
+    },
+
+    setManagedChatbots: async (id: string, managedBotIds: string[]) => {
+        const response = await axiosInstance.patch(
+            ENDPOINTS.USER_ENDPOINTS.SET_MANAGED_CHATBOTS(id),
+            { managedBotIds }
+        );
+        return response.data.data;
+    },
+
+    setPreferredChatbot: async (id: string, preferredChatbotId: string | null) => {
+        const response = await axiosInstance.patch(
+            ENDPOINTS.USER_ENDPOINTS.SET_PREFERRED_CHATBOT(id),
+            { preferredChatbotId }
+        );
+        return response.data.data;
     }
 };

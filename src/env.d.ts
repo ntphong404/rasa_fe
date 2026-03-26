@@ -5,6 +5,7 @@ interface ImportMetaEnv {
   readonly VITE_BASE_URL: string;
   readonly VITE_FLASK_URL: string;
   readonly VITE_RASA_URL: string;
+  readonly VITE_RAG_BASE_URL?: string;
   // add more env variables here
 }
 

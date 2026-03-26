@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BookOpen, Globe, Keyboard, LifeBuoy, MonitorCog, Wrench } from "lucide-react";
+import { BookOpen, Bot, Globe, Keyboard, LifeBuoy, MonitorCog, Wrench } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,10 @@ import {
 import { useTheme } from "@/components/theme-provider";
 import i18n, { setLanguage } from "@/locales/i18n";
 import toast from "react-hot-toast";
+import { useChatbots } from "@/hooks/useChatbots";
+import { useAuthStore } from "@/store/auth";
+import { useChatbotStore } from "@/store/chatbot";
+import { authService } from "@/features/auth/api/service";
 
 type AppLanguage = "vi" | "en";
 type ThemeOption = "light" | "dark" | "system";
@@ -21,9 +25,37 @@ type ThemeOption = "light" | "dark" | "system";
 export function SettingsPage() {
   const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
+  const user = useAuthStore((state) => state.user);
+  const { chatbots } = useChatbots();
+  const selectedChatBotId = useChatbotStore((state) => state.selectedChatBotId);
+  const setSelectedChatBotId = useChatbotStore((state) => state.setSelectedChatBotId);
+  const [systemChatbotId, setSystemChatbotId] = useState<string | null>(null);
+  const isAdmin = useMemo(
+    () => Boolean(user?.roles?.some((role) => role.name?.toUpperCase() === "ADMIN")),
+    [user?.roles]
+  );
   const [language, setLanguageState] = useState<AppLanguage>(
     i18n.language === "en" ? "en" : "vi"
   );
+
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const loadSystemChatbot = async () => {
+      try {
+        const response = await authService.getSystemChatbot();
+        setSystemChatbotId(response.systemChatbotId || null);
+
+        if (response.systemChatbotId) {
+          setSelectedChatBotId(response.systemChatbotId);
+        }
+      } catch (error) {
+        console.error("Failed to load system chatbot setting:", error);
+      }
+    };
+
+    loadSystemChatbot();
+  }, [isAdmin, setSelectedChatBotId]);
 
   const handleLanguageChange = async (value: AppLanguage) => {
     await i18n.changeLanguage(value);
@@ -35,6 +67,21 @@ export function SettingsPage() {
   const handleThemeChange = (value: ThemeOption) => {
     setTheme(value);
     toast.success(t("Settings updated"));
+  };
+
+  const handleSystemChatbotChange = async (value: string) => {
+    const preferredChatbotId = value;
+
+    try {
+      const updatedSetting = await authService.updateSystemChatbot(preferredChatbotId);
+      setSystemChatbotId(updatedSetting.systemChatbotId || null);
+      if (preferredChatbotId) {
+        setSelectedChatBotId(preferredChatbotId);
+      }
+      toast.success(t("Settings updated"));
+    } catch (error) {
+      toast.error(t("Failed to update chatbot preference"));
+    }
   };
 
   return (
@@ -87,6 +134,36 @@ export function SettingsPage() {
             </Select>
           </CardContent>
         </Card>
+
+        {isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              {t("System Chatbot")}
+            </CardTitle>
+            <CardDescription>{t("Select chatbot used for all chat conversations")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select
+              value={selectedChatBotId || systemChatbotId || chatbots[0]?.botId || ""}
+              onValueChange={handleSystemChatbotChange}
+              disabled={chatbots.length === 0}
+            >
+              <SelectTrigger className="max-w-sm">
+                <SelectValue placeholder={t("Select chatbot for chat")} />
+              </SelectTrigger>
+              <SelectContent>
+                {chatbots.map((bot) => (
+                  <SelectItem key={bot._id} value={bot.botId}>
+                    {bot.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+        )}
 
         <Card>
           <CardHeader>

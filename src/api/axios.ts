@@ -48,6 +48,14 @@ axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const selectedBotId = useChatbotStore.getState().selectedBotId;
   const scopedBotId = selectedBotId && selectedBotId !== 'global' ? selectedBotId : null;
   if (scopedBotId) {
+    const isChatbotScopedRoute =
+      typeof config.url === 'string' &&
+      /^\/api\/v1\/chatbot\/[a-f0-9]{24}\//i.test(config.url);
+
+    if (isChatbotScopedRoute) {
+      return config;
+    }
+
     const hasBotIdInUrl = typeof config.url === 'string' && /[?&]botId=/.test(config.url);
     // Initialize params if it doesn't exist
     if (!config.params) {

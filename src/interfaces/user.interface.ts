@@ -13,6 +13,8 @@ export interface IUser {
   avatar: string;
   is2FAEnabled: boolean;
   roles: Role[];
+  managedBotIds?: string[];
+  preferredChatbotId?: string | null;
   createdAt: string;
   updatedAt: string;
 }

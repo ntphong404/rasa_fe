@@ -73,7 +73,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "#",
         icon: Bot,
         hidden: false,
-        allowedRoles: ['admin'], // Only Admin can see
+        allowedRoles: ['manager', 'admin'], // Manager and Admin can see
         items: [
           {
             title: t("Training"),
@@ -104,13 +104,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           //   title: "Slots",
           //   url: "/slots",
           // },
-          {
-            title: "Chatbot",
-            url: "/chat_bot",
-          },
+          ...(userRoleLevel === 'admin'
+            ? [
+                {
+                  title: "Chatbot",
+                  url: "/chat_bot",
+                },
+              ]
+            : []),
           {
             title: "UQuestion",
             url: "/uquestion",
+          },
+          {
+            title: t("Message Feedback"),
+            url: "/message-feedback",
           },
         ],
       },
@@ -125,10 +133,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: t("Documents"),
             url: "/docs",
           },
-          {
-            title: t("Context documents"),
-            url: "/context-docs",
-          },
+          ...(userRoleLevel === 'admin'
+            ? [
+                {
+                  title: t("Context documents"),
+                  url: "/context-docs",
+                },
+              ]
+            : []),
         ],
       },
       {

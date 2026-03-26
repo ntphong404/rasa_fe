@@ -17,6 +17,7 @@ import { responseService } from "@/features/reponses/api/service";
 import { ruleService } from "@/features/rules/api/service";
 import { useChatbotStore } from "@/store/chatbot";
 import { useChatbots } from "@/hooks/useChatbots";
+import { useAuthStore } from "@/store/auth";
 import { parseFile, formatIntentName, type ParsedRow, parseYAML, parseResponseYAML, mergeNLUWithResponses, type ResponseMap } from "../utils/fileParser";
 import { generateTemplate } from "../utils/templateGenerator";
 
@@ -26,7 +27,10 @@ export function ImportIntentPage() {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+    const user = useAuthStore((state) => state.user);
     const { chatbots } = useChatbots();
+    const isManager = !!user?.roles?.some((role) => role.name?.toUpperCase() === "MANAGER");
+    const managerAssignedBotId = user?.managedBotIds?.[0] || null;
     const [selectedImportBotIds, setSelectedImportBotIds] = useState<string[]>([]);
     const [importMode, setImportMode] = useState<'excel' | 'yaml'>('excel');
     const [file, setFile] = useState<File | null>(null);
@@ -75,6 +79,11 @@ export function ImportIntentPage() {
     // When global is selected, keep user's explicit tickbox selections.
     // Also remove stale bot ids when chatbot list changes.
     const syncSelectedImportBots = () => {
+        if (isManager) {
+            setSelectedImportBotIds(managerAssignedBotId ? [managerAssignedBotId] : []);
+            return;
+        }
+
         setSelectedImportBotIds((prev) => {
             const validSet = new Set(availableImportBots.map((b) => b.botId));
             const filtered = prev.filter((id) => validSet.has(id));
@@ -90,7 +99,7 @@ export function ImportIntentPage() {
     useEffect(() => {
         syncSelectedImportBots();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedBotId, chatbots.length]);
+    }, [selectedBotId, chatbots.length, isManager, managerAssignedBotId]);
 
     const handleParseYAMLDualFile = async (nlu: File, domain: File) => {
         setNluFile(nlu);
@@ -525,7 +534,11 @@ export function ImportIntentPage() {
     };
 
     const handleImport = async () => {
-        const importBotIds = selectedImportBotIds.filter(Boolean);
+        const importBotIds = isManager
+            ? managerAssignedBotId
+                ? [managerAssignedBotId]
+                : []
+            : selectedImportBotIds.filter(Boolean);
         const sharedLabel = importMode === "yaml" ? commonImportLabel.trim() : "";
         if (importBotIds.length === 0) {
             return toast.error(t("Please select at least 1 chatbot to import"));
@@ -903,7 +916,7 @@ export function ImportIntentPage() {
                         </div>
                     )}
 
-                    {rows.length === 0 && (
+                    {rows.length === 0 && !isManager && (
                         <div className="max-w-3xl mx-auto mb-4 rounded-lg border bg-card p-4">
                             <div className="flex items-center justify-between gap-2 mb-3">
                                 <div>

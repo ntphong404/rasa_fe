@@ -4,6 +4,7 @@ export interface UQuestionQuery {
   search?: string;
   sort?: "asc" | "desc";
   chatbotId?: string;
+  reason?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -16,6 +17,7 @@ export default function createUQuestionQuery(query: UQuestionQuery): string {
   if (query.search) params.append("search", query.search);
   if (query.sort) params.append("sort", query.sort);
   if (query.chatbotId) params.append("chatbotId", query.chatbotId);
+  if (query.reason) params.append("reason", query.reason);
   if (query.startDate) params.append("startDate", query.startDate);
   if (query.endDate) params.append("endDate", query.endDate);
 

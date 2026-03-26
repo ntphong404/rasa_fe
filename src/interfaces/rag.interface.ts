@@ -68,3 +68,45 @@ export interface IngestedDocumentsResponse {
   model: string;
   data: IngestedDocument[];
 }
+
+export type DocStatus = "pending" | "processing" | "preprocessed" | "processed" | "failed";
+
+export interface LightRagDocumentStatusItem {
+  id: string;
+  content_summary: string;
+  content_length: number;
+  status: DocStatus;
+  created_at: string;
+  updated_at: string;
+  track_id?: string;
+  chunks_count?: number;
+  error_msg?: string;
+  metadata?: Record<string, unknown>;
+  file_path: string;
+}
+
+export interface LightRagDocumentsStatusesResponse {
+  statuses: Record<string, LightRagDocumentStatusItem[]>;
+}
+
+export interface LightRagDocActionResponse {
+  status: "success" | "partial_success" | "failure" | "duplicated" | "deletion_started" | "busy" | "not_allowed" | "scanning_started" | "reprocessing_started" | "cancellation_requested" | "not_busy";
+  message: string;
+  track_id?: string;
+  doc_id?: string;
+}
+
+export interface LightRagPipelineStatusResponse {
+  autoscanned: boolean;
+  busy: boolean;
+  job_name: string;
+  job_start?: string;
+  docs: number;
+  batchs: number;
+  cur_batch: number;
+  request_pending: boolean;
+  cancellation_requested?: boolean;
+  latest_message: string;
+  history_messages?: string[];
+  update_status?: Record<string, unknown>;
+}

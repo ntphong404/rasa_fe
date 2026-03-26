@@ -19,6 +19,8 @@ export interface User {
   is2FAEnabled: boolean;
   status?: EUserStatus;
   roles: string[];
+  managedBotIds?: string[];
+  preferredChatbotId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
