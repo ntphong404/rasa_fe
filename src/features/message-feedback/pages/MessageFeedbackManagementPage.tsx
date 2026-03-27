@@ -10,8 +10,17 @@ import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { ConfirmHardDeleteDialog } from "@/components/confirm-delete-dialog";
-import { ArrowUpDown, Eye, SearchIcon, Trash2 } from "lucide-react";
+import { ArrowUpDown, Eye, SearchIcon, Trash2, SlidersHorizontal } from "lucide-react";
 import { useChatbotStore } from "@/store/chatbot";
 import { messageFeedbackService } from "../api/service";
 import { MessageFeedbackItem } from "../api/dto/MessageFeedbackResponse";
@@ -147,10 +156,10 @@ export function MessageFeedbackManagementPage() {
 
   return (
     <div className="admin-page space-y-4">
-      <form className="table-controller admin-toolbar flex flex-wrap items-center gap-2" onSubmit={form.handleSubmit(onSubmit)}>
-        <Form {...form}>
-          <>
-            <div className="relative w-full max-w-md">
+      <Form {...form}>
+        <form className="table-controller admin-toolbar" onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <div className="relative">
               <div className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground">
                 <SearchIcon className="h-4 w-4" />
               </div>
@@ -171,32 +180,63 @@ export function MessageFeedbackManagementPage() {
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="sourceType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <select
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value || undefined)}
-                      className="h-9 rounded-md border bg-background px-3 text-sm"
-                    >
-                      <option value="">{t("All sources")}</option>
-                      <option value="0">Rasa</option>
-                      <option value="1">RAG</option>
-                    </select>
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <Button type="submit">
-              <SearchIcon className="mr-2 h-4 w-4" />
-              {t("Search")}
-            </Button>
-          </>
-        </Form>
-      </form>
+          </div>
+
+          <Button type="submit">
+            <SearchIcon className="mr-2 h-4 w-4" />
+            <span>{t("Search")}</span>
+          </Button>
+
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <SlidersHorizontal className="mr-2 h-4 w-4" />
+                <span>{t("Filter")}</span>
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <div className="mx-auto w-full max-w-sm">
+                <DrawerHeader>
+                  <DrawerTitle>{t("Filter Feedbacks")}</DrawerTitle>
+                </DrawerHeader>
+                <div className="grid gap-4 p-4">
+                  <FormField
+                    control={form.control}
+                    name="sourceType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">
+                              {t("Source Type")}
+                            </label>
+                            <select
+                              value={field.value || ""}
+                              onChange={(e) => field.onChange(e.target.value || undefined)}
+                              className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            >
+                              <option value="">{t("All sources")}</option>
+                              <option value="0">Rasa</option>
+                              <option value="1">RAG</option>
+                            </select>
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <DrawerFooter>
+                  <DrawerClose asChild>
+                    <Button variant="outline">{t("Close")}</Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </div>
+            </DrawerContent>
+          </Drawer>
+
+          <div className="flex-1"></div>
+        </form>
+      </Form>
 
       {error ? (
         <Alert variant="destructive">
@@ -208,13 +248,13 @@ export function MessageFeedbackManagementPage() {
             {
               accessorKey: "questionText",
               header: ({ column }) => (
-                <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+                <Button variant="ghost" className="p-0 hover:bg-transparent" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
                   {t("Question")}
                   <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               ),
               cell: ({ row }) => (
-                <div className="max-w-[420px] truncate" title={row.original.questionText}>
+                <div className="whitespace-normal break-words line-clamp-2 min-w-[200px]" title={row.original.questionText}>
                   {row.original.questionText}
                 </div>
               ),
@@ -223,7 +263,7 @@ export function MessageFeedbackManagementPage() {
               accessorKey: "answerText",
               header: t("Answer"),
               cell: ({ row }) => (
-                <div className="max-w-[520px] truncate" title={row.original.answerText}>
+                <div className="whitespace-normal break-words line-clamp-2 min-w-[300px]" title={row.original.answerText}>
                   {row.original.answerText}
                 </div>
               ),
@@ -232,23 +272,33 @@ export function MessageFeedbackManagementPage() {
               accessorKey: "sourceType",
               header: t("Source"),
               cell: ({ row }) => (
-                <Badge variant="outline">{sourceLabel(row.original.sourceType)}</Badge>
+                <Badge variant="outline" className="whitespace-nowrap">{sourceLabel(row.original.sourceType)}</Badge>
               ),
             },
             {
               accessorKey: "createdAt",
               header: t("Created At"),
-              cell: ({ row }) => new Date(row.original.createdAt).toLocaleString(),
+              cell: ({ row }) => <span className="whitespace-nowrap">{new Date(row.original.createdAt).toLocaleString()}</span>,
             },
             {
               id: "actions",
               header: t("Actions"),
               cell: ({ row }) => (
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => void handleView(row.original)}>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => void handleView(row.original)}
+                    title={t("View details")}
+                  >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="text-red-600" onClick={() => askDelete(row.original)}>
+                  <Button
+                    size="sm"
+                    className="bg-red-700 hover:bg-red-800"
+                    onClick={() => askDelete(row.original)}
+                    title={t("Delete permanently")}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

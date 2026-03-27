@@ -88,8 +88,8 @@
   "Associated Resources": "Tài nguyên Liên quan",
   "Add Intent": "Thêm Intent",
   "Add Action": "Thêm Action",
-  "Search intents...": "Tìm intent...",
-  "Search actions...": "Tìm action...",
+  "Search intents...": "Tìm kiếm intent...",
+  "Search actions...": "Tìm kiếm hành động...",
   "No intents found": "Không tìm thấy intent",
   "No actions found": "Không tìm thấy action",
   "Preview": "Xem trước",
@@ -174,7 +174,7 @@
   "Action already selected": "Action đã được chọn",
   "Response already selected": "Response đã được chọn",
   "Select Response": "Chọn Response",
-  "Search responses...": "Tìm kiếm response...",
+  "Search responses...": "Tìm kiếm phản hồi...",
   "Include deleted responses": "Bao gồm response đã xóa",
   "Running": "Đang chạy",
   "Offline": "Ngoại tuyến",
@@ -274,10 +274,10 @@
   "chatbots / page": "chatbot / trang",
   "Newest first": "Mới nhất trước",
   "Oldest first": "Cũ nhất trước",
-  "Start Date": "Ngày bắt đầu",
-  "End Date": "Ngày kết thúc",
+  "Start Date": "Từ ngày",
+  "End Date": "Đến ngày",
   "Sort by": "Sắp xếp theo",
-  "Select sort": "Chọn sắp xếp",
+  "Select sort": "Chọn cách sắp xếp",
   "View details": "Xem chi tiết",
   "Edit": "Chỉnh sửa",
   "Move to trash": "Chuyển vào thùng rác",
@@ -369,7 +369,7 @@
   "Esc closes most dialogs and popovers": "Esc đóng hầu hết hộp thoại và popover",
   "What is an Action?": "Action là gì?",
   "Actions are custom Python code that a bot can run. They are used for tasks like calling APIs, querying a database, or interacting with external systems.": "Action là đoạn mã Python tùy chỉnh mà bot có thể chạy. Action dùng để gọi API, truy vấn cơ sở dữ liệu hoặc tương tác với các hệ thống bên ngoài.",
-  "View Python code": "Xem mã Python",
+  "View Python code": "Xem code Python",
   "Help Center": "Trung tâm trợ giúp",
   "Find guides, support options, and useful shortcuts": "Tìm hướng dẫn, kênh hỗ trợ và các phím tắt hữu ích",
   "Get Started": "Bắt đầu nhanh",
@@ -386,7 +386,7 @@
   "Support and troubleshooting": "Hỗ trợ và xử lý sự cố",
   "Contact Support": "Liên hệ hỗ trợ",
   "Open shortcuts help": "Mở trợ giúp phím tắt",
-  "Show deleted actions": "Hiển thị action đã xóa",
+  "Show deleted actions": "Hiện action đã xóa",
   "What is an Entity?": "Entity là gì?",
   "Entities are structured data that can be extracted from user input. There are three types:": "Entity là dữ liệu có cấu trúc được trích xuất từ câu người dùng. Có 3 loại chính:",
   "What is a Response?": "Response là gì?",
@@ -473,403 +473,404 @@
   "Document deleted successfully": "Đã xóa tài liệu {{fileName}} thành công",
   "Failed to delete document. Please try again.": "Không thể xóa tài liệu. Vui lòng thử lại.",
   "Delete document": "Xóa tài liệu",
-  "Are you sure you want to delete this document? This action cannot be undone.": "Bạn có chắc muốn xóa tài liệu này không? Hành động này không thể hoàn tác."
-  ,"Please enter action name": "Vui lòng nhập tên action"
-  ,"Failed to create action": "Không thể tạo action"
-  ,"Action updated successfully": "Cập nhật action thành công"
-  ,"Failed to update action": "Không thể cập nhật action"
-  ,"Failed to create response": "Không thể tạo response"
-  ,"Failed to update response": "Không thể cập nhật response"
-  ,"Please enter entity name": "Vui lòng nhập tên entity"
-  ,"Entity ID is missing": "Thiếu ID entity"
-  ,"Failed to create entity": "Không thể tạo entity"
-  ,"Failed to update entity": "Không thể cập nhật entity"
-  ,"Restored successfully": "Khôi phục thành công"
-  ,"Restore failed. Please try again.": "Khôi phục thất bại. Vui lòng thử lại."
-  ,"Restore item": "Khôi phục mục"
-  ,"Are you sure you want to restore this item?": "Bạn có chắc muốn khôi phục mục này không?"
-  ,"It will be moved back to active list.": "Mục sẽ được chuyển về danh sách đang hoạt động."
-  ,"Restore": "Khôi phục"
-  ,"Copied to clipboard": "Đã sao chép vào clipboard"
-  ,"Failed to copy text": "Không thể sao chép văn bản"
-  ,"An error occurred while copying": "Có lỗi xảy ra khi sao chép"
-  ,"PDF exported successfully": "Đã xuất file PDF thành công"
-  ,"Failed to export PDF": "Không thể xuất file PDF"
-  ,"Word exported successfully": "Đã xuất file Word thành công"
-  ,"Failed to export Word": "Không thể xuất file Word"
-  ,"Options": "Tùy chọn"
-  ,"Copied": "Đã sao chép"
-  ,"Copy": "Sao chép"
-  ,"Export PDF": "Xuất PDF"
-  ,"Export Word": "Xuất Word"
-  ,"No messages to export": "Không có tin nhắn nào để xuất"
-  ,"Export conversation": "Xuất cuộc trò chuyện"
-  ,"Export file": "Xuất file"
-  ,"Exporting...": "Đang xuất..."
-  ,"Saved selected documents": "Đã lưu {{count}} tài liệu được chọn"
-  ,"Failed to save selection. Please try again.": "Không thể lưu lựa chọn. Vui lòng thử lại."
-  ,"Read intents successfully from files": "Đã đọc thành công {{count}} intents từ {{nluName}} + {{domainName}}"
-  ,"Failed to read YAML file: {{error}}": "Lỗi khi đọc file YAML: {{error}}"
-  ,"Read rows successfully from file": "Đã đọc thành công {{count}} dòng từ file {{fileName}}"
-  ,"Failed to read file: {{error}}. Please check file format (Excel or CSV).": "Lỗi khi đọc file: {{error}}. Vui lòng kiểm tra định dạng file (Excel hoặc CSV)."
-  ,"Please select both NLU and Domain files": "Vui lòng chọn cả 2 file NLU và Domain"
-  ,"Intent name cannot be empty": "Tên intent không được để trống"
-  ,"Intent name is duplicated. Please choose another name.": "Tên intent bị trùng. Vui lòng đặt tên khác."
-  ,"Updated successfully": "Đã cập nhật"
-  ,"Example cannot be empty": "Ví dụ không được để trống"
-  ,"Example updated successfully": "Đã cập nhật ví dụ"
-  ,"At least one example is required": "Phải có ít nhất 1 ví dụ"
-  ,"Example deleted successfully": "Đã xóa ví dụ"
-  ,"Question and answer are required to generate examples": "Cần có câu hỏi và câu trả lời để tạo ví dụ"
-  ,"No examples were generated": "Không có ví dụ nào được tạo"
-  ,"Added new examples": "Đã thêm {{count}} ví dụ mới"
-  ,"Please import a file first": "Vui lòng import file trước"
-  ,"The first row must include both question and answer": "Dòng đầu tiên cần có đầy đủ câu hỏi và câu trả lời"
-  ,"Created new intents": "Đã tạo {{count}} intent mới"
-  ,"No rows selected for import": "Chưa chọn dòng nào để import"
-  ,"Intents require at least 5 examples": "{{count}} intent không đủ 5 ví dụ. Vui lòng thêm ví dụ hoặc dùng nút ✨ để tạo tự động."
-  ,"Duplicate intent names detected: {{names}}. Please fix before import.": "Phát hiện tên intent trùng: {{names}}. Vui lòng sửa trước khi import."
-  ,"Imported rows successfully": "Đã import thành công {{count}} dòng"
-  ,"Import result: {{success}} succeeded, {{failed}} failed. Please check errors below.": "Thành công: {{success}}, Thất bại: {{failed}}. Kiểm tra lỗi bên dưới."
-  ,"No failed rows to retry": "Không có dòng nào thất bại để thử lại"
-  ,"Excel template downloaded. Please fill data and upload.": "Đã tải file mẫu Excel. Hãy điền dữ liệu và tải lên."
-  ,"YAML template downloaded. Please adjust data and upload.": "Đã tải file mẫu YAML. Hãy chỉnh dữ liệu và tải lên."
-  ,"Failed to generate template file": "Lỗi khi tạo file mẫu"
-  ,"No questions were generated": "Không có câu hỏi nào được tạo"
-  ,"Added questions automatically": "Đã thêm các câu hỏi tự động"
-  ,"Please enter question group name": "Vui lòng nhập tên nhóm câu hỏi"
-  ,"Please enter at least one question to start": "Vui lòng nhập ít nhất một câu hỏi để bắt đầu"
-  ,"Data created successfully": "Tạo dữ liệu thành công"
-  ,"Failed to create data": "Tạo dữ liệu thất bại"
-  ,"Import question groups from file": "Nhập nhóm câu hỏi từ file"
-  ,"Import intents and create stories automatically": "Import intents và tạo stories tự động"
-  ,"Download template": "Tải file mẫu"
-  ,"Excel template": "Mẫu Excel"
-  ,"YAML template": "Mẫu YAML"
-  ,"Import from file": "Nhập từ file"
-  ,"Import from YAML (2 files)": "Nhập từ YAML (2 file)"
-  ,"Drag and drop an Excel file here to import": "Kéo thả file Excel vào đây để nhập"
-  ,"Or": "Hoặc"
-  ,"choose file from your computer": "chọn file từ máy tính"
-  ,"Supported: XLSX, CSV, TSV": "Hỗ trợ: XLSX, CSV, TSV"
-  ,"Drop files here or click to select": "Thả file vào đây hoặc bấm để chọn"
-  ,"Excel guide: Download template and fill data manually": "Excel: Tải file mẫu và điền dữ liệu thủ công"
-  ,"Choose NLU file (.yaml)": "Chọn file NLU (.yaml)"
-  ,"Contains intent definitions and examples": "Chứa định nghĩa intent và ví dụ"
-  ,"Choose Domain/Response file (.yaml)": "Chọn file Domain/Response (.yaml)"
-  ,"Contains response definitions (utterances)": "Chứa định nghĩa response (utterances)"
-  ,"Process 2 files and preview": "Xử lý 2 file và xem trước"
-  ,"NLU file help: Intent structure with examples": "NLU File: Cấu trúc intent với examples"
-  ,"Domain file help: Response/utterance structure": "Domain File: Cấu trúc responses/utterances"
-  ,"Reading file...": "Đang đọc file..."
-  ,"Data preview": "Xem trước dữ liệu"
-  ,"Question groups count: {{count}}": "{{count}} nhóm câu hỏi"
-  ,"Progress": "Tiến trình"
-  ,"Generating...": "Đang tạo..."
-  ,"Generate more question groups": "Tạo thêm nhóm câu hỏi"
-  ,"Select": "Chọn"
-  ,"Answer": "Câu trả lời"
-  ,"question_group_name": "ten_nhom_cau_hoi"
-  ,"Enter answer...": "Nhập câu trả lời..."
-  ,"Questions count: {{count}}": "{{count}} câu hỏi"
-  ,"Saved": "Đã lưu"
-  ,"Edit question group": "Sửa nhóm câu hỏi"
-  ,"Generate more questions": "Tạo thêm câu hỏi"
-  ,"Delete question group": "Xóa nhóm câu hỏi"
-  ,"API error": "Lỗi API"
-  ,"Validation": "Kiểm tra"
-  ,"Importing...": "Đang nhập..."
-  ,"Import selected data": "Nhập dữ liệu đã chọn"
-  ,"Retry failed rows": "Thử lại các dòng lỗi"
-  ,"Cancel / Clear all": "Hủy / Xóa tất cả"
-  ,"At least 5 examples required (current: {{count}})": "Cần ít nhất 5 ví dụ (hiện tại: {{count}})"
-  ,"Unable to read file": "Không thể đọc file"
-  ,"Unknown error": "Lỗi không xác định"
-  ,"At least 5 questions are required before saving": "Cần ít nhất 5 câu hỏi trước khi lưu"
-  ,"Normalized name": "Tên chuẩn hóa"
-  ,"(auto-generated)": "(sẽ được tạo tự động)"
-  ,"No questions yet. Add manually or generate automatically.": "Chưa có câu hỏi. Thêm thủ công hoặc tạo tự động."
-  ,"Delete question": "Xóa câu hỏi"
-  ,"Saving...": "Đang lưu..."
-  ,"Generate questions automatically": "Tạo câu hỏi tự động"
-  ,"Clear all questions": "Xóa tất cả câu hỏi"
-  ,"Usage guide": "Hướng dẫn sử dụng"
-  ,"What is a question group?": "Nhóm câu hỏi là gì?"
-  ,"A question group represents a user intent (what users may ask). Similar questions help the system recognize that group.": "Nhóm câu hỏi đại diện cho ý định người dùng (những gì họ có thể hỏi). Các câu hỏi tương tự giúp hệ thống nhận diện nhóm này."
-  ,"Example": "Ví dụ"
-  ,"Example question group line": "• chao_hoi - người dùng chào hỏi"
-  ,"Name format": "Định dạng tên"
-  ,"The question group name is normalized to lower_case_with_underscores. You can preview the normalized name under the input field.": "Tên nhóm câu hỏi sẽ được chuẩn hóa về dạng chữ_thường_gạch_dưới. Bạn có thể xem trước ngay bên dưới ô nhập."
-  ,"Answer name": "Tên câu trả lời"
-  ,"If you enter an answer, it will be created with the default name pattern utter_<group_name>.": "Nếu bạn nhập câu trả lời, hệ thống sẽ tạo theo mẫu tên mặc định utter_<ten_nhom>."
-  ,"Similar questions help": "Các câu hỏi tương tự"
-  ,"You can add many similar questions to improve recognition. Use the Generate questions automatically button to let AI suggest more from your sample.": "Bạn có thể thêm nhiều câu hỏi tương tự để cải thiện khả năng nhận diện. Dùng nút Tạo câu hỏi tự động để AI gợi ý thêm từ câu hỏi mẫu."
-  ,"Loading chatbot list...": "Đang tải danh sách chatbot..."
-  ,"Select chatbot...": "Chọn chatbot..."
-  ,"General": "Thường"
-  ,"Add data": "Thêm dữ liệu"
-  ,"Expert": "Chuyên gia"
-  ,"Training": "Huấn luyện"
-  ,"Context documents": "Tài liệu ngữ cảnh"
-  ,"Statistics reports": "Báo cáo thống kê"
-  ,"Conversations": "Cuộc hội thoại"
-  ,"Unable to send message. Please try again.": "Không thể gửi tin nhắn. Vui lòng thử lại."
-  ,"Sorry, I cannot respond right now. Please try again later.": "Xin lỗi, tôi không thể phản hồi lúc này. Vui lòng thử lại sau."
-  ,"Switched to normal chat mode": "Đã chuyển sang chế độ Chat thường"
-  ,"Switched to RAG chat mode": "Đã chuyển sang chế độ RAG Chat"
-  ,"How can I help you?": "Tôi có thể giúp gì cho bạn?"
-  ,"Normal chat": "Chat thường"
-  ,"Start a conversation": "Bắt đầu cuộc trò chuyện"
-  ,"Ask a question or request help to start the conversation": "Chọn gợi ý bên dưới hoặc nhập câu hỏi của bạn để bắt đầu trò chuyện với AI"
-  ,"Responding...": "Đang trả lời..."
-  ,"Loading chatbot...": "Đang tải chatbot..."
-  ,"Select chatbot": "Chọn chatbot"
-  ,"No chatbots available": "Không có chatbot khả dụng"
-  ,"Ask anything": "Hỏi bất kỳ điều gì"
-  ,"Chatbot may make mistakes. Please verify important information.": "Chat Bot có thể mắc lỗi. Hãy kiểm tra các thông tin quan trọng."
-  ,"Like response": "Thích câu trả lời"
-  ,"Dislike response": "Không thích câu trả lời"
-  ,"Unable to record feedback right now": "Chưa thể ghi nhận đánh giá lúc này"
-  ,"Choose chat type": "Chọn loại chat"
-  ,"Choose the chat mode that fits your needs": "Chọn chế độ chat phù hợp với nhu cầu của bạn"
-  ,"Chat with Rasa bot for general questions and standard support": "Chat với Rasa bot để trả lời câu hỏi chung và hỗ trợ thông thường"
-  ,"Chat with AI based on uploaded documents for specific questions": "Chat với AI dựa trên tài liệu đã upload để trả lời câu hỏi cụ thể"
-  ,"Select documents (optional)": "Chọn tài liệu (tùy chọn)"
-  ,"No documents yet. Please upload documents before using RAG Chat.": "Chưa có tài liệu nào. Vui lòng upload tài liệu trước khi sử dụng RAG Chat."
-  ,"Start": "Bắt đầu"
-  ,"More": "Thêm"
-  ,"More pages": "Thêm trang"
-  ,"RAG Chat": "RAG Chat"
-  ,"Server Excel Import": "Import Excel lên server"
-  ,"Upload one file, backend creates intent/response/rule with metadata": "Tải một file, backend sẽ tạo intent/response/rule kèm metadata"
-  ,"FAQ Excel Import": "Import Excel FAQ"
-  ,"For FAQ data: backend auto links intent and rule for each row": "Dùng cho dữ liệu FAQ: backend tự gắn intent và rule theo từng dòng"
-  ,"Chatbot for management (optional)": "Chatbot để quản lý (tùy chọn)"
-  ,"No specific chatbot (shared)": "Không chọn chatbot cụ thể (dùng chung)"
-  ,"View batches": "Xem các batch"
-  ,"Import label (optional)": "Nhãn import (tùy chọn)"
-  ,"Example: pccc_batch_march": "Ví dụ: pccc_batch_march"
-  ,"Duplicate strategy": "Chiến lược trùng dữ liệu"
-  ,"Skip duplicate": "Bỏ qua bản ghi trùng"
-  ,"Upsert": "Upsert"
-  ,"Strict fail": "Dừng khi có trùng"
-  ,"Change file": "Đổi file"
-  ,"Choose Excel file": "Chọn file Excel"
-  ,"Please select chatbot first": "Vui lòng chọn chatbot trước"
-  ,"Please select chatbot before importing": "Vui lòng chọn chatbot trước khi import"
-  ,"Please choose an Excel file": "Vui lòng chọn file Excel"
-  ,"Server import completed": "Import lên server thành công"
-  ,"Import failed": "Import thất bại"
-  ,"Batch": "Batch"
-  ,"Created": "Đã tạo"
-  ,"Skipped": "Bỏ qua"
-  ,"Failed": "Thất bại"
-  ,"items": "bản ghi"
-  ,"active": "đang bật"
-    ,"Label": "Nhãn"
-    ,"Filter by label": "Lọc theo nhãn"
-    ,"Organize intents by label/category (e.g., sheet name)": "Tổ chức intent theo nhãn/danh mục (ví dụ: tên sheet)"
-    ,"Training Status": "Trạng thái train"
-    ,"All training statuses": "Tất cả trạng thái train"
-    ,"Trained": "Đã train"
-    ,"Not trained": "Chưa train"
-    ,"Model": "Model"
-    ,"All models": "Tất cả model"
-  ,"Please enter at least one question to auto-generate": "Vui lòng nhập ít nhất một câu hỏi để tạo tự động"
-  ,"Sample question (enter one question to start)": "Câu hỏi mẫu (nhập một câu hỏi để bắt đầu)"
-  ,"Quick data creation": "Tạo dữ liệu nhanh"
-  ,"Create question groups, answers, and link them together": "Tạo nhóm câu hỏi, câu trả lời và liên kết chúng lại"
-  ,"Question group name": "Tên nhóm câu hỏi"
-  ,"Similar questions": "Câu hỏi tương tự"
-  ,"Import Batches": "Quản lý lô nhập"
-  ,"Manage imported data batches and toggle training inclusion": "Quản lý các lô dữ liệu đã nhập và bật/tắt đưa vào huấn luyện"
-  ,"Please select a specific chatbot to toggle a batch": "Vui lòng chọn một chatbot cụ thể để bật/tắt lô này"
-  ,"Batch activated": "Đã kích hoạt lô"
-  ,"Batch deactivated": "Đã tắt lô"
-  ,"Failed to update batch": "Không thể cập nhật lô"
-  ,"Please select a specific chatbot to delete a batch": "Vui lòng chọn một chatbot cụ thể để xóa lô này"
-  ,"This will permanently delete this batch. Continue?": "Thao tác này sẽ xóa vĩnh viễn lô này. Tiếp tục?"
-  ,"Import batch deleted": "Đã xóa lô nhập"
-  ,"Failed to delete batch": "Không thể xóa lô"
-  ,"Failed to load import batches": "Không thể tải danh sách lô nhập"
-  ,"Please select a chatbot first to view import batches.": "Vui lòng chọn một chatbot trước để xem các lô nhập."
-  ,"Global mode: displaying batches across all chatbots. Select a specific chatbot to toggle or delete a batch.": "Chế độ toàn bộ: hiển thị lô từ tất cả chatbot. Chọn một chatbot cụ thể để bật/tắt hoặc xóa lô."
-  ,"No import batches found": "Không tìm thấy lô nhập nào"
-  ,"Inactive": "Không hoạt động"
-  ,"Deactivate batch": "Tắt lô"
-  ,"Activate batch": "Kích hoạt lô"
-  ,"Delete batch": "Xóa lô"
-  ,"Session expired or unauthorized. Please log in again.": "Phiên đăng nhập đã hết hạn hoặc bạn không có quyền. Vui lòng đăng nhập lại."
-  ,"Intent name is duplicated{{name}}.": "Intent đã bị trùng tên{{name}}."
-  ,"Response name is duplicated{{name}}.": "Response đã bị trùng tên{{name}}."
-  ,"Data is duplicated. Please check intent/response names.": "Dữ liệu bị trùng. Vui lòng kiểm tra lại tên intent/response."
-  ,"Cannot connect to server. Please check your network or try again later.": "Không kết nối được tới máy chủ. Vui lòng kiểm tra mạng hoặc thử lại sau."
-  ,"Response name is duplicated: {{name}}.": "Response đã bị trùng tên: {{name}}."
-  ,"Intent name is duplicated: {{name}}.": "Intent đã bị trùng tên: {{name}}."
-  ,"Story already exists for this intent.": "Story đã tồn tại cho intent này."
-  ,"Cannot import this row. Please check data and try again.": "Không thể import dòng này. Vui lòng kiểm tra dữ liệu và thử lại."
-  ,"Please select at least 1 chatbot to import": "Vui lòng chọn ít nhất 1 chatbot để import"
-  ,"Select one or more chatbots to import this data": "Chọn một hoặc nhiều chatbot để import dữ liệu này"
-  ,"Common label for import file": "Nhãn chung cho file import"
-  ,"Example: pccc_faq_03_2026": "Ví dụ: pccc_faq_03_2026"
-  ,"This label applies to all intents/responses imported from the current YAML file": "Nhãn này sẽ áp dụng cho toàn bộ intent/response được import từ file YAML hiện tại"
-  ,"Please select at least 1 chatbot before importing": "Vui lòng chọn ít nhất 1 chatbot trước khi import"
-  ,"Duplicate handling": "Xử lý trùng dữ liệu"
-  ,"Overwrite if content differs": "Ghi đè nếu nội dung khác"
-  ,"Skip duplicates": "Bỏ qua bản ghi trùng"
-  ,"Stop and report duplicates": "Dừng khi có trùng và báo lỗi"
-  ,"Error": "Lỗi"
-  ,"Intent already exists: {{name}}": "Intent đã tồn tại: {{name}}"
-  ,"Response already exists: {{name}}": "Response đã tồn tại: {{name}}"
-  ,"Import intents and create rules automatically": "Import intents và tạo rules tự động"
-  ,"Select all": "Chọn tất cả"
-  ,"Clear": "Bỏ chọn"
-  ,"Please select at least one chatbot": "Vui lòng chọn ít nhất một chatbot"
-  ,"Applicable Chatbots": "Chatbot áp dụng"
-  ,"Select one or more chatbots to create this data": "Chọn một hoặc nhiều chatbot để tạo dữ liệu này"
-  ,"Example: pccc": "Ví dụ: pccc"
-  ,"Failed to generate examples automatically": "Tạo ví dụ tự động thất bại"
-  ,"Failed to generate intents automatically": "Tạo intent tự động thất bại"
-  ,"Chatbot Report": "Báo Cáo Chatbot"
-  ,"Failed to load chatbot statistics. Please try again later.": "Không thể tải dữ liệu thống kê chatbot. Vui lòng thử lại sau."
-  ,"Information about chatbots in the system": "Thông tin về các chatbot trong hệ thống"
-  ,"Total Chatbots": "Tổng Chatbot"
-  ,"Chatbots in system": "Chatbot trong hệ thống"
-  ,"Running Rasa servers": "Server Rasa đang chạy"
-  ,"Running Action servers": "Action server đang chạy"
-  ,"Chatbot Details": "Chi Tiết Chatbot"
-  ,"List and details of chatbots": "Danh sách và thông tin chi tiết các chatbot"
-  ,"No chatbots in the system": "Không có chatbot nào trong hệ thống"
-  ,"Conversation Report": "Báo Cáo Cuộc Hội Thoại"
-  ,"Failed to load conversation statistics. Please try again later.": "Không thể tải dữ liệu thống kê cuộc hội thoại. Vui lòng thử lại sau."
-  ,"Statistics on conversations and messages": "Thống kê về cuộc hội thoại và tin nhắn"
-  ,"From date": "Từ ngày"
-  ,"To date": "Đến ngày"
-  ,"Clear filters": "Xóa bộ lọc"
-  ,"Total Conversations": "Tổng Cuộc Hội Thoại"
-  ,"All conversations": "Tất cả cuộc hội thoại"
-  ,"Average Messages": "Tin Nhắn Trung Bình"
-  ,"Per conversation": "Mỗi cuộc hội thoại"
-  ,"Active Users": "Người Dùng Hoạt Động"
-  ,"Currently interacting": "Đang tương tác"
-  ,"Conversation Trend": "Xu Hướng Cuộc Hội Thoại"
-  ,"Number of conversations and messages over time": "Số lượng cuộc hội thoại và tin nhắn theo thời gian"
-  ,"Messages": "Tin nhắn"
-  ,"Most Active Users": "Người Dùng Tích Cực Nhất"
-  ,"Top users with the most conversations": "Top người dùng có nhiều cuộc hội thoại nhất"
-  ,"Document Report": "Báo Cáo Tài Liệu"
-  ,"Failed to load document statistics. Please try again later.": "Không thể tải dữ liệu thống kê tài liệu. Vui lòng thử lại sau."
-  ,"Small (< 1MB)": "Nhỏ (< 1MB)"
-  ,"Medium (1-10MB)": "Trung bình (1-10MB)"
-  ,"Large (>= 10MB)": "Lớn (>= 10MB)"
-  ,"Public": "Công khai"
-  ,"Private": "Riêng tư"
-  ,"Statistics on documents in the system": "Thống kê về tài liệu trong hệ thống"
-  ,"Total Documents": "Tổng Tài Liệu"
-  ,"Public Documents": "Tài Liệu Công Khai"
-  ,"Publicly accessible": "Có thể truy cập công khai"
-  ,"Private Documents": "Tài Liệu Riêng Tư"
-  ,"Internal only": "Chỉ nội bộ"
-  ,"Total Size": "Tổng Dung Lượng"
-  ,"Size of all documents": "Dung lượng tất cả tài liệu"
-  ,"Distribution by File Type": "Phân Bố Theo Loại File"
-  ,"Number of documents by format": "Số lượng tài liệu theo định dạng"
-  ,"Distribution by Size": "Phân Bố Theo Kích Thước"
-  ,"Number of files by size": "Số lượng file theo kích thước"
-  ,"Count": "Số lượng"
-  ,"Access Rights Distribution": "Phân Quyền Truy Cập"
-  ,"Public vs private documents": "Tài liệu công khai vs riêng tư"
-  ,"Details by File Type": "Chi Tiết Theo Loại File"
-  ,"Quantity and size": "Số lượng và dung lượng"
-  ,"No documents found": "Không có tài liệu nào"
-  ,"NLP Report": "Báo Cáo NLP"
-  ,"Failed to load NLP statistics. Please try again later.": "Không thể tải dữ liệu thống kê NLP. Vui lòng thử lại sau."
-  ,"Statistics on natural language processing components": "Thống kê về các thành phần xử lý ngôn ngữ tự nhiên"
-  ,"Total intents": "Tổng số ý định"
-  ,"Total entities": "Tổng số thực thể"
-  ,"Total actions": "Tổng số hành động"
-  ,"Total stories": "Tổng số câu chuyện"
-  ,"Total responses": "Tổng số phản hồi"
-  ,"NLP Component Distribution": "Phân Bố Thành Phần NLP"
-  ,"Proportion of components in system": "Tỷ lệ các thành phần trong hệ thống"
-  ,"Component Comparison": "So Sánh Thành Phần"
-  ,"Quantity of NLP components": "Số lượng các thành phần NLP"
-  ,"Most popular intents": "Các intent phổ biến nhất"
-  ,"Stories with the most intents": "Các story có nhiều intent nhất"
-  ,"User Report": "Báo Cáo Người Dùng"
-  ,"Failed to load user statistics. Please try again later.": "Không thể tải dữ liệu thống kê người dùng. Vui lòng thử lại sau."
-  ,"Overview of users in the system": "Tổng quan về người dùng trong hệ thống"
-  ,"Total Users": "Tổng Người Dùng"
-  ,"All users": "Tất cả người dùng"
-  ,"Active": "Hoạt động"
-  ,"Banned Users": "Người Dùng Bị Cấm"
-  ,"Banned": "Bị cấm"
-  ,"Inactive Users": "Người Dùng Không Hoạt Động"
-  ,"Not activated": "Chưa kích hoạt"
-  ,"Gender Distribution": "Phân Bố Theo Giới Tính"
-  ,"Number of users by gender": "Số lượng người dùng theo giới tính"
-  ,"Registration Trend": "Xu Hướng Đăng Ký"
-  ,"Number of new users over time": "Số lượng người dùng mới theo thời gian"
-  ,"New users": "Người dùng mới"
-  ,"User Status Distribution": "Phân Bố Trạng Thái Người Dùng"
-  ,"Comparison of user status": "So sánh trạng thái người dùng"
-  ,"Inactive": "Không hoạt động"
-  ,"Create Intent": "Thêm Intent"
-  ,"Intent Name": "Tên Intent"
-  ,"Error loading intents": "Lỗi khi tải danh sách intent"
-  ,"No description": "Không có mô tả"
-  ,"Label": "Nhãn"
-  ,"Training Status": "Trạng thái huấn luyện"
-  ,"Trained": "Đã huấn luyện"
-  ,"Not trained": "Chưa huấn luyện"
-  ,"All training statuses": "Tất cả trạng thái huấn luyện"
-  ,"Model": "Mô hình"
-  ,"All models": "Tất cả mô hình"
-  ,"Show deleted intents": "Hiện intent đã xóa"
-  ,"Sort by": "Sắp xếp theo"
-  ,"Newest first": "Mới nhất trước"
-  ,"Oldest first": "Cũ nhất trước"
-  ,"Select sort": "Chọn cách sắp xếp"
-  ,"Start Date": "Từ ngày"
-  ,"End Date": "Đến ngày"
-  ,"Select limit": "Chọn giới hạn"
-  ,"intents / page": "intent / trang"
-  ,"Search intents": "Tìm kiếm intent"
-  ,"Filter Intents": "Lọc Intent"
-  ,"Filter by label": "Lọc theo nhãn"
-  ,"Created At": "Tạo lúc"
-  ,"Actions": "Thao tác"
-  ,"View details": "Xem chi tiết"
-  ,"Restore from trash": "Khôi phục từ thùng rác"
-  ,"Delete permanently": "Xóa vĩnh viễn"
-  ,"Move to trash": "Chuyển vào thùng rác"
-  ,"Description": "Mô tả"
-  ,"Search": "Tìm kiếm"
-  ,"Filter": "Lọc"
-  ,"Close": "Đóng"
-  ,"items selected": "mục đã chọn"
-  ,"Search actions": "Tìm kiếm action"
-  ,"Filter Actions": "Lọc Action"
-  ,"Show deleted actions": "Hiện action đã xóa"
-  ,"actions / page": "action / trang"
-  ,"Create Action": "Thêm Action"
-  ,"Error loading actions": "Lỗi khi tải danh sách action"
-  ,"Action Name": "Tên Action"
-  ,"Action Code": "Code Action"
-  ,"View Python code": "Xem code Python"
-  ,"View Code": "Xem Code"
-  ,"Python Code": "Python Code"
-  ,"No definition": "Không có định nghĩa"
-  ,"Edit action": "Chỉnh sửa action"
-  ,"Restore": "Khôi phục"
-  ,"Search entities": "Tìm kiếm entity"
-  ,"Filter Entities": "Lọc Entity"
-  ,"Show deleted entities": "Hiện entity đã xóa"
-  ,"entities / page": "entity / trang"
-  ,"Create Entity": "Thêm Entity"
-  ,"Error loading entities": "Lỗi khi tải danh sách entity"
-  ,"Entity Name": "Tên Entity"
-  ,"Definition": "Định nghĩa"
-  ,"View YAML": "Xem YAML"
-  ,"YAML Definition": "Định nghĩa YAML"
-}
+  "Are you sure you want to delete this document? This action cannot be undone.": "Bạn có chắc muốn xóa tài liệu này không? Hành động này không thể hoàn tác.",
+  "Please enter action name": "Vui lòng nhập tên action",
+  "Failed to create action": "Không thể tạo action",
+  "Action updated successfully": "Cập nhật action thành công",
+  "Failed to update action": "Không thể cập nhật action",
+  "Failed to create response": "Không thể tạo response",
+  "Failed to update response": "Không thể cập nhật response",
+  "Please enter entity name": "Vui lòng nhập tên entity",
+  "Entity ID is missing": "Thiếu ID entity",
+  "Failed to create entity": "Không thể tạo entity",
+  "Failed to update entity": "Không thể cập nhật entity",
+  "Restored successfully": "Khôi phục thành công",
+  "Restore failed. Please try again.": "Khôi phục thất bại. Vui lòng thử lại.",
+  "Restore item": "Khôi phục mục",
+  "Are you sure you want to restore this item?": "Bạn có chắc muốn khôi phục mục này không?",
+  "It will be moved back to active list.": "Mục sẽ được chuyển về danh sách đang hoạt động.",
+  "Restore": "Khôi phục",
+  "Copied to clipboard": "Đã sao chép vào clipboard",
+  "Failed to copy text": "Không thể sao chép văn bản",
+  "An error occurred while copying": "Có lỗi xảy ra khi sao chép",
+  "PDF exported successfully": "Đã xuất file PDF thành công",
+  "Failed to export PDF": "Không thể xuất file PDF",
+  "Word exported successfully": "Đã xuất file Word thành công",
+  "Failed to export Word": "Không thể xuất file Word",
+  "Options": "Tùy chọn",
+  "Copied": "Đã sao chép",
+  "Copy": "Sao chép",
+  "Export PDF": "Xuất PDF",
+  "Export Word": "Xuất Word",
+  "No messages to export": "Không có tin nhắn nào để xuất",
+  "Export conversation": "Xuất cuộc trò chuyện",
+  "Export file": "Xuất file",
+  "Exporting...": "Đang xuất...",
+  "Saved selected documents": "Đã lưu {{count}} tài liệu được chọn",
+  "Failed to save selection. Please try again.": "Không thể lưu lựa chọn. Vui lòng thử lại.",
+  "Read intents successfully from files": "Đã đọc thành công {{count}} intents từ {{nluName}} + {{domainName}}",
+  "Failed to read YAML file: {{error}}": "Lỗi khi đọc file YAML: {{error}}",
+  "Read rows successfully from file": "Đã đọc thành công {{count}} dòng từ file {{fileName}}",
+  "Failed to read file: {{error}}. Please check file format (Excel or CSV).": "Lỗi khi đọc file: {{error}}. Vui lòng kiểm tra định dạng file (Excel hoặc CSV).",
+  "Please select both NLU and Domain files": "Vui lòng chọn cả 2 file NLU và Domain",
+  "Intent name cannot be empty": "Tên intent không được để trống",
+  "Intent name is duplicated. Please choose another name.": "Tên intent bị trùng. Vui lòng đặt tên khác.",
+  "Updated successfully": "Đã cập nhật",
+  "Example cannot be empty": "Ví dụ không được để trống",
+  "Example updated successfully": "Đã cập nhật ví dụ",
+  "At least one example is required": "Phải có ít nhất 1 ví dụ",
+  "Example deleted successfully": "Đã xóa ví dụ",
+  "Question and answer are required to generate examples": "Cần có câu hỏi và câu trả lời để tạo ví dụ",
+  "No examples were generated": "Không có ví dụ nào được tạo",
+  "Added new examples": "Đã thêm {{count}} ví dụ mới",
+  "Please import a file first": "Vui lòng import file trước",
+  "The first row must include both question and answer": "Dòng đầu tiên cần có đầy đủ câu hỏi và câu trả lời",
+  "Created new intents": "Đã tạo {{count}} intent mới",
+  "No rows selected for import": "Chưa chọn dòng nào để import",
+  "Intents require at least 5 examples": "{{count}} intent không đủ 5 ví dụ. Vui lòng thêm ví dụ hoặc dùng nút ✨ để tạo tự động.",
+  "Duplicate intent names detected: {{names}}. Please fix before import.": "Phát hiện tên intent trùng: {{names}}. Vui lòng sửa trước khi import.",
+  "Imported rows successfully": "Đã import thành công {{count}} dòng",
+  "Import result: {{success}} succeeded, {{failed}} failed. Please check errors below.": "Thành công: {{success}}, Thất bại: {{failed}}. Kiểm tra lỗi bên dưới.",
+  "No failed rows to retry": "Không có dòng nào thất bại để thử lại",
+  "Excel template downloaded. Please fill data and upload.": "Đã tải file mẫu Excel. Hãy điền dữ liệu và tải lên.",
+  "YAML template downloaded. Please adjust data and upload.": "Đã tải file mẫu YAML. Hãy chỉnh dữ liệu và tải lên.",
+  "Failed to generate template file": "Lỗi khi tạo file mẫu",
+  "No questions were generated": "Không có câu hỏi nào được tạo",
+  "Added questions automatically": "Đã thêm các câu hỏi tự động",
+  "Please enter question group name": "Vui lòng nhập tên nhóm câu hỏi",
+  "Please enter at least one question to start": "Vui lòng nhập ít nhất một câu hỏi để bắt đầu",
+  "Data created successfully": "Tạo dữ liệu thành công",
+  "Failed to create data": "Tạo dữ liệu thất bại",
+  "Import question groups from file": "Nhập nhóm câu hỏi từ file",
+  "Import intents and create stories automatically": "Import intents và tạo stories tự động",
+  "Download template": "Tải file mẫu",
+  "Excel template": "Mẫu Excel",
+  "YAML template": "Mẫu YAML",
+  "Import from file": "Nhập từ file",
+  "Import from YAML (2 files)": "Nhập từ YAML (2 file)",
+  "Drag and drop an Excel file here to import": "Kéo thả file Excel vào đây để nhập",
+  "Or": "Hoặc",
+  "choose file from your computer": "chọn file từ máy tính",
+  "Supported: XLSX, CSV, TSV": "Hỗ trợ: XLSX, CSV, TSV",
+  "Drop files here or click to select": "Thả file vào đây hoặc bấm để chọn",
+  "Excel guide: Download template and fill data manually": "Excel: Tải file mẫu và điền dữ liệu thủ công",
+  "Choose NLU file (.yaml)": "Chọn file NLU (.yaml)",
+  "Contains intent definitions and examples": "Chứa định nghĩa intent và ví dụ",
+  "Choose Domain/Response file (.yaml)": "Chọn file Domain/Response (.yaml)",
+  "Contains response definitions (utterances)": "Chứa định nghĩa response (utterances)",
+  "Process 2 files and preview": "Xử lý 2 file và xem trước",
+  "NLU file help: Intent structure with examples": "NLU File: Cấu trúc intent với examples",
+  "Domain file help: Response/utterance structure": "Domain File: Cấu trúc responses/utterances",
+  "Reading file...": "Đang đọc file...",
+  "Data preview": "Xem trước dữ liệu",
+  "Question groups count: {{count}}": "{{count}} nhóm câu hỏi",
+  "Progress": "Tiến trình",
+  "Generating...": "Đang tạo...",
+  "Generate more question groups": "Tạo thêm nhóm câu hỏi",
+  "Select": "Chọn",
+  "Answer": "Câu trả lời",
+  "question_group_name": "ten_nhom_cau_hoi",
+  "Enter answer...": "Nhập câu trả lời...",
+  "Questions count: {{count}}": "{{count}} câu hỏi",
+  "Saved": "Đã lưu",
+  "Edit question group": "Sửa nhóm câu hỏi",
+  "Generate more questions": "Tạo thêm câu hỏi",
+  "Delete question group": "Xóa nhóm câu hỏi",
+  "API error": "Lỗi API",
+  "Validation": "Kiểm tra",
+  "Importing...": "Đang nhập...",
+  "Import selected data": "Nhập dữ liệu đã chọn",
+  "Retry failed rows": "Thử lại các dòng lỗi",
+  "Cancel / Clear all": "Hủy / Xóa tất cả",
+  "At least 5 examples required (current: {{count}})": "Cần ít nhất 5 ví dụ (hiện tại: {{count}})",
+  "Unable to read file": "Không thể đọc file",
+  "Unknown error": "Lỗi không xác định",
+  "At least 5 questions are required before saving": "Cần ít nhất 5 câu hỏi trước khi lưu",
+  "Normalized name": "Tên chuẩn hóa",
+  "(auto-generated)": "(sẽ được tạo tự động)",
+  "No questions yet. Add manually or generate automatically.": "Chưa có câu hỏi. Thêm thủ công hoặc tạo tự động.",
+  "Delete question": "Xóa câu hỏi",
+  "Saving...": "Đang lưu...",
+  "Generate questions automatically": "Tạo câu hỏi tự động",
+  "Clear all questions": "Xóa tất cả câu hỏi",
+  "Usage guide": "Hướng dẫn sử dụng",
+  "What is a question group?": "Nhóm câu hỏi là gì?",
+  "A question group represents a user intent (what users may ask). Similar questions help the system recognize that group.": "Nhóm câu hỏi đại diện cho ý định người dùng (những gì họ có thể hỏi). Các câu hỏi tương tự giúp hệ thống nhận diện nhóm này.",
+  "Example": "Ví dụ",
+  "Example question group line": "• chao_hoi - người dùng chào hỏi",
+  "Name format": "Định dạng tên",
+  "The question group name is normalized to lower_case_with_underscores. You can preview the normalized name under the input field.": "Tên nhóm câu hỏi sẽ được chuẩn hóa về dạng chữ_thường_gạch_dưới. Bạn có thể xem trước ngay bên dưới ô nhập.",
+  "Answer name": "Tên câu trả lời",
+  "If you enter an answer, it will be created with the default name pattern utter_<group_name>.": "Nếu bạn nhập câu trả lời, hệ thống sẽ tạo theo mẫu tên mặc định utter_<ten_nhom>.",
+  "Similar questions help": "Các câu hỏi tương tự",
+  "You can add many similar questions to improve recognition. Use the Generate questions automatically button to let AI suggest more from your sample.": "Bạn có thể thêm nhiều câu hỏi tương tự để cải thiện khả năng nhận diện. Dùng nút Tạo câu hỏi tự động để AI gợi ý thêm từ câu hỏi mẫu.",
+  "Loading chatbot list...": "Đang tải danh sách chatbot...",
+  "Select chatbot...": "Chọn chatbot...",
+  "General": "Thường",
+  "Add data": "Thêm dữ liệu",
+  "Expert": "Chuyên gia",
+  "Training": "Huấn luyện",
+  "Context documents": "Tài liệu ngữ cảnh",
+  "Statistics reports": "Báo cáo thống kê",
+  "Conversations": "Cuộc hội thoại",
+  "Unable to send message. Please try again.": "Không thể gửi tin nhắn. Vui lòng thử lại.",
+  "Sorry, I cannot respond right now. Please try again later.": "Xin lỗi, tôi không thể phản hồi lúc này. Vui lòng thử lại sau.",
+  "Switched to normal chat mode": "Đã chuyển sang chế độ Chat thường",
+  "Switched to RAG chat mode": "Đã chuyển sang chế độ RAG Chat",
+  "How can I help you?": "Tôi có thể giúp gì cho bạn?",
+  "Normal chat": "Chat thường",
+  "Start a conversation": "Bắt đầu cuộc trò chuyện",
+  "Ask a question or request help to start the conversation": "Chọn gợi ý bên dưới hoặc nhập câu hỏi của bạn để bắt đầu trò chuyện với AI",
+  "Responding...": "Đang trả lời...",
+  "Loading chatbot...": "Đang tải chatbot...",
+  "Select chatbot": "Chọn chatbot",
+  "No chatbots available": "Không có chatbot khả dụng",
+  "Ask anything": "Hỏi bất kỳ điều gì",
+  "Chatbot may make mistakes. Please verify important information.": "Chat Bot có thể mắc lỗi. Hãy kiểm tra các thông tin quan trọng.",
+  "Like response": "Thích câu trả lời",
+  "Dislike response": "Không thích câu trả lời",
+  "Unable to record feedback right now": "Chưa thể ghi nhận đánh giá lúc này",
+  "Choose chat type": "Chọn loại chat",
+  "Choose the chat mode that fits your needs": "Chọn chế độ chat phù hợp với nhu cầu của bạn",
+  "Chat with Rasa bot for general questions and standard support": "Chat với Rasa bot để trả lời câu hỏi chung và hỗ trợ thông thường",
+  "Chat with AI based on uploaded documents for specific questions": "Chat với AI dựa trên tài liệu đã upload để trả lời câu hỏi cụ thể",
+  "Select documents (optional)": "Chọn tài liệu (tùy chọn)",
+  "No documents yet. Please upload documents before using RAG Chat.": "Chưa có tài liệu nào. Vui lòng upload tài liệu trước khi sử dụng RAG Chat.",
+  "Start": "Bắt đầu",
+  "More": "Thêm",
+  "More pages": "Thêm trang",
+  "RAG Chat": "RAG Chat",
+  "Server Excel Import": "Import Excel lên server",
+  "Upload one file, backend creates intent/response/rule with metadata": "Tải một file, backend sẽ tạo intent/response/rule kèm metadata",
+  "FAQ Excel Import": "Import Excel FAQ",
+  "For FAQ data: backend auto links intent and rule for each row": "Dùng cho dữ liệu FAQ: backend tự gắn intent và rule theo từng dòng",
+  "Chatbot for management (optional)": "Chatbot để quản lý (tùy chọn)",
+  "No specific chatbot (shared)": "Không chọn chatbot cụ thể (dùng chung)",
+  "View batches": "Xem các batch",
+  "Import label (optional)": "Nhãn import (tùy chọn)",
+  "Example: pccc_batch_march": "Ví dụ: pccc_batch_march",
+  "Duplicate strategy": "Chiến lược trùng dữ liệu",
+  "Skip duplicate": "Bỏ qua bản ghi trùng",
+  "Upsert": "Upsert",
+  "Strict fail": "Dừng khi có trùng",
+  "Change file": "Đổi file",
+  "Choose Excel file": "Chọn file Excel",
+  "Please select chatbot first": "Vui lòng chọn chatbot trước",
+  "Please select chatbot before importing": "Vui lòng chọn chatbot trước khi import",
+  "Please choose an Excel file": "Vui lòng chọn file Excel",
+  "Server import completed": "Import lên server thành công",
+  "Import failed": "Import thất bại",
+  "Batch": "Batch",
+  "Skipped": "Bỏ qua",
+  "Failed": "Thất bại",
+  "items": "bản ghi",
+  "active": "đang bật",
+  "Label": "Nhãn",
+  "Filter by label": "Lọc theo nhãn",
+  "Organize intents by label/category (e.g., sheet name)": "Tổ chức intent theo nhãn/danh mục (ví dụ: tên sheet)",
+  "Training Status": "Trạng thái huấn luyện",
+  "All training statuses": "Tất cả trạng thái huấn luyện",
+  "Trained": "Đã huấn luyện",
+  "Not trained": "Chưa huấn luyện",
+  "Model": "Mô hình",
+  "All models": "Tất cả mô hình",
+  "Please enter at least one question to auto-generate": "Vui lòng nhập ít nhất một câu hỏi để tạo tự động",
+  "Sample question (enter one question to start)": "Câu hỏi mẫu (nhập một câu hỏi để bắt đầu)",
+  "Quick data creation": "Tạo dữ liệu nhanh",
+  "Create question groups, answers, and link them together": "Tạo nhóm câu hỏi, câu trả lời và liên kết chúng lại",
+  "Question group name": "Tên nhóm câu hỏi",
+  "Similar questions": "Câu hỏi tương tự",
+  "Import Batches": "Quản lý lô nhập",
+  "Manage imported data batches and toggle training inclusion": "Quản lý các lô dữ liệu đã nhập và bật/tắt đưa vào huấn luyện",
+  "Please select a specific chatbot to toggle a batch": "Vui lòng chọn một chatbot cụ thể để bật/tắt lô này",
+  "Batch activated": "Đã kích hoạt lô",
+  "Batch deactivated": "Đã tắt lô",
+  "Failed to update batch": "Không thể cập nhật lô",
+  "Please select a specific chatbot to delete a batch": "Vui lòng chọn một chatbot cụ thể để xóa lô này",
+  "This will permanently delete this batch. Continue?": "Thao tác này sẽ xóa vĩnh viễn lô này. Tiếp tục?",
+  "Import batch deleted": "Đã xóa lô nhập",
+  "Failed to delete batch": "Không thể xóa lô",
+  "Failed to load import batches": "Không thể tải danh sách lô nhập",
+  "Please select a chatbot first to view import batches.": "Vui lòng chọn một chatbot trước để xem các lô nhập.",
+  "Global mode: displaying batches across all chatbots. Select a specific chatbot to toggle or delete a batch.": "Chế độ toàn bộ: hiển thị lô từ tất cả chatbot. Chọn một chatbot cụ thể để bật/tắt hoặc xóa lô.",
+  "No import batches found": "Không tìm thấy lô nhập nào",
+  "Inactive": "Không hoạt động",
+  "Deactivate batch": "Tắt lô",
+  "Activate batch": "Kích hoạt lô",
+  "Delete batch": "Xóa lô",
+  "Session expired or unauthorized. Please log in again.": "Phiên đăng nhập đã hết hạn hoặc bạn không có quyền. Vui lòng đăng nhập lại.",
+  "Intent name is duplicated{{name}}.": "Intent đã bị trùng tên{{name}}.",
+  "Response name is duplicated{{name}}.": "Response đã bị trùng tên{{name}}.",
+  "Data is duplicated. Please check intent/response names.": "Dữ liệu bị trùng. Vui lòng kiểm tra lại tên intent/response.",
+  "Cannot connect to server. Please check your network or try again later.": "Không kết nối được tới máy chủ. Vui lòng kiểm tra mạng hoặc thử lại sau.",
+  "Response name is duplicated: {{name}}.": "Response đã bị trùng tên: {{name}}.",
+  "Intent name is duplicated: {{name}}.": "Intent đã bị trùng tên: {{name}}.",
+  "Story already exists for this intent.": "Story đã tồn tại cho intent này.",
+  "Cannot import this row. Please check data and try again.": "Không thể import dòng này. Vui lòng kiểm tra dữ liệu và thử lại.",
+  "Please select at least 1 chatbot to import": "Vui lòng chọn ít nhất 1 chatbot để import",
+  "Select one or more chatbots to import this data": "Chọn một hoặc nhiều chatbot để import dữ liệu này",
+  "Common label for import file": "Nhãn chung cho file import",
+  "Example: pccc_faq_03_2026": "Ví dụ: pccc_faq_03_2026",
+  "This label applies to all intents/responses imported from the current YAML file": "Nhãn này sẽ áp dụng cho toàn bộ intent/response được import từ file YAML hiện tại",
+  "Please select at least 1 chatbot before importing": "Vui lòng chọn ít nhất 1 chatbot trước khi import",
+  "Duplicate handling": "Xử lý trùng dữ liệu",
+  "Overwrite if content differs": "Ghi đè nếu nội dung khác",
+  "Skip duplicates": "Bỏ qua bản ghi trùng",
+  "Stop and report duplicates": "Dừng khi có trùng và báo lỗi",
+  "Error": "Lỗi",
+  "Intent already exists: {{name}}": "Intent đã tồn tại: {{name}}",
+  "Response already exists: {{name}}": "Response đã tồn tại: {{name}}",
+  "Import intents and create rules automatically": "Import intents và tạo rules tự động",
+  "Select all": "Chọn tất cả",
+  "Clear": "Bỏ chọn",
+  "Please select at least one chatbot": "Vui lòng chọn ít nhất một chatbot",
+  "Applicable Chatbots": "Chatbot áp dụng",
+  "Select one or more chatbots to create this data": "Chọn một hoặc nhiều chatbot để tạo dữ liệu này",
+  "Example: pccc": "Ví dụ: pccc",
+  "Failed to generate examples automatically": "Tạo ví dụ tự động thất bại",
+  "Failed to generate intents automatically": "Tạo intent tự động thất bại",
+  "Chatbot Report": "Báo Cáo Chatbot",
+  "Failed to load chatbot statistics. Please try again later.": "Không thể tải dữ liệu thống kê chatbot. Vui lòng thử lại sau.",
+  "Information about chatbots in the system": "Thông tin về các chatbot trong hệ thống",
+  "Total Chatbots": "Tổng Chatbot",
+  "Chatbots in system": "Chatbot trong hệ thống",
+  "Running Rasa servers": "Server Rasa đang chạy",
+  "Running Action servers": "Action server đang chạy",
+  "Chatbot Details": "Chi Tiết Chatbot",
+  "List and details of chatbots": "Danh sách và thông tin chi tiết các chatbot",
+  "No chatbots in the system": "Không có chatbot nào trong hệ thống",
+  "Conversation Report": "Báo Cáo Cuộc Hội Thoại",
+  "Failed to load conversation statistics. Please try again later.": "Không thể tải dữ liệu thống kê cuộc hội thoại. Vui lòng thử lại sau.",
+  "Statistics on conversations and messages": "Thống kê về cuộc hội thoại và tin nhắn",
+  "From date": "Từ ngày",
+  "To date": "Đến ngày",
+  "Clear filters": "Xóa bộ lọc",
+  "Total Conversations": "Tổng Cuộc Hội Thoại",
+  "All conversations": "Tất cả cuộc hội thoại",
+  "Average Messages": "Tin Nhắn Trung Bình",
+  "Per conversation": "Mỗi cuộc hội thoại",
+  "Active Users": "Người Dùng Hoạt Động",
+  "Currently interacting": "Đang tương tác",
+  "Conversation Trend": "Xu Hướng Cuộc Hội Thoại",
+  "Number of conversations and messages over time": "Số lượng cuộc hội thoại và tin nhắn theo thời gian",
+  "Messages": "Tin nhắn",
+  "Most Active Users": "Người Dùng Tích Cực Nhất",
+  "Top users with the most conversations": "Top người dùng có nhiều cuộc hội thoại nhất",
+  "Document Report": "Báo Cáo Tài Liệu",
+  "Failed to load document statistics. Please try again later.": "Không thể tải dữ liệu thống kê tài liệu. Vui lòng thử lại sau.",
+  "Small (< 1MB)": "Nhỏ (< 1MB)",
+  "Medium (1-10MB)": "Trung bình (1-10MB)",
+  "Large (>= 10MB)": "Lớn (>= 10MB)",
+  "Statistics on documents in the system": "Thống kê về tài liệu trong hệ thống",
+  "Total Documents": "Tổng Tài Liệu",
+  "Public Documents": "Tài Liệu Công Khai",
+  "Publicly accessible": "Có thể truy cập công khai",
+  "Private Documents": "Tài Liệu Riêng Tư",
+  "Internal only": "Chỉ nội bộ",
+  "Total Size": "Tổng Dung Lượng",
+  "Size of all documents": "Dung lượng tất cả tài liệu",
+  "Distribution by File Type": "Phân Bố Theo Loại File",
+  "Number of documents by format": "Số lượng tài liệu theo định dạng",
+  "Distribution by Size": "Phân Bố Theo Kích Thước",
+  "Number of files by size": "Số lượng file theo kích thước",
+  "Count": "Số lượng",
+  "Access Rights Distribution": "Phân Quyền Truy Cập",
+  "Public vs private documents": "Tài liệu công khai vs riêng tư",
+  "Details by File Type": "Chi Tiết Theo Loại File",
+  "Quantity and size": "Số lượng và dung lượng",
+  "No documents found": "Không có tài liệu nào",
+  "NLP Report": "Báo Cáo NLP",
+  "Failed to load NLP statistics. Please try again later.": "Không thể tải dữ liệu thống kê NLP. Vui lòng thử lại sau.",
+  "Statistics on natural language processing components": "Thống kê về các thành phần xử lý ngôn ngữ tự nhiên",
+  "Total intents": "Tổng số ý định",
+  "Total entities": "Tổng số thực thể",
+  "Total actions": "Tổng số hành động",
+  "Total stories": "Tổng số câu chuyện",
+  "Total responses": "Tổng số phản hồi",
+  "NLP Component Distribution": "Phân Bố Thành Phần NLP",
+  "Proportion of components in system": "Tỷ lệ các thành phần trong hệ thống",
+  "Component Comparison": "So Sánh Thành Phần",
+  "Quantity of NLP components": "Số lượng các thành phần NLP",
+  "Most popular intents": "Các intent phổ biến nhất",
+  "Stories with the most intents": "Các story có nhiều intent nhất",
+  "User Report": "Báo Cáo Người Dùng",
+  "Failed to load user statistics. Please try again later.": "Không thể tải dữ liệu thống kê người dùng. Vui lòng thử lại sau.",
+  "Overview of users in the system": "Tổng quan về người dùng trong hệ thống",
+  "Total Users": "Tổng Người Dùng",
+  "All users": "Tất cả người dùng",
+  "Banned Users": "Người Dùng Bị Cấm",
+  "Banned": "Bị cấm",
+  "Inactive Users": "Người Dùng Không Hoạt Động",
+  "Not activated": "Chưa kích hoạt",
+  "Gender Distribution": "Phân Bố Theo Giới Tính",
+  "Number of users by gender": "Số lượng người dùng theo giới tính",
+  "Registration Trend": "Xu Hướng Đăng Ký",
+  "Number of new users over time": "Số lượng người dùng mới theo thời gian",
+  "New users": "Người dùng mới",
+  "User Status Distribution": "Phân Bố Trạng Thái Người Dùng",
+  "Comparison of user status": "So sánh trạng thái người dùng",
+  "Create Intent": "Thêm Intent",
+  "Intent Name": "Tên Intent",
+  "Error loading intents": "Lỗi khi tải danh sách intent",
+  "No description": "Không có mô tả",
+  "Show deleted intents": "Hiện intent đã xóa",
+  "Search intents": "Tìm kiếm intent",
+  "Filter Intents": "Lọc Intent",
+  "Search actions": "Tìm kiếm hành động",
+  "Filter Actions": "Lọc Action",
+  "actions / page": "action / trang",
+  "Create Action": "Thêm Action",
+  "Error loading actions": "Lỗi khi tải danh sách action",
+  "Action Name": "Tên Action",
+  "Action Code": "Code Action",
+  "View Code": "Xem Code",
+  "Python Code": "Python Code",
+  "No definition": "Không có định nghĩa",
+  "Edit action": "Chỉnh sửa action",
+  "Search entities": "Tìm kiếm thực thể",
+  "Filter Entities": "Lọc Entity",
+  "Show deleted entities": "Hiện entity đã xóa",
+  "entities / page": "entity / trang",
+  "Create Entity": "Thêm Entity",
+  "Error loading entities": "Lỗi khi tải danh sách entity",
+  "Entity Name": "Tên Entity",
+  "Definition": "Định nghĩa",
+  "View YAML": "Xem YAML",
+  "Name": "Tên",
+  "Filters": "Bộ lọc",
+  "Intents": "Intents",
+  "Filter Options": "Tùy chọn lọc",
+  "Search...": "Tìm kiếm...",
+  "Show deleted": "Hiển thị đã xóa",
+  "Items / page": "Mục / trang",
+  "Retry": "Thử lại",
+  "Rule moved to trash": "Đã chuyển rule vào thùng rác",
+  "Failed to delete rule": "Xóa rule thất bại",
+  "Rule deleted permanently": "Đã xóa rule vĩnh viễn",
+  "Rule restored": "Đã khôi phục rule",
+  "Failed to restore rule": "Khôi phục rule thất bại",
+  "Search models...": "Tìm kiếm mô hình...",
+  "Train Model": "Huấn luyện mô hình",
+  "Original": "Gốc",
+  "Custom": "Tùy chỉnh",
+  "Stories": "Stories",
+  "Download Model": "Tải Model xuống",
+  "models / page": "mô hình / trang",
+  "Failed to load models": "Không thể tải danh sách mô hình",
+  "Search username": "Tìm kiếm tên đăng nhập",
+  "Search unanswered questions": "Tìm kiếm câu hỏi chưa trả lời",
+  "Search stories...": "Tìm kiếm story...",
+  "Search roles": "Tìm kiếm vai trò",
+  "Search responses": "Tìm kiếm phản hồi",
+  "Search permissions": "Tìm kiếm quyền",
+  "Search question or answer": "Tìm kiếm câu hỏi hoặc câu trả lời",
+  "Search entities...": "Tìm kiếm thực thể...",
+  "All sources": "Tất cả nguồn",
+  "Question": "Câu hỏi",
+  "Source": "Nguồn",
+  "Feedback Detail": "Chi tiết phản hồi",
+  "Disliked chatbot response details": "Chi tiết các phản hồi chatbot bị đánh giá không tốt",
+  "User": "Người dùng",
+  "Message ID": "ID tin nhắn",
+  "Please select a chatbot to view message feedback": "Vui lòng chọn một chatbot để xem đánh giá tin nhắn"
+}

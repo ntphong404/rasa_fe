@@ -318,565 +318,525 @@
   "Document deleted successfully": "Document {{fileName}} deleted successfully",
   "Failed to delete document. Please try again.": "Failed to delete document. Please try again.",
   "Delete document": "Delete document",
-  "Are you sure you want to delete this document? This action cannot be undone.": "Are you sure you want to delete this document? This action cannot be undone."
-  ,"Please enter action name": "Please enter action name"
-  ,"Failed to create action": "Failed to create action"
-  ,"Action updated successfully": "Action updated successfully"
-  ,"Failed to update action": "Failed to update action"
-  ,"Failed to create response": "Failed to create response"
-  ,"Failed to update response": "Failed to update response"
-  ,"Please enter entity name": "Please enter entity name"
-  ,"Entity ID is missing": "Entity ID is missing"
-  ,"Failed to create entity": "Failed to create entity"
-  ,"Failed to update entity": "Failed to update entity"
-  ,"Restored successfully": "Restored successfully"
-  ,"Restore failed. Please try again.": "Restore failed. Please try again."
-  ,"Restore item": "Restore item"
-  ,"Are you sure you want to restore this item?": "Are you sure you want to restore this item?"
-  ,"It will be moved back to active list.": "It will be moved back to active list."
-  ,"Restore": "Restore"
-  ,"Copied to clipboard": "Copied to clipboard"
-  ,"Failed to copy text": "Failed to copy text"
-  ,"An error occurred while copying": "An error occurred while copying"
-  ,"PDF exported successfully": "PDF exported successfully"
-  ,"Failed to export PDF": "Failed to export PDF"
-  ,"Word exported successfully": "Word exported successfully"
-  ,"Failed to export Word": "Failed to export Word"
-  ,"Options": "Options"
-  ,"Copied": "Copied"
-  ,"Copy": "Copy"
-  ,"Export PDF": "Export PDF"
-  ,"Export Word": "Export Word"
-  ,"No messages to export": "No messages to export"
-  ,"Export conversation": "Export conversation"
-  ,"Export file": "Export file"
-  ,"Exporting...": "Exporting..."
-  ,"Saved selected documents": "Saved {{count}} selected documents"
-  ,"Failed to save selection. Please try again.": "Failed to save selection. Please try again."
-  ,"Read intents successfully from files": "Read {{count}} intents successfully from {{nluName}} + {{domainName}}"
-  ,"Failed to read YAML file: {{error}}": "Failed to read YAML file: {{error}}"
-  ,"Read rows successfully from file": "Read {{count}} rows successfully from file {{fileName}}"
-  ,"Failed to read file: {{error}}. Please check file format (Excel or CSV).": "Failed to read file: {{error}}. Please check file format (Excel or CSV)."
-  ,"Please select both NLU and Domain files": "Please select both NLU and Domain files"
-  ,"Intent name cannot be empty": "Intent name cannot be empty"
-  ,"Intent name is duplicated. Please choose another name.": "Intent name is duplicated. Please choose another name."
-  ,"Updated successfully": "Updated successfully"
-  ,"Example cannot be empty": "Example cannot be empty"
-  ,"Example updated successfully": "Example updated successfully"
-  ,"At least one example is required": "At least one example is required"
-  ,"Example deleted successfully": "Example deleted successfully"
-  ,"Question and answer are required to generate examples": "Question and answer are required to generate examples"
-  ,"No examples were generated": "No examples were generated"
-  ,"Added new examples": "Added {{count}} new examples"
-  ,"Please import a file first": "Please import a file first"
-  ,"The first row must include both question and answer": "The first row must include both question and answer"
-  ,"Created new intents": "Created {{count}} new intents"
-  ,"No rows selected for import": "No rows selected for import"
-  ,"Intents require at least 5 examples": "{{count}} intents have fewer than 5 examples. Please add more or use ✨ to generate automatically."
-  ,"Duplicate intent names detected: {{names}}. Please fix before import.": "Duplicate intent names detected: {{names}}. Please fix before import."
-  ,"Imported rows successfully": "Imported {{count}} rows successfully"
-  ,"Import result: {{success}} succeeded, {{failed}} failed. Please check errors below.": "Import result: {{success}} succeeded, {{failed}} failed. Please check errors below."
-  ,"No failed rows to retry": "No failed rows to retry"
-  ,"Excel template downloaded. Please fill data and upload.": "Excel template downloaded. Please fill data and upload."
-  ,"YAML template downloaded. Please adjust data and upload.": "YAML template downloaded. Please adjust data and upload."
-  ,"Failed to generate template file": "Failed to generate template file"
-  ,"No questions were generated": "No questions were generated"
-  ,"Added questions automatically": "Added questions automatically"
-  ,"Please enter question group name": "Please enter question group name"
-  ,"Please enter at least one question to start": "Please enter at least one question to start"
-  ,"Data created successfully": "Data created successfully"
-  ,"Failed to create data": "Failed to create data"
-  ,"Import question groups from file": "Import question groups from file"
-  ,"Import intents and create stories automatically": "Import intents and create stories automatically"
-  ,"Download template": "Download template"
-  ,"Excel template": "Excel template"
-  ,"YAML template": "YAML template"
-  ,"Import from file": "Import from file"
-  ,"Import from YAML (2 files)": "Import from YAML (2 files)"
-  ,"Drag and drop an Excel file here to import": "Drag and drop an Excel file here to import"
-  ,"Or": "Or"
-  ,"choose file from your computer": "choose file from your computer"
-  ,"Supported: XLSX, CSV, TSV": "Supported: XLSX, CSV, TSV"
-  ,"Drop files here or click to select": "Drop files here or click to select"
-  ,"Excel guide: Download template and fill data manually": "Excel: Download template and fill data manually"
-  ,"Selected": "Selected"
-  ,"Choose NLU file (.yaml)": "Choose NLU file (.yaml)"
-  ,"Contains intent definitions and examples": "Contains intent definitions and examples"
-  ,"Choose Domain/Response file (.yaml)": "Choose Domain/Response file (.yaml)"
-  ,"Contains response definitions (utterances)": "Contains response definitions (utterances)"
-  ,"Process 2 files and preview": "Process 2 files and preview"
-  ,"NLU file help: Intent structure with examples": "NLU File: Intent structure with examples"
-  ,"Domain file help: Response/utterance structure": "Domain File: Response/utterance structure"
-  ,"Reading file...": "Reading file..."
-  ,"Data preview": "Data preview"
-  ,"Question groups count: {{count}}": "{{count}} question groups"
-  ,"Progress": "Progress"
-  ,"Generating...": "Generating..."
-  ,"Generate more question groups": "Generate more question groups"
-  ,"Select": "Select"
-  ,"Answer": "Answer"
-  ,"question_group_name": "question_group_name"
-  ,"Enter answer...": "Enter answer..."
-  ,"Questions count: {{count}}": "{{count}} questions"
-  ,"Saved": "Saved"
-  ,"Edit question group": "Edit question group"
-  ,"Generate more questions": "Generate more questions"
-  ,"Delete question group": "Delete question group"
-  ,"API error": "API error"
-  ,"Validation": "Validation"
-  ,"Importing...": "Importing..."
-  ,"Import selected data": "Import selected data"
-  ,"Retry failed rows": "Retry failed rows"
-  ,"Cancel / Clear all": "Cancel / Clear all"
-  ,"At least 5 examples required (current: {{count}})": "At least 5 examples required (current: {{count}})"
-  ,"Unable to read file": "Unable to read file"
-  ,"Unknown error": "Unknown error"
-  ,"At least 5 questions are required before saving": "At least 5 questions are required before saving"
-  ,"Normalized name": "Normalized name"
-  ,"(auto-generated)": "(auto-generated)"
-  ,"No questions yet. Add manually or generate automatically.": "No questions yet. Add manually or generate automatically."
-  ,"Delete question": "Delete question"
-  ,"Saving...": "Saving..."
-  ,"Generate questions automatically": "Generate questions automatically"
-  ,"Clear all questions": "Clear all questions"
-  ,"Usage guide": "Usage guide"
-  ,"What is a question group?": "What is a question group?"
-  ,"A question group represents a user intent (what users may ask). Similar questions help the system recognize that group.": "A question group represents a user intent (what users may ask). Similar questions help the system recognize that group."
-  ,"Example": "Example"
-  ,"Example question group line": "- chao_hoi - user greets"
-  ,"Name format": "Name format"
-  ,"The question group name is normalized to lower_case_with_underscores. You can preview the normalized name under the input field.": "The question group name is normalized to lower_case_with_underscores. You can preview the normalized name under the input field."
-  ,"Answer name": "Answer name"
-  ,"If you enter an answer, it will be created with the default name pattern utter_<group_name>.": "If you enter an answer, it will be created with the default name pattern utter_<group_name>."
-  ,"Similar questions help": "Similar questions"
-  ,"You can add many similar questions to improve recognition. Use the Generate questions automatically button to let AI suggest more from your sample.": "You can add many similar questions to improve recognition. Use the Generate questions automatically button to let AI suggest more from your sample."
-  ,"Loading chatbot list...": "Loading chatbot list..."
-  ,"Select chatbot...": "Select chatbot..."
-  ,"General": "General"
-  ,"Add data": "Add data"
-  ,"View details": "View details"
-  ,"Expert": "Expert"
-  ,"Training": "Training"
-  ,"Context documents": "Context documents"
-  ,"Statistics reports": "Statistics reports"
-  ,"Conversations": "Conversations"
-  ,"Unable to send message. Please try again.": "Unable to send message. Please try again."
-  ,"Sorry, I cannot respond right now. Please try again later.": "Sorry, I cannot respond right now. Please try again later."
-  ,"Switched to normal chat mode": "Switched to normal chat mode"
-  ,"Switched to RAG chat mode": "Switched to RAG chat mode"
-  ,"How can I help you?": "How can I help you?"
-  ,"Normal chat": "Normal chat"
-  ,"Start a conversation": "Start a conversation"
-  ,"Ask a question or request help to start the conversation": "Ask a question or request help to start the conversation"
-  ,"Responding...": "Responding..."
-  ,"Loading chatbot...": "Loading chatbot..."
-  ,"Select chatbot": "Select chatbot"
-  ,"No chatbots available": "No chatbots available"
-  ,"Ask anything": "Ask anything"
-  ,"Chatbot may make mistakes. Please verify important information.": "Chatbot may make mistakes. Please verify important information."
-  ,"Like response": "Like response"
-  ,"Dislike response": "Dislike response"
-  ,"Unable to record feedback right now": "Unable to record feedback right now"
-  ,"Choose chat type": "Choose chat type"
-  ,"Choose the chat mode that fits your needs": "Choose the chat mode that fits your needs"
-  ,"Chat with Rasa bot for general questions and standard support": "Chat with Rasa bot for general questions and standard support"
-  ,"Chat with AI based on uploaded documents for specific questions": "Chat with AI based on uploaded documents for specific questions"
-  ,"Select documents (optional)": "Select documents (optional)"
-  ,"All documents": "All documents"
-  ,"No documents yet. Please upload documents before using RAG Chat.": "No documents yet. Please upload documents before using RAG Chat."
-  ,"Start": "Start"
-  ,"More": "More"
-  ,"More pages": "More pages"
-  ,"RAG Chat": "RAG Chat"
-  ,"Server Excel Import": "Server Excel Import"
-  ,"Upload one file, backend creates intent/response/rule with metadata": "Upload one file, backend creates intent/response/rule with metadata"
-    ,"FAQ Excel Import": "FAQ Excel Import"
-    ,"For FAQ data: backend auto links intent and rule for each row": "For FAQ data: backend auto links intent and rule for each row"
-    ,"Chatbot for management (optional)": "Chatbot for management (optional)"
-    ,"No specific chatbot (shared)": "No specific chatbot (shared)"
-  ,"View batches": "View batches"
-  ,"Import label (optional)": "Import label (optional)"
-  ,"Example: pccc_batch_march": "Example: pccc_batch_march"
-  ,"Duplicate strategy": "Duplicate strategy"
-  ,"Skip duplicate": "Skip duplicate"
-  ,"Upsert": "Upsert"
-  ,"Strict fail": "Strict fail"
-  ,"Change file": "Change file"
-  ,"Choose Excel file": "Choose Excel file"
-  ,"Please select chatbot first": "Please select chatbot first"
-  ,"Please select chatbot before importing": "Please select chatbot before importing"
-  ,"Please choose an Excel file": "Please choose an Excel file"
-  ,"Server import completed": "Server import completed"
-  ,"Import failed": "Import failed"
-  ,"Batch": "Batch"
-  ,"Created": "Created"
-  ,"Skipped": "Skipped"
-  ,"Failed": "Failed"
-  ,"items": "items"
-  ,"active": "active"
-    ,"Label": "Label"
-    ,"Filter by label": "Filter by label"
-    ,"Organize intents by label/category (e.g., sheet name)": "Organize intents by label/category (e.g., sheet name)"
-    ,"Training Status": "Training Status"
-    ,"All training statuses": "All training statuses"
-    ,"Trained": "Trained"
-    ,"Not trained": "Not trained"
-    ,"Model": "Model"
-    ,"All models": "All models"
-  ,"Please enter at least one question to auto-generate": "Please enter at least one question to auto-generate"
-  ,"Sample question (enter one question to start)": "Sample question (enter one question to start)"
-  ,"Quick data creation": "Quick data creation"
-  ,"Create question groups, answers, and link them together": "Create question groups, answers, and link them together"
-  ,"Question group name": "Question group name"
-  ,"Similar questions": "Similar questions"
-  ,"Import Batches": "Import Batches"
-  ,"Manage imported data batches and toggle training inclusion": "Manage imported data batches and toggle training inclusion"
-  ,"Please select a specific chatbot to toggle a batch": "Please select a specific chatbot to toggle a batch"
-  ,"Batch activated": "Batch activated"
-  ,"Batch deactivated": "Batch deactivated"
-  ,"Failed to update batch": "Failed to update batch"
-  ,"Please select a specific chatbot to delete a batch": "Please select a specific chatbot to delete a batch"
-  ,"This will permanently delete this batch. Continue?": "This will permanently delete this batch. Continue?"
-  ,"Import batch deleted": "Import batch deleted"
-  ,"Failed to delete batch": "Failed to delete batch"
-  ,"Failed to load import batches": "Failed to load import batches"
-  ,"Please select a chatbot first to view import batches.": "Please select a chatbot first to view import batches."
-  ,"Global mode: displaying batches across all chatbots. Select a specific chatbot to toggle or delete a batch.": "Global mode: displaying batches across all chatbots. Select a specific chatbot to toggle or delete a batch."
-  ,"No import batches found": "No import batches found"
-  ,"Inactive": "Inactive"
-  ,"Deactivate batch": "Deactivate batch"
-  ,"Activate batch": "Activate batch"
-  ,"Delete batch": "Delete batch"
-  ,"Session expired or unauthorized. Please log in again.": "Session expired or unauthorized. Please log in again."
-  ,"Intent name is duplicated{{name}}.": "Intent name is duplicated{{name}}."
-  ,"Response name is duplicated{{name}}.": "Response name is duplicated{{name}}."
-  ,"Data is duplicated. Please check intent/response names.": "Data is duplicated. Please check intent/response names."
-  ,"Cannot connect to server. Please check your network or try again later.": "Cannot connect to server. Please check your network or try again later."
-  ,"Response name is duplicated: {{name}}.": "Response name is duplicated: {{name}}."
-  ,"Intent name is duplicated: {{name}}.": "Intent name is duplicated: {{name}}."
-  ,"Story already exists for this intent.": "Story already exists for this intent."
-  ,"Cannot import this row. Please check data and try again.": "Cannot import this row. Please check data and try again."
-  ,"Please select at least 1 chatbot to import": "Please select at least 1 chatbot to import"
-  ,"Select one or more chatbots to import this data": "Select one or more chatbots to import this data"
-  ,"Common label for import file": "Common label for import file"
-  ,"Example: pccc_faq_03_2026": "Example: pccc_faq_03_2026"
-  ,"This label applies to all intents/responses imported from the current YAML file": "This label applies to all intents/responses imported from the current YAML file"
-  ,"Please select at least 1 chatbot before importing": "Please select at least 1 chatbot before importing"
-  ,"Duplicate handling": "Duplicate handling"
-  ,"Overwrite if content differs": "Overwrite if content differs"
-  ,"Skip duplicates": "Skip duplicates"
-  ,"Stop and report duplicates": "Stop and report duplicates"
-  ,"Error": "Error"
-  ,"Intent already exists: {{name}}": "Intent already exists: {{name}}"
-  ,"Response already exists: {{name}}": "Response already exists: {{name}}"
-  ,"Import intents and create rules automatically": "Import intents and create rules automatically"
-  ,"Select all": "Select all"
-  ,"Clear": "Clear"
-  ,"Please select at least one chatbot": "Please select at least one chatbot"
-  ,"Applicable Chatbots": "Applicable Chatbots"
-  ,"Select one or more chatbots to create this data": "Select one or more chatbots to create this data"
-  ,"Example: pccc": "Example: pccc"
-  ,"Failed to generate examples automatically": "Failed to generate examples automatically"
-  ,"Failed to generate intents automatically": "Failed to generate intents automatically"
-  ,"Operations": "Operations"
-  ,"Related Intents": "Related Intents"
-  ,"Related Actions": "Related Actions"
-  ,"Related Responses": "Related Responses"
-  ,"Related Entities": "Related Entities"
-  ,"No entities": "No entities"
-  ,"No YAML definition available": "No YAML definition available"
-  ,"Help & Guide": "Help & Guide"
-  ,"Rule Guide": "Rule Guide"
-  ,"What is a Rule?": "What is a Rule?"
-  ,"A Rule defines fixed conversation patterns that your bot should always follow. Rules are useful for handling specific conversation flows like greetings, FAQs, or fallback responses.": "A Rule defines fixed conversation patterns that your bot should always follow. Rules are useful for handling specific conversation flows like greetings, FAQs, or fallback responses."
-  ,"Examples": "Examples"
-  ,"Always respond to greetings": "Always respond to greetings"
-  ,"Handle farewell messages": "Handle farewell messages"
-  ,"Handle unknown messages": "Handle unknown messages"
-  ,"Rule Structure": "Rule Structure"
-  ,"Rules consist of steps that define the conversation flow:": "Rules consist of steps that define the conversation flow:"
-  ,"User's message intent": "User's message intent"
-  ,"Bot's response action": "Bot's response action"
-  ,"Direct text response": "Direct text response"
-  ,"Best Practices": "Best Practices"
-  ,"Keep rules simple and focused on specific patterns": "Keep rules simple and focused on specific patterns"
-  ,"Use clear, descriptive names for rules": "Use clear, descriptive names for rules"
-  ,"Test rules with different user inputs": "Test rules with different user inputs"
-  ,"Avoid overly complex rule chains": "Avoid overly complex rule chains"
-  ,"Use stories for complex conversation flows": "Use stories for complex conversation flows"
-  ,"In Expert Mode, you can write YAML directly. Use the Generate Template button to get started with proper YAML structure.": "In Expert Mode, you can write YAML directly. Use the Generate Template button to get started with proper YAML structure."
-  ,"Tips": "Tips"
-  ,"Use consistent indentation (2 spaces)": "Use consistent indentation (2 spaces)"
-  ,"Follow RASA YAML syntax": "Follow RASA YAML syntax"
-  ,"Validate your YAML before saving": "Validate your YAML before saving"
-  ,"Add Response": "Add Response"
-  ,"Selected Intents": "Selected Intents"
-  ,"Selected Actions": "Selected Actions"
-  ,"Selected Responses": "Selected Responses"
-  ,"Click to insert ID at cursor position": "Click to insert ID at cursor position"
-  ,"Click on intent badges to insert their ID at cursor position": "Click on intent badges to insert their ID at cursor position"
-  ,"Click on action badges to insert their ID at cursor position": "Click on action badges to insert their ID at cursor position"
-  ,"Click on response badges to insert their ID at cursor position": "Click on response badges to insert their ID at cursor position"
-  ,"Intent already selected": "Intent already selected"
-  ,"Action already selected": "Action already selected"
-  ,"Response already selected": "Response already selected"
-  ,"Select Response": "Select Response"
-  ,"Search responses...": "Search responses..."
-  ,"Include deleted responses": "Include deleted responses"
-  ,"Running": "Running"
-  ,"Offline": "Offline"
-  ,"Not Responding": "Not Responding"
-  ,"service(s) offline": "service(s) offline"
-  ,"services online": "services online"
-  ,"All services are online": "All services are online"
-  ,"Rasa Server": "Rasa Server"
-  ,"Actions Server": "Actions Server"
-  ,"Active Model": "Active Model"
-  ,"Error Details": "Error Details"
-  ,"No service data available": "No service data available"
-  ,"Model Details": "Model Details"
-  ,"Model Name": "Model Name"
-  ,"Type": "Type"
-  ,"View detailed information about the trained model": "View detailed information about the trained model"
-  ,"Click button above to check health status": "Click button above to check health status"
-  ,"Found": "Found"
-  ,"actions in MongoDB": "actions in MongoDB"
-  ,"actions in Rasa": "actions in Rasa"
-  ,"No actions found in MongoDB": "No actions found in MongoDB"
-  ,"No actions found in Rasa server": "No actions found in Rasa server"
-  ,"Failed to fetch actions from MongoDB": "Failed to fetch actions from MongoDB"
-  ,"Failed to fetch actions from Rasa": "Failed to fetch actions from Rasa"
-  ,"Get Actions List from MongoDB": "Get Actions List from MongoDB"
-  ,"Get Actions List from Rasa": "Get Actions List from Rasa"
-  ,"Available Actions from MongoDB": "Available Actions from MongoDB"
-  ,"Available Actions from Rasa": "Available Actions from Rasa"
-  ,"Push Actions to Rasa": "Push Actions to Rasa"
-  ,"Actions pushed to Rasa successfully. actions.py file updated.": "Actions pushed to Rasa successfully. actions.py file updated."
-  ,"Failed to push actions to Rasa": "Failed to push actions to Rasa"
-  ,"Get actions list from MongoDB first to push them to Rasa": "Get actions list from MongoDB first to push them to Rasa"
-  ,"Overwrite actions.py file in Rasa via Flask API. This syncs MongoDB actions to Rasa server.": "Overwrite actions.py file in Rasa via Flask API. This syncs MongoDB actions to Rasa server."
-  ,"No actions selected. Will push all actions to Rasa.": "No actions selected. Will push all actions to Rasa."
-  ,"Custom Selection": "Custom Selection"
-  ,"ChatBot Operations": "ChatBot Operations"
-  ,"Manage operations for": "Manage operations for"
-  ,"Health": "Health"
-  ,"Models": "Models"
-  ,"Check Health": "Check Health"
-  ,"Health check completed but no service data available": "Health check completed but no service data available"
-  ,"Failed to check health": "Failed to check health"
-  ,"Send Model to Another ChatBot": "Send Model to Another ChatBot"
-  ,"Load from MongoDB": "Load from MongoDB"
-  ,"Share a trained model stored in MongoDB/MinIO to another chatbot's Rasa server": "Share a trained model stored in MongoDB/MinIO to another chatbot's Rasa server"
-  ,"Models in MongoDB": "Models in MongoDB"
-  ,"Load models from MongoDB first": "Load models from MongoDB first"
-  ,"Select model to send": "Select model to send"
-  ,"Model sent to another chatbot successfully": "Model sent to another chatbot successfully"
-  ,"Failed to send model to another chatbot": "Failed to send model to another chatbot"
-  ,"Models in Rasa Server": "Models in Rasa Server"
-  ,"Refresh": "Refresh"
-  ,"Models available in Rasa server": "Models available in Rasa server"
-  ,"No models found in Rasa server. Click Refresh to check.": "No models found in Rasa server. Click Refresh to check."
-  ,"Run Model": "Run Model"
-  ,"Activate a model in this chatbot's Rasa server": "Activate a model in this chatbot's Rasa server"
-  ,"Get models list first": "Get models list first"
-  ,"Select model to activate": "Select model to activate"
-  ,"Model activated in Rasa successfully": "Model activated in Rasa successfully"
-  ,"Failed to activate model in Rasa": "Failed to activate model in Rasa"
-  ,"models in Rasa server": "models in Rasa server"
-  ,"models in MongoDB": "models in MongoDB"
-  ,"Failed to fetch models from Rasa": "Failed to fetch models from Rasa"
-  ,"Failed to fetch models from MongoDB": "Failed to fetch models from MongoDB"
-  ,"Select model (optional)": "Select model (optional)"
-  ,"Model ID (optional)": "Model ID (optional)"
-  ,"None - Push all actions": "None - Push all actions"
-  ,"Deselect All": "Deselect All"
-  ,"Select All": "Select All"
-  ,"No actions loaded": "No actions loaded"
-  ,"Run Actions Server": "Run Actions Server"
-  ,"Actions server started successfully": "Actions server started successfully"
-  ,"Failed to start actions server": "Failed to start actions server"
-  ,"ChatBot Management": "ChatBot Management"
-  ,"ChatBot": "ChatBot"
-  ,"ChatBots": "ChatBots"
-  ,"Create ChatBot": "Create ChatBot"
-  ,"Edit ChatBot": "Edit ChatBot"
-  ,"ChatBot Details": "ChatBot Details"
-  ,"ChatBot Name": "ChatBot Name"
-  ,"Enter chatbot name": "Enter chatbot name"
-  ,"Enter details for the new chatbot.": "Enter details for the new chatbot."
-  ,"Update details for the chatbot.": "Update details for the chatbot."
-  ,"Network Configuration": "Network Configuration"
-  ,"IP Address": "IP Address"
-  ,"Enter IP address (e.g., 192.168.1.100)": "Enter IP address (e.g., 192.168.1.100)"
-  ,"Rasa Port": "Rasa Port"
-  ,"Flask Port": "Flask Port"
-  ,"Save Changes": "Save Changes"
-  ,"Create": "Create"
-  ,"Search chatbots": "Search chatbots"
-  ,"Filter ChatBots": "Filter ChatBots"
-  ,"Show deleted chatbots": "Show deleted chatbots"
-  ,"chatbots / page": "chatbots / page"
-  ,"Newest first": "Newest first"
-  ,"Oldest first": "Oldest first"
-  ,"Start Date": "Start Date"
-  ,"End Date": "End Date"
-  ,"Sort by": "Sort by"
-  ,"Select sort": "Select sort"
-  ,"Edit": "Edit"
-  ,"Move to trash": "Move to trash"
-  ,"Restore from trash": "Restore from trash"
-  ,"Delete permanently": "Delete permanently"
-  ,"items selected": "items selected"
-  ,"Error loading chatbots": "Error loading chatbots"
-  ,"No chatbot selected": "No chatbot selected"
-  ,"on": "on"
-  ,"View details": "View details"
-  ,"Add data": "Add data"
-  ,"System": "System"
-  ,"Context documents": "Context documents"
-  ,"Statistics reports": "Statistics reports"
-  ,"Conversations": "Conversations"
-  ,"All documents": "All documents"
-  ,"Chatbot Report": "Chatbot Report"
-  ,"Failed to load chatbot statistics. Please try again later.": "Failed to load chatbot statistics. Please try again later."
-  ,"Information about chatbots in the system": "Information about chatbots in the system"
-  ,"Total Chatbots": "Total Chatbots"
-  ,"Chatbots in system": "Chatbots in system"
-  ,"Running Rasa servers": "Running Rasa servers"
-  ,"Running Action servers": "Running Action servers"
-  ,"Chatbot Details": "Chatbot Details"
-  ,"List and details of chatbots": "List and details of chatbots"
-  ,"No chatbots in the system": "No chatbots in the system"
-  ,"Conversation Report": "Conversation Report"
-  ,"Failed to load conversation statistics. Please try again later.": "Failed to load conversation statistics. Please try again later."
-  ,"Statistics on conversations and messages": "Statistics on conversations and messages"
-  ,"From date": "From date"
-  ,"To date": "To date"
-  ,"Clear filters": "Clear filters"
-  ,"Total Conversations": "Total Conversations"
-  ,"All conversations": "All conversations"
-  ,"Average Messages": "Average Messages"
-  ,"Per conversation": "Per conversation"
-  ,"Active Users": "Active Users"
-  ,"Currently interacting": "Currently interacting"
-  ,"Conversation Trend": "Conversation Trend"
-  ,"Number of conversations and messages over time": "Number of conversations and messages over time"
-  ,"Messages": "Messages"
-  ,"Most Active Users": "Most Active Users"
-  ,"Top users with the most conversations": "Top users with the most conversations"
-  ,"Document Report": "Document Report"
-  ,"Failed to load document statistics. Please try again later.": "Failed to load document statistics. Please try again later."
-  ,"Small (< 1MB)": "Small (< 1MB)"
-  ,"Medium (1-10MB)": "Medium (1-10MB)"
-  ,"Large (>= 10MB)": "Large (>= 10MB)"
-  ,"Public": "Public"
-  ,"Private": "Private"
-  ,"Statistics on documents in the system": "Statistics on documents in the system"
-  ,"Total Documents": "Total Documents"
-  ,"Public Documents": "Public Documents"
-  ,"Publicly accessible": "Publicly accessible"
-  ,"Private Documents": "Private Documents"
-  ,"Internal only": "Internal only"
-  ,"Total Size": "Total Size"
-  ,"Size of all documents": "Size of all documents"
-  ,"Distribution by File Type": "Distribution by File Type"
-  ,"Number of documents by format": "Number of documents by format"
-  ,"Distribution by Size": "Distribution by Size"
-  ,"Number of files by size": "Number of files by size"
-  ,"Count": "Count"
-  ,"Access Rights Distribution": "Access Rights Distribution"
-  ,"Public vs private documents": "Public vs private documents"
-  ,"Details by File Type": "Details by File Type"
-  ,"Quantity and size": "Quantity and size"
-  ,"No documents found": "No documents found"
-  ,"NLP Report": "NLP Report"
-  ,"Failed to load NLP statistics. Please try again later.": "Failed to load NLP statistics. Please try again later."
-  ,"Statistics on natural language processing components": "Statistics on natural language processing components"
-  ,"Total intents": "Total intents"
-  ,"Total entities": "Total entities"
-  ,"Total actions": "Total actions"
-  ,"Total stories": "Total stories"
-  ,"Total responses": "Total responses"
-  ,"NLP Component Distribution": "NLP Component Distribution"
-  ,"Proportion of components in system": "Proportion of components in system"
-  ,"Component Comparison": "Component Comparison"
-  ,"Quantity of NLP components": "Quantity of NLP components"
-  ,"Most popular intents": "Most popular intents"
-  ,"Stories with the most intents": "Stories with the most intents"
-  ,"User Report": "User Report"
-  ,"Failed to load user statistics. Please try again later.": "Failed to load user statistics. Please try again later."
-  ,"Overview of users in the system": "Overview of users in the system"
-  ,"Total Users": "Total Users"
-  ,"All users": "All users"
-  ,"Active": "Active"
-  ,"Banned Users": "Banned Users"
-  ,"Banned": "Banned"
-  ,"Inactive Users": "Inactive Users"
-  ,"Not activated": "Not activated"
-  ,"Gender Distribution": "Gender Distribution"
-  ,"Number of users by gender": "Number of users by gender"
-  ,"Registration Trend": "Registration Trend"
-  ,"Number of new users over time": "Number of new users over time"
-  ,"New users": "New users"
-  ,"User Status Distribution": "User Status Distribution"
-  ,"Comparison of user status": "Comparison of user status"
-  ,"Inactive": "Inactive"
-  ,"Create Intent": "Create Intent"
-  ,"Intent Name": "Intent Name"
-  ,"Error loading intents": "Error loading intents"
-  ,"No description": "No description"
-  ,"Label": "Label"
-  ,"Training Status": "Training Status"
-  ,"Trained": "Trained"
-  ,"Not trained": "Not trained"
-  ,"All training statuses": "All training statuses"
-  ,"Model": "Model"
-  ,"All models": "All models"
-  ,"Show deleted intents": "Show deleted intents"
-  ,"Sort by": "Sort by"
-  ,"Newest first": "Newest first"
-  ,"Oldest first": "Oldest first"
-  ,"Select sort": "Select sort"
-  ,"Start Date": "Start Date"
-  ,"End Date": "End Date"
-  ,"Select limit": "Select limit"
-  ,"intents / page": "intents / page"
-  ,"Search intents": "Search intents"
-  ,"Filter Intents": "Filter Intents"
-  ,"Filter by label": "Filter by label"
-  ,"Created At": "Created At"
-  ,"Actions": "Actions"
-  ,"View details": "View details"
-  ,"Restore from trash": "Restore from trash"
-  ,"Delete permanently": "Delete permanently"
-  ,"Move to trash": "Move to trash"
-  ,"Description": "Description"
-  ,"Search": "Search"
-  ,"Filter": "Filter"
-  ,"Close": "Close"
-  ,"items selected": "items selected"
-  ,"Search actions": "Search actions"
-  ,"Filter Actions": "Filter Actions"
-  ,"Show deleted actions": "Show deleted actions"
-  ,"actions / page": "actions / page"
-  ,"Create Action": "Create Action"
-  ,"Error loading actions": "Error loading actions"
-  ,"Action Name": "Action Name"
-  ,"Action Code": "Action Code"
-  ,"View Python code": "View Python code"
-  ,"View Code": "View Code"
-  ,"Python Code": "Python Code"
-  ,"No definition": "No definition"
-  ,"Edit action": "Edit action"
-  ,"Restore": "Restore"
-  ,"Search entities": "Search entities"
-  ,"Filter Entities": "Filter Entities"
-  ,"Show deleted entities": "Show deleted entities"
-  ,"entities / page": "entities / page"
-  ,"Create Entity": "Create Entity"
-  ,"Error loading entities": "Error loading entities"
-  ,"Entity Name": "Entity Name"
-  ,"Definition": "Definition"
-  ,"View YAML": "View YAML"
-  ,"YAML Definition": "YAML Definition"
+  "Are you sure you want to delete this document? This action cannot be undone.": "Are you sure you want to delete this document? This action cannot be undone.",
+  "Please enter action name": "Please enter action name",
+  "Failed to create action": "Failed to create action",
+  "Action updated successfully": "Action updated successfully",
+  "Failed to update action": "Failed to update action",
+  "Failed to create response": "Failed to create response",
+  "Failed to update response": "Failed to update response",
+  "Please enter entity name": "Please enter entity name",
+  "Entity ID is missing": "Entity ID is missing",
+  "Failed to create entity": "Failed to create entity",
+  "Failed to update entity": "Failed to update entity",
+  "Restored successfully": "Restored successfully",
+  "Restore failed. Please try again.": "Restore failed. Please try again.",
+  "Restore item": "Restore item",
+  "Are you sure you want to restore this item?": "Are you sure you want to restore this item?",
+  "It will be moved back to active list.": "It will be moved back to active list.",
+  "Restore": "Restore",
+  "Copied to clipboard": "Copied to clipboard",
+  "Failed to copy text": "Failed to copy text",
+  "An error occurred while copying": "An error occurred while copying",
+  "PDF exported successfully": "PDF exported successfully",
+  "Failed to export PDF": "Failed to export PDF",
+  "Word exported successfully": "Word exported successfully",
+  "Failed to export Word": "Failed to export Word",
+  "Options": "Options",
+  "Copied": "Copied",
+  "Copy": "Copy",
+  "Export PDF": "Export PDF",
+  "Export Word": "Export Word",
+  "No messages to export": "No messages to export",
+  "Export conversation": "Export conversation",
+  "Export file": "Export file",
+  "Exporting...": "Exporting...",
+  "Saved selected documents": "Saved {{count}} selected documents",
+  "Failed to save selection. Please try again.": "Failed to save selection. Please try again.",
+  "Read intents successfully from files": "Read {{count}} intents successfully from {{nluName}} + {{domainName}}",
+  "Failed to read YAML file: {{error}}": "Failed to read YAML file: {{error}}",
+  "Read rows successfully from file": "Read {{count}} rows successfully from file {{fileName}}",
+  "Failed to read file: {{error}}. Please check file format (Excel or CSV).": "Failed to read file: {{error}}. Please check file format (Excel or CSV).",
+  "Please select both NLU and Domain files": "Please select both NLU and Domain files",
+  "Intent name cannot be empty": "Intent name cannot be empty",
+  "Intent name is duplicated. Please choose another name.": "Intent name is duplicated. Please choose another name.",
+  "Updated successfully": "Updated successfully",
+  "Example cannot be empty": "Example cannot be empty",
+  "Example updated successfully": "Example updated successfully",
+  "At least one example is required": "At least one example is required",
+  "Example deleted successfully": "Example deleted successfully",
+  "Question and answer are required to generate examples": "Question and answer are required to generate examples",
+  "No examples were generated": "No examples were generated",
+  "Added new examples": "Added {{count}} new examples",
+  "Please import a file first": "Please import a file first",
+  "The first row must include both question and answer": "The first row must include both question and answer",
+  "Created new intents": "Created {{count}} new intents",
+  "No rows selected for import": "No rows selected for import",
+  "Intents require at least 5 examples": "{{count}} intents have fewer than 5 examples. Please add more or use ✨ to generate automatically.",
+  "Duplicate intent names detected: {{names}}. Please fix before import.": "Duplicate intent names detected: {{names}}. Please fix before import.",
+  "Imported rows successfully": "Imported {{count}} rows successfully",
+  "Import result: {{success}} succeeded, {{failed}} failed. Please check errors below.": "Import result: {{success}} succeeded, {{failed}} failed. Please check errors below.",
+  "No failed rows to retry": "No failed rows to retry",
+  "Excel template downloaded. Please fill data and upload.": "Excel template downloaded. Please fill data and upload.",
+  "YAML template downloaded. Please adjust data and upload.": "YAML template downloaded. Please adjust data and upload.",
+  "Failed to generate template file": "Failed to generate template file",
+  "No questions were generated": "No questions were generated",
+  "Added questions automatically": "Added questions automatically",
+  "Please enter question group name": "Please enter question group name",
+  "Please enter at least one question to start": "Please enter at least one question to start",
+  "Data created successfully": "Data created successfully",
+  "Failed to create data": "Failed to create data",
+  "Import question groups from file": "Import question groups from file",
+  "Import intents and create stories automatically": "Import intents and create stories automatically",
+  "Download template": "Download template",
+  "Excel template": "Excel template",
+  "YAML template": "YAML template",
+  "Import from file": "Import from file",
+  "Import from YAML (2 files)": "Import from YAML (2 files)",
+  "Drag and drop an Excel file here to import": "Drag and drop an Excel file here to import",
+  "Or": "Or",
+  "choose file from your computer": "choose file from your computer",
+  "Supported: XLSX, CSV, TSV": "Supported: XLSX, CSV, TSV",
+  "Drop files here or click to select": "Drop files here or click to select",
+  "Excel guide: Download template and fill data manually": "Excel: Download template and fill data manually",
+  "Selected": "Selected",
+  "Choose NLU file (.yaml)": "Choose NLU file (.yaml)",
+  "Contains intent definitions and examples": "Contains intent definitions and examples",
+  "Choose Domain/Response file (.yaml)": "Choose Domain/Response file (.yaml)",
+  "Contains response definitions (utterances)": "Contains response definitions (utterances)",
+  "Process 2 files and preview": "Process 2 files and preview",
+  "NLU file help: Intent structure with examples": "NLU File: Intent structure with examples",
+  "Domain file help: Response/utterance structure": "Domain File: Response/utterance structure",
+  "Reading file...": "Reading file...",
+  "Data preview": "Data preview",
+  "Question groups count: {{count}}": "{{count}} question groups",
+  "Progress": "Progress",
+  "Generating...": "Generating...",
+  "Generate more question groups": "Generate more question groups",
+  "Select": "Select",
+  "Answer": "Answer",
+  "question_group_name": "question_group_name",
+  "Enter answer...": "Enter answer...",
+  "Questions count: {{count}}": "{{count}} questions",
+  "Saved": "Saved",
+  "Edit question group": "Edit question group",
+  "Generate more questions": "Generate more questions",
+  "Delete question group": "Delete question group",
+  "API error": "API error",
+  "Validation": "Validation",
+  "Importing...": "Importing...",
+  "Import selected data": "Import selected data",
+  "Retry failed rows": "Retry failed rows",
+  "Cancel / Clear all": "Cancel / Clear all",
+  "At least 5 examples required (current: {{count}})": "At least 5 examples required (current: {{count}})",
+  "Unable to read file": "Unable to read file",
+  "Unknown error": "Unknown error",
+  "At least 5 questions are required before saving": "At least 5 questions are required before saving",
+  "Normalized name": "Normalized name",
+  "(auto-generated)": "(auto-generated)",
+  "No questions yet. Add manually or generate automatically.": "No questions yet. Add manually or generate automatically.",
+  "Delete question": "Delete question",
+  "Saving...": "Saving...",
+  "Generate questions automatically": "Generate questions automatically",
+  "Clear all questions": "Clear all questions",
+  "Usage guide": "Usage guide",
+  "What is a question group?": "What is a question group?",
+  "A question group represents a user intent (what users may ask). Similar questions help the system recognize that group.": "A question group represents a user intent (what users may ask). Similar questions help the system recognize that group.",
+  "Example": "Example",
+  "Example question group line": "- chao_hoi - user greets",
+  "Name format": "Name format",
+  "The question group name is normalized to lower_case_with_underscores. You can preview the normalized name under the input field.": "The question group name is normalized to lower_case_with_underscores. You can preview the normalized name under the input field.",
+  "Answer name": "Answer name",
+  "If you enter an answer, it will be created with the default name pattern utter_<group_name>.": "If you enter an answer, it will be created with the default name pattern utter_<group_name>.",
+  "Similar questions help": "Similar questions",
+  "You can add many similar questions to improve recognition. Use the Generate questions automatically button to let AI suggest more from your sample.": "You can add many similar questions to improve recognition. Use the Generate questions automatically button to let AI suggest more from your sample.",
+  "Loading chatbot list...": "Loading chatbot list...",
+  "Select chatbot...": "Select chatbot...",
+  "General": "General",
+  "Add data": "Add data",
+  "View details": "View details",
+  "Expert": "Expert",
+  "Training": "Training",
+  "Context documents": "Context documents",
+  "Statistics reports": "Statistics reports",
+  "Conversations": "Conversations",
+  "Unable to send message. Please try again.": "Unable to send message. Please try again.",
+  "Sorry, I cannot respond right now. Please try again later.": "Sorry, I cannot respond right now. Please try again later.",
+  "Switched to normal chat mode": "Switched to normal chat mode",
+  "Switched to RAG chat mode": "Switched to RAG chat mode",
+  "How can I help you?": "How can I help you?",
+  "Normal chat": "Normal chat",
+  "Start a conversation": "Start a conversation",
+  "Ask a question or request help to start the conversation": "Ask a question or request help to start the conversation",
+  "Responding...": "Responding...",
+  "Loading chatbot...": "Loading chatbot...",
+  "Select chatbot": "Select chatbot",
+  "No chatbots available": "No chatbots available",
+  "Ask anything": "Ask anything",
+  "Chatbot may make mistakes. Please verify important information.": "Chatbot may make mistakes. Please verify important information.",
+  "Like response": "Like response",
+  "Dislike response": "Dislike response",
+  "Unable to record feedback right now": "Unable to record feedback right now",
+  "Choose chat type": "Choose chat type",
+  "Choose the chat mode that fits your needs": "Choose the chat mode that fits your needs",
+  "Chat with Rasa bot for general questions and standard support": "Chat with Rasa bot for general questions and standard support",
+  "Chat with AI based on uploaded documents for specific questions": "Chat with AI based on uploaded documents for specific questions",
+  "Select documents (optional)": "Select documents (optional)",
+  "All documents": "All documents",
+  "No documents yet. Please upload documents before using RAG Chat.": "No documents yet. Please upload documents before using RAG Chat.",
+  "Start": "Start",
+  "More": "More",
+  "More pages": "More pages",
+  "RAG Chat": "RAG Chat",
+  "Server Excel Import": "Server Excel Import",
+  "Upload one file, backend creates intent/response/rule with metadata": "Upload one file, backend creates intent/response/rule with metadata",
+  "FAQ Excel Import": "FAQ Excel Import",
+  "For FAQ data: backend auto links intent and rule for each row": "For FAQ data: backend auto links intent and rule for each row",
+  "Chatbot for management (optional)": "Chatbot for management (optional)",
+  "No specific chatbot (shared)": "No specific chatbot (shared)",
+  "View batches": "View batches",
+  "Import label (optional)": "Import label (optional)",
+  "Example: pccc_batch_march": "Example: pccc_batch_march",
+  "Duplicate strategy": "Duplicate strategy",
+  "Skip duplicate": "Skip duplicate",
+  "Upsert": "Upsert",
+  "Strict fail": "Strict fail",
+  "Change file": "Change file",
+  "Choose Excel file": "Choose Excel file",
+  "Please select chatbot first": "Please select chatbot first",
+  "Please select chatbot before importing": "Please select chatbot before importing",
+  "Please choose an Excel file": "Please choose an Excel file",
+  "Server import completed": "Server import completed",
+  "Import failed": "Import failed",
+  "Batch": "Batch",
+  "Created": "Created",
+  "Skipped": "Skipped",
+  "Failed": "Failed",
+  "items": "items",
+  "active": "active",
+  "Label": "Label",
+  "Filter by label": "Filter by label",
+  "Organize intents by label/category (e.g., sheet name)": "Organize intents by label/category (e.g., sheet name)",
+  "Training Status": "Training Status",
+  "All training statuses": "All training statuses",
+  "Trained": "Trained",
+  "Not trained": "Not trained",
+  "Model": "Model",
+  "All models": "All models",
+  "Please enter at least one question to auto-generate": "Please enter at least one question to auto-generate",
+  "Sample question (enter one question to start)": "Sample question (enter one question to start)",
+  "Quick data creation": "Quick data creation",
+  "Create question groups, answers, and link them together": "Create question groups, answers, and link them together",
+  "Question group name": "Question group name",
+  "Similar questions": "Similar questions",
+  "Import Batches": "Import Batches",
+  "Manage imported data batches and toggle training inclusion": "Manage imported data batches and toggle training inclusion",
+  "Please select a specific chatbot to toggle a batch": "Please select a specific chatbot to toggle a batch",
+  "Batch activated": "Batch activated",
+  "Batch deactivated": "Batch deactivated",
+  "Failed to update batch": "Failed to update batch",
+  "Please select a specific chatbot to delete a batch": "Please select a specific chatbot to delete a batch",
+  "This will permanently delete this batch. Continue?": "This will permanently delete this batch. Continue?",
+  "Import batch deleted": "Import batch deleted",
+  "Failed to delete batch": "Failed to delete batch",
+  "Failed to load import batches": "Failed to load import batches",
+  "Please select a chatbot first to view import batches.": "Please select a chatbot first to view import batches.",
+  "Global mode: displaying batches across all chatbots. Select a specific chatbot to toggle or delete a batch.": "Global mode: displaying batches across all chatbots. Select a specific chatbot to toggle or delete a batch.",
+  "No import batches found": "No import batches found",
+  "Inactive": "Inactive",
+  "Deactivate batch": "Deactivate batch",
+  "Activate batch": "Activate batch",
+  "Delete batch": "Delete batch",
+  "Session expired or unauthorized. Please log in again.": "Session expired or unauthorized. Please log in again.",
+  "Intent name is duplicated{{name}}.": "Intent name is duplicated{{name}}.",
+  "Response name is duplicated{{name}}.": "Response name is duplicated{{name}}.",
+  "Data is duplicated. Please check intent/response names.": "Data is duplicated. Please check intent/response names.",
+  "Cannot connect to server. Please check your network or try again later.": "Cannot connect to server. Please check your network or try again later.",
+  "Response name is duplicated: {{name}}.": "Response name is duplicated: {{name}}.",
+  "Intent name is duplicated: {{name}}.": "Intent name is duplicated: {{name}}.",
+  "Story already exists for this intent.": "Story already exists for this intent.",
+  "Cannot import this row. Please check data and try again.": "Cannot import this row. Please check data and try again.",
+  "Please select at least 1 chatbot to import": "Please select at least 1 chatbot to import",
+  "Select one or more chatbots to import this data": "Select one or more chatbots to import this data",
+  "Common label for import file": "Common label for import file",
+  "Example: pccc_faq_03_2026": "Example: pccc_faq_03_2026",
+  "This label applies to all intents/responses imported from the current YAML file": "This label applies to all intents/responses imported from the current YAML file",
+  "Please select at least 1 chatbot before importing": "Please select at least 1 chatbot before importing",
+  "Duplicate handling": "Duplicate handling",
+  "Overwrite if content differs": "Overwrite if content differs",
+  "Skip duplicates": "Skip duplicates",
+  "Stop and report duplicates": "Stop and report duplicates",
+  "Error": "Error",
+  "Intent already exists: {{name}}": "Intent already exists: {{name}}",
+  "Response already exists: {{name}}": "Response already exists: {{name}}",
+  "Import intents and create rules automatically": "Import intents and create rules automatically",
+  "Select all": "Select all",
+  "Clear": "Clear",
+  "Please select at least one chatbot": "Please select at least one chatbot",
+  "Applicable Chatbots": "Applicable Chatbots",
+  "Select one or more chatbots to create this data": "Select one or more chatbots to create this data",
+  "Example: pccc": "Example: pccc",
+  "Failed to generate examples automatically": "Failed to generate examples automatically",
+  "Failed to generate intents automatically": "Failed to generate intents automatically",
+  "Operations": "Operations",
+  "Related Intents": "Related Intents",
+  "Related Actions": "Related Actions",
+  "Related Responses": "Related Responses",
+  "Related Entities": "Related Entities",
+  "No entities": "No entities",
+  "No YAML definition available": "No YAML definition available",
+  "Help & Guide": "Help & Guide",
+  "Rule Guide": "Rule Guide",
+  "What is a Rule?": "What is a Rule?",
+  "A Rule defines fixed conversation patterns that your bot should always follow. Rules are useful for handling specific conversation flows like greetings, FAQs, or fallback responses.": "A Rule defines fixed conversation patterns that your bot should always follow. Rules are useful for handling specific conversation flows like greetings, FAQs, or fallback responses.",
+  "Examples": "Examples",
+  "Always respond to greetings": "Always respond to greetings",
+  "Handle farewell messages": "Handle farewell messages",
+  "Handle unknown messages": "Handle unknown messages",
+  "Rule Structure": "Rule Structure",
+  "Rules consist of steps that define the conversation flow:": "Rules consist of steps that define the conversation flow:",
+  "User's message intent": "User's message intent",
+  "Bot's response action": "Bot's response action",
+  "Direct text response": "Direct text response",
+  "Best Practices": "Best Practices",
+  "Keep rules simple and focused on specific patterns": "Keep rules simple and focused on specific patterns",
+  "Use clear, descriptive names for rules": "Use clear, descriptive names for rules",
+  "Test rules with different user inputs": "Test rules with different user inputs",
+  "Avoid overly complex rule chains": "Avoid overly complex rule chains",
+  "Use stories for complex conversation flows": "Use stories for complex conversation flows",
+  "In Expert Mode, you can write YAML directly. Use the Generate Template button to get started with proper YAML structure.": "In Expert Mode, you can write YAML directly. Use the Generate Template button to get started with proper YAML structure.",
+  "Tips": "Tips",
+  "Use consistent indentation (2 spaces)": "Use consistent indentation (2 spaces)",
+  "Follow RASA YAML syntax": "Follow RASA YAML syntax",
+  "Validate your YAML before saving": "Validate your YAML before saving",
+  "Add Response": "Add Response",
+  "Selected Intents": "Selected Intents",
+  "Selected Actions": "Selected Actions",
+  "Selected Responses": "Selected Responses",
+  "Click to insert ID at cursor position": "Click to insert ID at cursor position",
+  "Click on intent badges to insert their ID at cursor position": "Click on intent badges to insert their ID at cursor position",
+  "Click on action badges to insert their ID at cursor position": "Click on action badges to insert their ID at cursor position",
+  "Click on response badges to insert their ID at cursor position": "Click on response badges to insert their ID at cursor position",
+  "Intent already selected": "Intent already selected",
+  "Action already selected": "Action already selected",
+  "Response already selected": "Response already selected",
+  "Select Response": "Select Response",
+  "Search responses...": "Search responses...",
+  "Include deleted responses": "Include deleted responses",
+  "Running": "Running",
+  "Offline": "Offline",
+  "Not Responding": "Not Responding",
+  "service(s) offline": "service(s) offline",
+  "services online": "services online",
+  "All services are online": "All services are online",
+  "Rasa Server": "Rasa Server",
+  "Actions Server": "Actions Server",
+  "Active Model": "Active Model",
+  "Error Details": "Error Details",
+  "No service data available": "No service data available",
+  "Model Details": "Model Details",
+  "Model Name": "Model Name",
+  "Type": "Type",
+  "View detailed information about the trained model": "View detailed information about the trained model",
+  "Click button above to check health status": "Click button above to check health status",
+  "Found": "Found",
+  "actions in MongoDB": "actions in MongoDB",
+  "actions in Rasa": "actions in Rasa",
+  "No actions found in MongoDB": "No actions found in MongoDB",
+  "No actions found in Rasa server": "No actions found in Rasa server",
+  "Failed to fetch actions from MongoDB": "Failed to fetch actions from MongoDB",
+  "Failed to fetch actions from Rasa": "Failed to fetch actions from Rasa",
+  "Get Actions List from MongoDB": "Get Actions List from MongoDB",
+  "Get Actions List from Rasa": "Get Actions List from Rasa",
+  "Available Actions from MongoDB": "Available Actions from MongoDB",
+  "Available Actions from Rasa": "Available Actions from Rasa",
+  "Push Actions to Rasa": "Push Actions to Rasa",
+  "Actions pushed to Rasa successfully. actions.py file updated.": "Actions pushed to Rasa successfully. actions.py file updated.",
+  "Failed to push actions to Rasa": "Failed to push actions to Rasa",
+  "Get actions list from MongoDB first to push them to Rasa": "Get actions list from MongoDB first to push them to Rasa",
+  "Overwrite actions.py file in Rasa via Flask API. This syncs MongoDB actions to Rasa server.": "Overwrite actions.py file in Rasa via Flask API. This syncs MongoDB actions to Rasa server.",
+  "No actions selected. Will push all actions to Rasa.": "No actions selected. Will push all actions to Rasa.",
+  "Custom Selection": "Custom Selection",
+  "ChatBot Operations": "ChatBot Operations",
+  "Manage operations for": "Manage operations for",
+  "Health": "Health",
+  "Models": "Models",
+  "Check Health": "Check Health",
+  "Health check completed but no service data available": "Health check completed but no service data available",
+  "Failed to check health": "Failed to check health",
+  "Send Model to Another ChatBot": "Send Model to Another ChatBot",
+  "Load from MongoDB": "Load from MongoDB",
+  "Share a trained model stored in MongoDB/MinIO to another chatbot's Rasa server": "Share a trained model stored in MongoDB/MinIO to another chatbot's Rasa server",
+  "Models in MongoDB": "Models in MongoDB",
+  "Load models from MongoDB first": "Load models from MongoDB first",
+  "Select model to send": "Select model to send",
+  "Model sent to another chatbot successfully": "Model sent to another chatbot successfully",
+  "Failed to send model to another chatbot": "Failed to send model to another chatbot",
+  "Models in Rasa Server": "Models in Rasa Server",
+  "Refresh": "Refresh",
+  "Models available in Rasa server": "Models available in Rasa server",
+  "No models found in Rasa server. Click Refresh to check.": "No models found in Rasa server. Click Refresh to check.",
+  "Run Model": "Run Model",
+  "Activate a model in this chatbot's Rasa server": "Activate a model in this chatbot's Rasa server",
+  "Get models list first": "Get models list first",
+  "Select model to activate": "Select model to activate",
+  "Model activated in Rasa successfully": "Model activated in Rasa successfully",
+  "Failed to activate model in Rasa": "Failed to activate model in Rasa",
+  "models in Rasa server": "models in Rasa server",
+  "models in MongoDB": "models in MongoDB",
+  "Failed to fetch models from Rasa": "Failed to fetch models from Rasa",
+  "Failed to fetch models from MongoDB": "Failed to fetch models from MongoDB",
+  "Select model (optional)": "Select model (optional)",
+  "Model ID (optional)": "Model ID (optional)",
+  "None - Push all actions": "None - Push all actions",
+  "Deselect All": "Deselect All",
+  "Select All": "Select All",
+  "No actions loaded": "No actions loaded",
+  "Run Actions Server": "Run Actions Server",
+  "Actions server started successfully": "Actions server started successfully",
+  "Failed to start actions server": "Failed to start actions server",
+  "ChatBot Management": "ChatBot Management",
+  "ChatBot": "ChatBot",
+  "ChatBots": "ChatBots",
+  "Create ChatBot": "Create ChatBot",
+  "Edit ChatBot": "Edit ChatBot",
+  "ChatBot Details": "ChatBot Details",
+  "ChatBot Name": "ChatBot Name",
+  "Enter chatbot name": "Enter chatbot name",
+  "Enter details for the new chatbot.": "Enter details for the new chatbot.",
+  "Update details for the chatbot.": "Update details for the chatbot.",
+  "Network Configuration": "Network Configuration",
+  "IP Address": "IP Address",
+  "Enter IP address (e.g., 192.168.1.100)": "Enter IP address (e.g., 192.168.1.100)",
+  "Rasa Port": "Rasa Port",
+  "Flask Port": "Flask Port",
+  "Save Changes": "Save Changes",
+  "Create": "Create",
+  "Search chatbots": "Search chatbots",
+  "Filter ChatBots": "Filter ChatBots",
+  "Show deleted chatbots": "Show deleted chatbots",
+  "chatbots / page": "chatbots / page",
+  "Newest first": "Newest first",
+  "Oldest first": "Oldest first",
+  "Start Date": "Start Date",
+  "End Date": "End Date",
+  "Sort by": "Sort by",
+  "Select sort": "Select sort",
+  "Edit": "Edit",
+  "Move to trash": "Move to trash",
+  "Restore from trash": "Restore from trash",
+  "Delete permanently": "Delete permanently",
+  "items selected": "items selected",
+  "Error loading chatbots": "Error loading chatbots",
+  "No chatbot selected": "No chatbot selected",
+  "on": "on",
+  "Chatbot Report": "Chatbot Report",
+  "Failed to load chatbot statistics. Please try again later.": "Failed to load chatbot statistics. Please try again later.",
+  "Information about chatbots in the system": "Information about chatbots in the system",
+  "Total Chatbots": "Total Chatbots",
+  "Chatbots in system": "Chatbots in system",
+  "Running Rasa servers": "Running Rasa servers",
+  "Running Action servers": "Running Action servers",
+  "Chatbot Details": "Chatbot Details",
+  "List and details of chatbots": "List and details of chatbots",
+  "No chatbots in the system": "No chatbots in the system",
+  "Conversation Report": "Conversation Report",
+  "Failed to load conversation statistics. Please try again later.": "Failed to load conversation statistics. Please try again later.",
+  "Statistics on conversations and messages": "Statistics on conversations and messages",
+  "From date": "From date",
+  "To date": "To date",
+  "Clear filters": "Clear filters",
+  "Total Conversations": "Total Conversations",
+  "All conversations": "All conversations",
+  "Average Messages": "Average Messages",
+  "Per conversation": "Per conversation",
+  "Active Users": "Active Users",
+  "Currently interacting": "Currently interacting",
+  "Conversation Trend": "Conversation Trend",
+  "Number of conversations and messages over time": "Number of conversations and messages over time",
+  "Messages": "Messages",
+  "Most Active Users": "Most Active Users",
+  "Top users with the most conversations": "Top users with the most conversations",
+  "Document Report": "Document Report",
+  "Failed to load document statistics. Please try again later.": "Failed to load document statistics. Please try again later.",
+  "Small (< 1MB)": "Small (< 1MB)",
+  "Medium (1-10MB)": "Medium (1-10MB)",
+  "Large (>= 10MB)": "Large (>= 10MB)",
+  "Statistics on documents in the system": "Statistics on documents in the system",
+  "Total Documents": "Total Documents",
+  "Public Documents": "Public Documents",
+  "Publicly accessible": "Publicly accessible",
+  "Private Documents": "Private Documents",
+  "Internal only": "Internal only",
+  "Total Size": "Total Size",
+  "Size of all documents": "Size of all documents",
+  "Distribution by File Type": "Distribution by File Type",
+  "Number of documents by format": "Number of documents by format",
+  "Distribution by Size": "Distribution by Size",
+  "Number of files by size": "Number of files by size",
+  "Count": "Count",
+  "Access Rights Distribution": "Access Rights Distribution",
+  "Public vs private documents": "Public vs private documents",
+  "Details by File Type": "Details by File Type",
+  "Quantity and size": "Quantity and size",
+  "No documents found": "No documents found",
+  "NLP Report": "NLP Report",
+  "Failed to load NLP statistics. Please try again later.": "Failed to load NLP statistics. Please try again later.",
+  "Statistics on natural language processing components": "Statistics on natural language processing components",
+  "Total intents": "Total intents",
+  "Total entities": "Total entities",
+  "Total actions": "Total actions",
+  "Total stories": "Total stories",
+  "Total responses": "Total responses",
+  "NLP Component Distribution": "NLP Component Distribution",
+  "Proportion of components in system": "Proportion of components in system",
+  "Component Comparison": "Component Comparison",
+  "Quantity of NLP components": "Quantity of NLP components",
+  "Most popular intents": "Most popular intents",
+  "Stories with the most intents": "Stories with the most intents",
+  "User Report": "User Report",
+  "Failed to load user statistics. Please try again later.": "Failed to load user statistics. Please try again later.",
+  "Overview of users in the system": "Overview of users in the system",
+  "Total Users": "Total Users",
+  "All users": "All users",
+  "Banned Users": "Banned Users",
+  "Banned": "Banned",
+  "Inactive Users": "Inactive Users",
+  "Not activated": "Not activated",
+  "Gender Distribution": "Gender Distribution",
+  "Number of users by gender": "Number of users by gender",
+  "Registration Trend": "Registration Trend",
+  "Number of new users over time": "Number of new users over time",
+  "New users": "New users",
+  "User Status Distribution": "User Status Distribution",
+  "Comparison of user status": "Comparison of user status",
+  "Create Intent": "Create Intent",
+  "Intent Name": "Intent Name",
+  "Error loading intents": "Error loading intents",
+  "No description": "No description",
+  "Show deleted intents": "Show deleted intents",
+  "Search intents": "Search intents",
+  "Filter Intents": "Filter Intents",
+  "Search actions": "Search actions",
+  "Filter Actions": "Filter Actions",
+  "actions / page": "actions / page",
+  "Create Action": "Create Action",
+  "Error loading actions": "Error loading actions",
+  "Action Name": "Action Name",
+  "Action Code": "Action Code",
+  "View Code": "View Code",
+  "Python Code": "Python Code",
+  "No definition": "No definition",
+  "Edit action": "Edit action",
+  "Search entities": "Search entities",
+  "Filter Entities": "Filter Entities",
+  "Show deleted entities": "Show deleted entities",
+  "entities / page": "entities / page",
+  "Create Entity": "Create Entity",
+  "Error loading entities": "Error loading entities",
+  "Entity Name": "Entity Name",
+  "Definition": "Definition",
+  "View YAML": "View YAML",
+  "Name": "Name",
+  "Filters": "Filters"
 }
