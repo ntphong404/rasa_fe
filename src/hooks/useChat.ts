@@ -45,7 +45,12 @@ export const useChat = (): UseChatReturn => {
           const msgs = Array.isArray(chatItem.message)
             ? chatItem.message
             : [chatItem.message];
-          msgs.forEach(msg => historyMessages.push({ recipient_id: "bot", text: msg }));
+          
+          if (msgs.length > 0) {
+            // Join history messages into a single string separated by double newline
+            const combinedText = msgs.join('\n\n');
+            historyMessages.push({ recipient_id: "bot", text: combinedText });
+          }
         }
       });
 
@@ -91,34 +96,39 @@ export const useChat = (): UseChatReturn => {
       // Gửi tin nhắn đến API
       const response = await chatService.sendMessage(completeMessageData);
       
-      if (response.success && response.data) {
+      if (response.success && response.data && response.data.length > 0) {
         // Stop loading indicator once first response is available, then render bot text progressively.
         setLoading(false);
 
-        for (const msg of response.data) {
-          const botMessageBase: IChatMessage = {
-            ...msg,
-            recipient_id: "bot",
-            text: "",
-            isStreaming: true,
-          };
+        // Concatenate all message texts from response.data into a single string
+        const combinedText = response.data
+          .map((m: any) => m.text)
+          .filter(Boolean)
+          .join("\n\n");
 
-          setMessages((prev) => [...prev, botMessageBase]);
+        // Use the metadata from the first message, but with the combined text
+        const firstMsg = response.data[0];
+        const botMessageBase: IChatMessage = {
+          ...firstMsg,
+          recipient_id: "bot",
+          text: "",
+          isStreaming: true,
+        };
 
-          const fullText = msg.text || "";
-          if (!fullText) {
-            setMessages((prev) => {
-              if (prev.length === 0) return prev;
-              const updated = [...prev];
-              const lastIndex = updated.length - 1;
-              updated[lastIndex] = { ...updated[lastIndex], isStreaming: false };
-              return updated;
-            });
-            continue;
-          }
+        setMessages((prev) => [...prev, botMessageBase]);
 
+        const fullText = combinedText || "";
+        if (!fullText) {
+          setMessages((prev) => {
+            if (prev.length === 0) return prev;
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            updated[lastIndex] = { ...updated[lastIndex], isStreaming: false };
+            return updated;
+          });
+        } else {
           // Keep per-character typing feel while making long messages reasonably fast.
-          const delay = fullText.length > 600 ? 4 : fullText.length > 300 ? 8 : 14;
+          const delay = fullText.length > 600 ? 5 : fullText.length > 300 ? 8 : 14;
           let displayed = "";
           let i = 0;
           let lastTick = Date.now();
