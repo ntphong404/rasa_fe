@@ -1,4 +1,4 @@
-const DEFAULT_RAG_ENTRY_URL = "http://158.178.236.168:20130/webui/#/";
+const DEFAULT_RAG_ENTRY_URL = "http://103.101.163.198:9621/webui/#/";
 
 const normalizeRagBaseUrl = (rawUrl?: string): string => {
   const candidate = (rawUrl || DEFAULT_RAG_ENTRY_URL).trim();
@@ -7,7 +7,7 @@ const normalizeRagBaseUrl = (rawUrl?: string): string => {
     // Accept UI URLs like .../webui/#/ and normalize to API origin.
     return new URL(candidate).origin;
   } catch {
-    return "http://158.178.236.168:20130";
+    return "http://103.101.163.198:9621";
   }
 };
 
