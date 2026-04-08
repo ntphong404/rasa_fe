@@ -106,11 +106,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           // },
           ...(userRoleLevel === 'admin'
             ? [
-                {
-                  title: "Chatbot",
-                  url: "/chat_bot",
-                },
-              ]
+              {
+                title: "Chatbot",
+                url: "/chat_bot",
+              },
+            ]
             : []),
           {
             title: "UQuestion",
@@ -135,11 +135,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
           ...(userRoleLevel === 'admin'
             ? [
-                {
-                  title: t("Context documents"),
-                  url: "/context-docs",
-                },
-              ]
+              {
+                title: t("Context documents"),
+                url: "/context-docs",
+              },
+            ]
             : []),
         ],
       },
@@ -237,7 +237,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             className="font-semibold text-xl"
             style={{ fontFamily: "'audiowide', 'Orbitron', sans-serif" }}
           >
-            Rasa Chatbot
+            KMA Chatbot
           </span>
         </div>
       </SidebarHeader>
@@ -258,7 +258,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
-        
+
         {isAuthenticated && (isAdmin || isManager) && <NavMain items={data.navMain} />}
         {isAuthenticated && <NavConversations />}
         {isAuthenticated && (
