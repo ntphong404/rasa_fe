@@ -51,16 +51,18 @@ interface PendingFeedbackItem {
 }
 
 const DEFAULT_QUICK_SUGGESTIONS = [
-  "Chiều cao để xe chữa cháy di chuyển được là bao nhiêu?",
-  "Các nội dung thẩm định thiết kế về phòng cháy và chữa cháy?",
-  "Hồ sơ đề nghị thẩm định thiết kế về phòng cháy và chữa cháy?",
-  "Yêu cầu PCCC trong quy hoạch xây dựng",
-  "Thời hạn thẩm định thiết kế về PCCC bao lâu?",
-  "Phân loại bộ phận ngăn cháy",
-  "Quy định chiều mở cửa thoát nạn",
-  "Quy định nguồn điện cho hệ thống báo cháy tự động",
-  "Độ cao lắp đặt của hộp nút ấn báo cháy",
-  "Số lượng bơm chữa cháy dự phòng",
+  "Vai trò của Kỹ thuật Điện tử Viễn thông trong thời đại công nghệ 4.0 là gì?",
+  "Điều kiện về điểm quá trình để học viên, sinh viên được dự thi kết thúc học phần là gì?",
+  "Ngành Công nghệ thông tin bao gồm những gì?",
+  "Cho hỏi học phí hệ chính quy của học viện kỹ thuật mật mã là bao nhiêu?",
+  "Thời gian ký quyết định ban hành logo mới của Học viện là khi nào?",
+  "Người không phải sinh viên có được vào trường không?",
+  "Chuẩn tiếng Anh đầu ra của Học viện là bao nhiêu?",
+  "Sau khi có giấy báo trúng tuyển bản mềm, thí sinh cần chuẩn bị những gì?",
+  "Tên đầy đủ của Học viện Kỹ thuật Mật mã là gì?",
+  "An toàn thông tin bao gồm những hoạt động gì?",
+  "Đơn vị nào quản lý các biên bản thẩm định và nghiệm thu ngân hàng câu hỏi thi?",
+  "Học viện kỹ thuật mật mã có bao nhiêu phương thức tuyển sinh?"
 ];
 
 const pickRandomSuggestions = (pool: string[], count: number) => {
@@ -71,9 +73,9 @@ const pickRandomSuggestions = (pool: string[], count: number) => {
 
 // elapsedCs = centiseconds (1/100 giây, interval 50ms, cs = ms/10)
 const WAITING_STATUS_STEPS = [
-  { atCs: 0,    text: "Đang suy nghĩ..." },
-  { atCs: 300,  text: "Đang tìm kiếm tài liệu..." },
-  { atCs: 600,  text: "Đang tổng hợp thông tin..." },
+  { atCs: 0, text: "Đang suy nghĩ..." },
+  { atCs: 300, text: "Đang tìm kiếm tài liệu..." },
+  { atCs: 600, text: "Đang tổng hợp thông tin..." },
   { atCs: 1000, text: "Đang kiểm tra độ chính xác..." },
   { atCs: 1500, text: "Đang hoàn thiện câu trả lời..." },
   { atCs: 2000, text: "Vui lòng chờ thêm chút nhé..." },
@@ -126,12 +128,12 @@ export function HomeChatDemo() {
   const userId = useCurrentUserId();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { selectedChatBotId, chatbots } = useChatbotStore();
-  
+
   // Chat conversation always uses the global system chatbot selection.
   const chatScopeBotId = selectedChatBotId;
   const selectedChatbot = chatbots.find((bot) => bot.botId === chatScopeBotId);
   const chatbotId = selectedChatbot?._id || chatScopeBotId || "";
-  
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const conversationIdFromUrl = searchParams.get("conversationId");
@@ -295,7 +297,7 @@ export function HomeChatDemo() {
         window.clearTimeout(feedbackFlushTimerRef.current);
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto scroll to bottom khi có tin nhắn mới, nhưng không ép khi user đang xem tin nhắn cũ.
@@ -321,7 +323,7 @@ export function HomeChatDemo() {
     if (prev && !conversationIdFromUrl) {
       startNewConversation();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationIdFromUrl]);
 
   // Show error toast
@@ -360,7 +362,7 @@ export function HomeChatDemo() {
         setIsSending(false);
         submitGuardRef.current = false;
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, isSending]);
 
   // Sync app header content when this chat page is active.
@@ -537,14 +539,14 @@ export function HomeChatDemo() {
       let i = 0;
       let lastTick = Date.now();
       const delay = 30;
-      
+
       while (i < testResponse.length) {
         const now = Date.now();
         const charsToPrint = Math.max(1, Math.floor((now - lastTick) / delay));
         displayedText += testResponse.substring(i, i + charsToPrint);
         i += charsToPrint;
         lastTick = now;
-        
+
         updateLastMessage(displayedText);
         if (i < testResponse.length) await sleep(delay);
       }
@@ -596,7 +598,7 @@ export function HomeChatDemo() {
         displayedText += testResponse.substring(i, i + charsToPrint);
         i += charsToPrint;
         lastTick = now;
-        
+
         updateLastMessage(displayedText);
         if (i < testResponse.length) await sleep(delay);
       }
@@ -637,7 +639,7 @@ export function HomeChatDemo() {
         displayedText += testResponse.substring(i, i + charsToPrint);
         i += charsToPrint;
         lastTick = now;
-        
+
         updateLastMessage(displayedText);
         if (i < testResponse.length) await sleep(delay);
       }
@@ -702,7 +704,7 @@ export function HomeChatDemo() {
       // Bot bắt đầu có text → đóng băng thời gian
       setFrozenElapsedLabel(formatElapsedTime(loadingElapsedCs) + "s");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, loading, isSending]);
 
   const loadSuggestedQuestions = async () => {
@@ -745,7 +747,7 @@ export function HomeChatDemo() {
     }, 700);
 
     return () => window.clearTimeout(delayedLoad);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatbotId, messages.length, contextChat.isNewChat]);
 
   useEffect(() => {
@@ -907,128 +909,128 @@ export function HomeChatDemo() {
 
                     return (
                       <>
-                      <div
-                        key={feedbackKey}
-                        className={`group flex ${isUser ? "justify-end" : "justify-start"}`}
-                      >
-                        <div className={`flex min-w-[120px] flex-col ${isUser ? "max-w-[78%]" : "max-w-[90%]"}`}>
-                          <div className={`mb-0.5 flex items-baseline gap-2 text-[11px] font-medium uppercase tracking-wide ${isUser ? "text-right text-slate-500 dark:text-slate-400" : "text-slate-600 dark:text-slate-300"}`}>
-                            {isUser ? "Bạn" : "Trợ lý"}
-                            {!isUser && isLastMessage && frozenElapsedLabel && !message.isStreaming && message.text && (
-                              <span className="normal-case tracking-normal font-mono text-xs text-slate-400 dark:text-slate-500">
-                                {frozenElapsedLabel}
-                              </span>
-                            )}
-                          </div>
-                          <div
-                            className={`relative rounded-lg ${isUser ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100 p-4" : "bg-transparent text-foreground pt-1 px-4 pb-4"}`}
-                          >
-                            <MarkdownMessage content={message.text} />
-                            
-                            {/* Message Buttons */}
-                            {message.buttons && message.buttons.length > 0 && (
-                              <div className="flex flex-col gap-2 mt-3">
-                                {message.buttons.map((button, idx) => (
-                                  button.type === "web_url" ? (
-                                    <a
-                                      key={idx}
-                                      href={button.payload}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors shadow-sm text-sm no-underline group"
-                                    >
-                                      <span className="text-lg">📄</span>
-                                      <span className="flex-1 text-left truncate font-medium">
-                                        {button.title}
-                                      </span>
-                                      <span className="opacity-80 group-hover:translate-y-0.5 transition-transform">⬇️</span>
-                                    </a>
-                                  ) : null
-                                ))}
-                              </div>
-                            )}
+                        <div
+                          key={feedbackKey}
+                          className={`group flex ${isUser ? "justify-end" : "justify-start"}`}
+                        >
+                          <div className={`flex min-w-[120px] flex-col ${isUser ? "max-w-[78%]" : "max-w-[90%]"}`}>
+                            <div className={`mb-0.5 flex items-baseline gap-2 text-[11px] font-medium uppercase tracking-wide ${isUser ? "text-right text-slate-500 dark:text-slate-400" : "text-slate-600 dark:text-slate-300"}`}>
+                              {isUser ? "Bạn" : "Trợ lý"}
+                              {!isUser && isLastMessage && frozenElapsedLabel && !message.isStreaming && message.text && (
+                                <span className="normal-case tracking-normal font-mono text-xs text-slate-400 dark:text-slate-500">
+                                  {frozenElapsedLabel}
+                                </span>
+                              )}
+                            </div>
+                            <div
+                              className={`relative rounded-lg ${isUser ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100 p-4" : "bg-transparent text-foreground pt-1 px-4 pb-4"}`}
+                            >
+                              <MarkdownMessage content={message.text} />
 
-                            {!message.isStreaming && <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                              <span>
-                                {new Date().toLocaleTimeString("vi-VN", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </span>
-                              <div className="flex items-center gap-1">
-                                <button
-                                  onClick={() => handleCopyMessage(message.text)}
-                                  className="rounded px-2 py-1 hover:bg-slate-200/70 dark:hover:bg-slate-700"
-                                  title="Sao chép"
-                                >
-                                  <Copy className="h-3.5 w-3.5" />
-                                </button>
-                                {!isUser && (
-                                  <>
-                                    <button
-                                      onClick={() => void toggleMessageFeedback(feedbackKey, message, "like", absoluteIndex, message.text, message.sourceType)}
-                                      disabled={!canVote}
-                                      aria-pressed={feedback === "like"}
-                                      className={`rounded px-2 py-1 transition-colors ${feedback === "like" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"} ${!canVote ? "cursor-not-allowed opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
-                                      title={canVote ? t("Like response") : "Tin nhắn này chưa hỗ trợ đánh giá"}
-                                    >
-                                      <ThumbsUp className="h-3.5 w-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => void toggleMessageFeedback(feedbackKey, message, "dislike", absoluteIndex, message.text, message.sourceType)}
-                                      disabled={!canVote}
-                                      aria-pressed={feedback === "dislike"}
-                                      className={`rounded px-2 py-1 transition-colors ${feedback === "dislike" ? "bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-500/15 dark:text-rose-300" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"} ${!canVote ? "cursor-not-allowed opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
-                                      title={canVote ? t("Dislike response") : "Tin nhắn này chưa hỗ trợ đánh giá"}
-                                    >
-                                      <ThumbsDown className="h-3.5 w-3.5" />
-                                    </button>
-                                  </>
-                                )}
-                                {isUser && (
-                                  <>
-                                    <button
-                                      onClick={() => handleEditMessage(message.text)}
-                                      className="rounded px-2 py-1 hover:bg-slate-200/70 dark:hover:bg-slate-700"
-                                      title="Sửa nội dung để gửi lại"
-                                    >
-                                      <Pencil className="h-3.5 w-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleRetryMessage(message.text)}
-                                      disabled={loading}
-                                      className="rounded px-2 py-1 hover:bg-slate-200/70 disabled:opacity-50 dark:hover:bg-slate-700"
-                                      title="Gửi lại"
-                                    >
-                                      <RotateCcw className="h-3.5 w-3.5" />
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </div>}
-                          </div>
-                        </div>
-                      </div>
-                      {/* Loading indicator: chỉ hiển khi chưa bắt đầu streaming */}
-                      {isUser && isLastUserMessage && (loading || isSending) && !hasStartedStreaming && (
-                        <div className="flex justify-start mt-3 animate-fadeInUp">
-                          <div className="flex min-w-[120px] max-w-[90%] flex-col">
-                            {/* Không có label — để chỉ hiển 1 cái "Trợ lý" từ message thực */}
-                            <div className="inline-flex items-center gap-2 px-1 py-1">
-                              {/* Spinner */}
-                              <div className="h-4 w-4 flex-shrink-0 rounded-full border-2 border-blue-200 border-t-blue-500 animate-spin dark:border-slate-600 dark:border-t-blue-400" />
-                              {/* Status text */}
-                              <span className="text-xs text-slate-600 dark:text-slate-300">
-                                {waitingStatusText}
-                              </span>
-                              {/* Timer */}
-                              <span className="text-xs text-slate-600 dark:text-slate-300">
-                                {formatElapsedTime(loadingElapsedCs)}s
-                              </span>
+                              {/* Message Buttons */}
+                              {message.buttons && message.buttons.length > 0 && (
+                                <div className="flex flex-col gap-2 mt-3">
+                                  {message.buttons.map((button, idx) => (
+                                    button.type === "web_url" ? (
+                                      <a
+                                        key={idx}
+                                        href={button.payload}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors shadow-sm text-sm no-underline group"
+                                      >
+                                        <span className="text-lg">📄</span>
+                                        <span className="flex-1 text-left truncate font-medium">
+                                          {button.title}
+                                        </span>
+                                        <span className="opacity-80 group-hover:translate-y-0.5 transition-transform">⬇️</span>
+                                      </a>
+                                    ) : null
+                                  ))}
+                                </div>
+                              )}
+
+                              {!message.isStreaming && <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                                <span>
+                                  {new Date().toLocaleTimeString("vi-VN", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => handleCopyMessage(message.text)}
+                                    className="rounded px-2 py-1 hover:bg-slate-200/70 dark:hover:bg-slate-700"
+                                    title="Sao chép"
+                                  >
+                                    <Copy className="h-3.5 w-3.5" />
+                                  </button>
+                                  {!isUser && (
+                                    <>
+                                      <button
+                                        onClick={() => void toggleMessageFeedback(feedbackKey, message, "like", absoluteIndex, message.text, message.sourceType)}
+                                        disabled={!canVote}
+                                        aria-pressed={feedback === "like"}
+                                        className={`rounded px-2 py-1 transition-colors ${feedback === "like" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"} ${!canVote ? "cursor-not-allowed opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
+                                        title={canVote ? t("Like response") : "Tin nhắn này chưa hỗ trợ đánh giá"}
+                                      >
+                                        <ThumbsUp className="h-3.5 w-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => void toggleMessageFeedback(feedbackKey, message, "dislike", absoluteIndex, message.text, message.sourceType)}
+                                        disabled={!canVote}
+                                        aria-pressed={feedback === "dislike"}
+                                        className={`rounded px-2 py-1 transition-colors ${feedback === "dislike" ? "bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-500/15 dark:text-rose-300" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"} ${!canVote ? "cursor-not-allowed opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
+                                        title={canVote ? t("Dislike response") : "Tin nhắn này chưa hỗ trợ đánh giá"}
+                                      >
+                                        <ThumbsDown className="h-3.5 w-3.5" />
+                                      </button>
+                                    </>
+                                  )}
+                                  {isUser && (
+                                    <>
+                                      <button
+                                        onClick={() => handleEditMessage(message.text)}
+                                        className="rounded px-2 py-1 hover:bg-slate-200/70 dark:hover:bg-slate-700"
+                                        title="Sửa nội dung để gửi lại"
+                                      >
+                                        <Pencil className="h-3.5 w-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleRetryMessage(message.text)}
+                                        disabled={loading}
+                                        className="rounded px-2 py-1 hover:bg-slate-200/70 disabled:opacity-50 dark:hover:bg-slate-700"
+                                        title="Gửi lại"
+                                      >
+                                        <RotateCcw className="h-3.5 w-3.5" />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>}
                             </div>
                           </div>
                         </div>
-                      )}
+                        {/* Loading indicator: chỉ hiển khi chưa bắt đầu streaming */}
+                        {isUser && isLastUserMessage && (loading || isSending) && !hasStartedStreaming && (
+                          <div className="flex justify-start mt-3 animate-fadeInUp">
+                            <div className="flex min-w-[120px] max-w-[90%] flex-col">
+                              {/* Không có label — để chỉ hiển 1 cái "Trợ lý" từ message thực */}
+                              <div className="inline-flex items-center gap-2 px-1 py-1">
+                                {/* Spinner */}
+                                <div className="h-4 w-4 flex-shrink-0 rounded-full border-2 border-blue-200 border-t-blue-500 animate-spin dark:border-slate-600 dark:border-t-blue-400" />
+                                {/* Status text */}
+                                <span className="text-xs text-slate-600 dark:text-slate-300">
+                                  {waitingStatusText}
+                                </span>
+                                {/* Timer */}
+                                <span className="text-xs text-slate-600 dark:text-slate-300">
+                                  {formatElapsedTime(loadingElapsedCs)}s
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </>
                     );
                   })}

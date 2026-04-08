@@ -80,7 +80,7 @@ export function CreateChatBotDialog({
             {t("Enter details for the new chatbot.")}
           </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto px-6 py-4">
             <div className="space-y-4">
@@ -98,7 +98,7 @@ export function CreateChatBotDialog({
                       <FormLabel>{t("Bot ID")} *</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Nhập ID bot (ví dụ: pccc_namdinh)"
+                          placeholder="Nhập ID bot (ví dụ: tuyensinh_kma)"
                           {...field}
                           className="w-full"
                         />
