@@ -1,5 +1,6 @@
 import axiosInstance from "@/api/axios";
 import ENDPOINTS from "@/api/endpoints";
+import { useChatbotStore } from "@/store/chatbot";
 import {
   ISendMessageRequest,
   ISendMessageResponse,
@@ -8,6 +9,24 @@ import {
   IConversationMutationResponse,
   IShareConversationResponse,
 } from "@/interfaces/chat.interface";
+
+const BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:8888";
+
+type StreamEvent = {
+  type?: string;
+  text?: string;
+  buttons?: any[];
+  items?: string[];
+  intent?: string;
+  confidence?: number;
+  streaming?: boolean;
+  source?: string;
+  sender_id?: string;
+  message?: string;
+  detail?: string;
+};
+
+type StreamEventHandler = (event: StreamEvent) => void | Promise<void>;
 
 export const chatService = {
   sendMessage: async (
@@ -18,6 +37,76 @@ export const chatService = {
       data
     );
     return response.data;
+  },
+
+  sendMessageStream: async (
+    data: ISendMessageRequest,
+    onEvent: StreamEventHandler
+  ): Promise<void> => {
+    const token = localStorage.getItem("authToken");
+    const selectedBotId = useChatbotStore.getState().selectedBotId;
+    const scopedBotId =
+      selectedBotId && selectedBotId !== "global" ? selectedBotId : null;
+
+    const url = new URL(
+      ENDPOINTS.CHAT_ENDPOINTS.SEND_MESSAGE_SYSTEM_STREAM,
+      BASE_URL
+    );
+
+    if (scopedBotId) {
+      url.searchParams.set("botId", scopedBotId);
+    }
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url.toString(), {
+      method: "POST",
+      headers,
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok || !response.body) {
+      const errorText = await response.text().catch(() => "");
+      throw new Error(errorText || `Streaming failed with status ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split(/\r?\n/);
+      buffer = lines.pop() || "";
+
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+
+        try {
+          await onEvent(JSON.parse(line) as StreamEvent);
+        } catch {
+          // Ignore malformed chunk and continue streaming.
+        }
+      }
+    }
+
+    if (buffer.trim()) {
+      try {
+        await onEvent(JSON.parse(buffer.trim()) as StreamEvent);
+      } catch {
+        // Ignore malformed tail chunk.
+      }
+    }
   },
 
   getConversations: async (

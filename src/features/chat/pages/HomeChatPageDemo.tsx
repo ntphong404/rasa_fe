@@ -71,14 +71,15 @@ const pickRandomSuggestions = (pool: string[], count: number) => {
   return shuffled.slice(0, count);
 };
 
-// elapsedCs = centiseconds (1/100 giây, interval 50ms, cs = ms/10)
+const secondsToCs = (seconds: number) => Math.round(seconds * 100);
+
 const WAITING_STATUS_STEPS = [
-  { atCs: 0, text: "Đang suy nghĩ..." },
-  { atCs: 300, text: "Đang tìm kiếm tài liệu..." },
-  { atCs: 600, text: "Đang tổng hợp thông tin..." },
-  { atCs: 1000, text: "Đang kiểm tra độ chính xác..." },
-  { atCs: 1500, text: "Đang hoàn thiện câu trả lời..." },
-  { atCs: 2000, text: "Vui lòng chờ thêm chút nhé..." },
+  { atCs: secondsToCs(0), text: "Đang suy nghĩ..." },
+  { atCs: secondsToCs(2), text: "Đang tìm kiếm tài liệu..." },
+  { atCs: secondsToCs(5), text: "Đang tổng hợp thông tin..." },
+  { atCs: secondsToCs(8), text: "Đang kiểm tra độ chính xác..." },
+  { atCs: secondsToCs(12), text: "Đang hoàn thiện câu trả lời..." },
+  { atCs: secondsToCs(16), text: "Vui lòng chờ thêm chút nhé..." },
 ];
 
 const getWaitingStatusText = (elapsedCs: number): string => {
@@ -162,9 +163,10 @@ export function HomeChatDemo() {
   const {
     messages,
     loading,
+    streamStarted,
     loadingHistory,
     error,
-    sendMessage,
+    sendMessageStream,
     clearError,
     currentConversationId,
     startNewConversation,
@@ -356,7 +358,7 @@ export function HomeChatDemo() {
     setShouldAutoScroll(true);
     setIsSending(true);
     const messageData = { message: next, userId, isLogined: !!isAuthenticated };
-    sendMessage(messageData)
+    sendMessageStream(messageData)
       .catch(console.error)
       .finally(() => {
         setIsSending(false);
@@ -506,7 +508,7 @@ export function HomeChatDemo() {
       userId: userId,
       isLogined: !!isAuthenticated,
     };
-    await sendMessage(messageData);
+    await sendMessageStream(messageData);
   };
 
 
@@ -653,7 +655,7 @@ export function HomeChatDemo() {
     setIsSending(true);
     const messageData = { message: text, userId, isLogined: !!isAuthenticated };
     try {
-      await sendMessage(messageData);
+      await sendMessageStream(messageData);
     } catch (err) {
       console.error("Error sending message:", err);
     } finally {
@@ -678,7 +680,8 @@ export function HomeChatDemo() {
   };
 
   useEffect(() => {
-    if (!(loading || isSending)) {
+    const shouldRunTimer = isSending || (loading && streamStarted);
+    if (!shouldRunTimer) {
       setLoadingElapsedCs(0);
       return;
     }
@@ -693,11 +696,12 @@ export function HomeChatDemo() {
     }, 50);
 
     return () => window.clearInterval(interval);
-  }, [loading, isSending]);
+  }, [loading, isSending, streamStarted]);
 
   // Detect khi bot bắt đầu trả lời (streaming bắt đầu) → đóng băng timer
   useEffect(() => {
-    if (!(loading || isSending)) return;
+    const shouldRunTimer = isSending || (loading && streamStarted);
+    if (!shouldRunTimer) return;
     if (frozenElapsedLabel !== null) return; // đã đóng băng rồi
     const lastMsg = messages[messages.length - 1];
     if (lastMsg && lastMsg.recipient_id !== userId && lastMsg.text && lastMsg.text.length > 0) {
@@ -705,7 +709,7 @@ export function HomeChatDemo() {
       setFrozenElapsedLabel(formatElapsedTime(loadingElapsedCs) + "s");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, loading, isSending]);
+  }, [messages, loading, isSending, streamStarted]);
 
   const loadSuggestedQuestions = async () => {
     if (!chatbotId) {
@@ -1223,7 +1227,3 @@ export function HomeChatDemo() {
     </div>
   );
 }
-
-
-
-

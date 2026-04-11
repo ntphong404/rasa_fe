@@ -4,13 +4,16 @@ import { IChatMessage, ISendMessageRequest, IConversation, IChatHistoryMessage }
 import { generateConversationId } from "@/lib/uuid";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+const STREAM_ANIMATION_THRESHOLD = 20;
 export type UseChatReturn = {
   messages: IChatMessage[];
   loading: boolean;
+  streamStarted: boolean;
   loadingHistory: boolean;
   error: string | null;
   currentConversationId: string | null;
   sendMessage: (messageData: Omit<ISendMessageRequest, 'conversationId'>) => Promise<any>;
+  sendMessageStream: (messageData: Omit<ISendMessageRequest, 'conversationId'>) => Promise<void>;
   clearMessages: () => void;
   clearError: () => void;
   loadConversationHistory: (conversation: IConversation) => void;
@@ -19,9 +22,33 @@ export type UseChatReturn = {
   updateLastMessage: (text: string) => void;
 };
 
+const stripThinkTags = (raw: string) => {
+  const normalized = raw || "";
+  const tagPattern = /<\/?think>/gi;
+  let visibleContent = "";
+  let cursor = 0;
+  let inThink = false;
+  let match: RegExpExecArray | null;
+
+  while ((match = tagPattern.exec(normalized)) !== null) {
+    if (!inThink) {
+      visibleContent += normalized.slice(cursor, match.index);
+    }
+    inThink = match[0].toLowerCase() === "<think>";
+    cursor = tagPattern.lastIndex;
+  }
+
+  if (!inThink) {
+    visibleContent += normalized.slice(cursor);
+  }
+
+  return visibleContent.trim();
+};
+
 export const useChat = (): UseChatReturn => {
   const [messages, setMessages] = useState<IChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [streamStarted, setStreamStarted] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
@@ -69,6 +96,7 @@ export const useChat = (): UseChatReturn => {
 
   const sendMessage = useCallback(async (messageData: Omit<ISendMessageRequest, 'conversationId'>) => {
     setLoading(true);
+    setStreamStarted(true);
     setError(null);
     
     try {
@@ -177,6 +205,192 @@ export const useChat = (): UseChatReturn => {
       throw err;
     } finally {
       setLoading(false);
+      setStreamStarted(false);
+    }
+  }, [currentConversationId]);
+
+  const sendMessageStream = useCallback(async (messageData: Omit<ISendMessageRequest, 'conversationId'>) => {
+    setLoading(true);
+    setStreamStarted(false);
+    setError(null);
+
+    try {
+      let conversationId = currentConversationId;
+      if (!conversationId) {
+        conversationId = generateConversationId();
+        setCurrentConversationId(conversationId);
+      }
+
+      const completeMessageData: ISendMessageRequest = {
+        ...messageData,
+        conversationId,
+      };
+
+      const userMessage: IChatMessage = {
+        recipient_id: messageData.userId,
+        text: messageData.message,
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+
+      let botMessageCreated = false;
+      let rawBotText = "";
+      let botButtons: IChatMessage["buttons"] = undefined;
+      let sourceType: IChatMessage["sourceType"] = "unknown";
+
+      const updateBotMessage = (text: string) => {
+        setMessages(prev => {
+          if (prev.length === 0) return prev;
+          const updated = [...prev];
+          const lastIndex = updated.length - 1;
+          updated[lastIndex] = {
+            ...updated[lastIndex],
+            text,
+            sourceType,
+            buttons: botButtons,
+          };
+          return updated;
+        });
+      };
+
+      const appendSegmentWithAnimation = async (segment: string) => {
+        if (!segment) return;
+
+        ensureBotMessage();
+
+        if (segment.length <= STREAM_ANIMATION_THRESHOLD) {
+          rawBotText += segment;
+          updateBotMessage(stripThinkTags(rawBotText));
+          return;
+        }
+
+        const delay = segment.length > 120 ? 4 : segment.length > 60 ? 6 : 10;
+        let localIndex = 0;
+
+        while (localIndex < segment.length) {
+          const nextCharCount = Math.max(1, Math.floor((Date.now() % 7) / 3) + 1);
+          rawBotText += segment.slice(localIndex, localIndex + nextCharCount);
+          localIndex += nextCharCount;
+          updateBotMessage(stripThinkTags(rawBotText));
+
+          if (localIndex < segment.length) {
+            await sleep(delay);
+          }
+        }
+      };
+
+      const ensureBotMessage = () => {
+        if (botMessageCreated) return;
+        botMessageCreated = true;
+        setMessages(prev => [
+          ...prev,
+          {
+            recipient_id: "bot",
+            text: "",
+            buttons: botButtons,
+            sourceType,
+            isStreaming: true,
+          },
+        ]);
+      };
+
+      await chatService.sendMessageStream(completeMessageData, async (event) => {
+        if (event.type === "start") {
+          setStreamStarted(true);
+          return;
+        }
+
+        if (event.type === "meta") {
+          sourceType = event.streaming ? "rag" : "rasa";
+          return;
+        }
+
+        if (event.type === "message" && typeof event.text === "string") {
+          setLoading(false);
+          if (rawBotText.length > 0) {
+            await appendSegmentWithAnimation("\n\n");
+          }
+          await appendSegmentWithAnimation(event.text);
+          return;
+        }
+
+        if (event.type === "token" && typeof event.text === "string") {
+          setLoading(false);
+          await appendSegmentWithAnimation(event.text);
+          return;
+        }
+
+        if (event.type === "buttons" && Array.isArray(event.buttons)) {
+          botButtons = event.buttons;
+          ensureBotMessage();
+          setMessages(prev => {
+            if (prev.length === 0) return prev;
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            updated[lastIndex] = {
+              ...updated[lastIndex],
+              buttons: botButtons,
+              sourceType,
+            };
+            return updated;
+          });
+          return;
+        }
+
+        if (event.type === "references" && Array.isArray(event.items) && event.items.length > 0) {
+          await appendSegmentWithAnimation(
+            `\n\nTài liệu tham khảo:\n- ${event.items.join("\n- ")}`
+          );
+          return;
+        }
+
+        if (event.type === "done") {
+          setLoading(false);
+          setStreamStarted(false);
+          setMessages(prev => {
+            if (prev.length === 0 || !botMessageCreated) return prev;
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            updated[lastIndex] = {
+              ...updated[lastIndex],
+              text: stripThinkTags(rawBotText),
+              sourceType,
+              buttons: botButtons,
+              isStreaming: false,
+            };
+            return updated;
+          });
+          return;
+        }
+
+        if (event.type === "error") {
+          throw new Error(event.message || "Có lỗi xảy ra khi stream tin nhắn");
+        }
+      });
+
+      setMessages(prev => {
+        if (prev.length === 0 || !botMessageCreated) return prev;
+        const updated = [...prev];
+        const lastIndex = updated.length - 1;
+        updated[lastIndex] = {
+          ...updated[lastIndex],
+          text: stripThinkTags(rawBotText),
+          sourceType,
+          buttons: botButtons,
+          isStreaming: false,
+        };
+        return updated;
+      });
+    } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Có lỗi xảy ra khi gửi tin nhắn";
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+      setStreamStarted(false);
     }
   }, [currentConversationId]);
 
@@ -209,10 +423,12 @@ export const useChat = (): UseChatReturn => {
   return {
     messages,
     loading,
+    streamStarted,
     loadingHistory,
     error,
     currentConversationId,
     sendMessage,
+    sendMessageStream,
     clearMessages,
     clearError,
     loadConversationHistory,

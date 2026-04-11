@@ -161,7 +161,9 @@ export default {
 
   CHAT_ENDPOINTS: {
     SEND_MESSAGE_SYSTEM: "/api/v1/chatbot/chat",
+    SEND_MESSAGE_SYSTEM_STREAM: "/api/v1/chatbot/chat/stream",
     SEND_MESSAGE: (id: string) => `/api/v1/chatbot/${id}/chat`,
+    SEND_MESSAGE_STREAM: (id: string) => `/api/v1/chatbot/${id}/chat/stream`,
     GET_CONVERSATIONS: (userId: string) =>
       `/api/v1/conversation/user/${userId}`,
     GET_ARCHIVED_CONVERSATIONS: (userId: string) =>
