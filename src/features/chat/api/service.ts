@@ -338,5 +338,15 @@ export const chatService = {
       ENDPOINTS.CHATBOT_ENDPOINTS.SUGGESTED_QUESTION_DETAIL(chatbotId, questionId)
     );
     return response.data;
+  },
+
+  incrementSuggestedQuestionCount: async (
+    chatbotId: string,
+    questionId: string
+  ): Promise<any> => {
+    const response = await axiosInstance.patch(
+      ENDPOINTS.CHATBOT_ENDPOINTS.SUGGESTED_QUESTION_DETAIL(chatbotId, questionId) + '/increment-count'
+    );
+    return response.data;
   }
 }
