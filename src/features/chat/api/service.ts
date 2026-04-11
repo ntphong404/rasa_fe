@@ -279,5 +279,64 @@ export const chatService = {
       { params: { limit } }
     );
     return response.data;
+  },
+
+  getSuggestedQuestionsList: async (
+    chatbotId: string,
+    params?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      sort?: "asc" | "desc";
+    }
+  ): Promise<any> => {
+    const response = await axiosInstance.get(
+      ENDPOINTS.CHATBOT_ENDPOINTS.SUGGESTED_QUESTIONS_LIST(chatbotId),
+      { params }
+    );
+    return response.data;
+  },
+
+  getSuggestedQuestionById: async (
+    chatbotId: string,
+    questionId: string
+  ): Promise<any> => {
+    const response = await axiosInstance.get(
+      ENDPOINTS.CHATBOT_ENDPOINTS.SUGGESTED_QUESTION_DETAIL(chatbotId, questionId)
+    );
+    return response.data;
+  },
+
+  createSuggestedQuestion: async (
+    chatbotId: string,
+    data: { question: string; reason?: string }
+  ): Promise<any> => {
+    const response = await axiosInstance.post(
+      ENDPOINTS.CHATBOT_ENDPOINTS.SUGGESTED_QUESTIONS_LIST(chatbotId),
+      data
+    );
+    return response.data;
+  },
+
+  updateSuggestedQuestion: async (
+    chatbotId: string,
+    questionId: string,
+    data: { question?: string; reason?: string }
+  ): Promise<any> => {
+    const response = await axiosInstance.put(
+      ENDPOINTS.CHATBOT_ENDPOINTS.SUGGESTED_QUESTION_DETAIL(chatbotId, questionId),
+      data
+    );
+    return response.data;
+  },
+
+  hardDeleteSuggestedQuestion: async (
+    chatbotId: string,
+    questionId: string
+  ): Promise<any> => {
+    const response = await axiosInstance.delete(
+      ENDPOINTS.CHATBOT_ENDPOINTS.SUGGESTED_QUESTION_DETAIL(chatbotId, questionId)
+    );
+    return response.data;
   }
 }
