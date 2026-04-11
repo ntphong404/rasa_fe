@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { ArrowUpDown, Edit, Eye, SearchIcon, Trash2, Plus } from "lucide-react";
 import { useChatbotStore } from "@/store/chatbot";
 import { suggestedQuestionService } from "../api/service";
@@ -392,40 +393,96 @@ export function SuggestedQuestionsManagementPage() {
 
       {/* View Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("Question Details")}</DialogTitle>
-          </DialogHeader>
-          {selectedQuestion && (
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">{t("Question")}</label>
-                <p className="text-sm text-gray-600 mt-1">{selectedQuestion.question}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">{t("Reason")}</label>
-                <p className="text-sm text-gray-600 mt-1">{selectedQuestion.reason || "-"}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">{t("Count")}</label>
-                <p className="text-sm text-gray-600 mt-1">{selectedQuestion.count || 1}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">{t("Last Seen At")}</label>
-                <p className="text-sm text-gray-600 mt-1">
-                  {selectedQuestion.lastSeenAt
-                    ? new Date(selectedQuestion.lastSeenAt).toLocaleString()
-                    : "-"}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">{t("Created At")}</label>
-                <p className="text-sm text-gray-600 mt-1">
-                  {new Date(selectedQuestion.createdAt).toLocaleString()}
-                </p>
-              </div>
-            </div>
-          )}
+        <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+          {/* Header with gradient background */}
+          <div className="bg-gradient-to-r from-green-50 to-teal-50 border-b px-4 py-4">
+            <DialogHeader className="space-y-2">
+              <DialogTitle className="text-xl font-bold text-green-900">
+                {t("Question Details")}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-green-600">
+                {t("View detailed information about this question")}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          {/* Content */}
+          <div className="overflow-y-auto px-4 py-4 space-y-3" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+            {selectedQuestion && (
+              <>
+                {/* Question */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-700 block">{t("Question")}</label>
+                  <div className="rounded-lg bg-gradient-to-r from-green-50 to-teal-50 border border-green-100 px-3 py-2 shadow-sm">
+                    <p className="text-sm leading-relaxed text-slate-700">{selectedQuestion.question}</p>
+                  </div>
+                </div>
+
+                <Separator className="bg-slate-200" />
+
+                {/* Reason */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-700 block">{t("Reason")}</label>
+                  <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2">
+                    <p className="text-sm text-slate-600">
+                      {selectedQuestion.reason ? (
+                        <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                          {selectedQuestion.reason}
+                        </span>
+                      ) : (
+                        <span className="italic text-slate-400">-</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <Separator className="bg-slate-200" />
+
+                {/* Statistics */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-slate-700 block">{t("Count")}</label>
+                    <div className="rounded-lg bg-blue-50 border border-blue-100 px-3 py-2 text-center">
+                      <p className="text-2xl font-bold text-blue-600">{selectedQuestion.count || 1}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-slate-700 block">{t("Last Seen At")}</label>
+                    <div className="rounded-lg bg-purple-50 border border-purple-100 px-3 py-2">
+                      <p className="text-xs text-purple-700 font-medium">
+                        {selectedQuestion.lastSeenAt
+                          ? new Date(selectedQuestion.lastSeenAt).toLocaleDateString()
+                          : "-"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator className="bg-slate-200" />
+
+                {/* Created At */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-700 block">{t("Created At")}</label>
+                  <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2">
+                    <p className="text-xs text-slate-600">
+                      {new Date(selectedQuestion.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="border-t bg-slate-50 px-4 py-3 flex justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setDetailsOpen(false)}
+              className="border-slate-300 hover:bg-slate-100"
+            >
+              {t("Close")}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -437,59 +494,101 @@ export function SuggestedQuestionsManagementPage() {
           resetFormData();
         }
       }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {editingQuestion ? t("Edit Question") : t("Create New Question")}
-            </DialogTitle>
-            <DialogDescription>
-              {editingQuestion
-                ? t("Update the suggested question details")
-                : t("Add a new suggested question")}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">{t("Question")} *</label>
+        <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+          {/* Header with gradient background */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b px-4 py-4">
+            <DialogHeader className="space-y-2">
+              <DialogTitle className="text-xl font-bold text-blue-900">
+                {editingQuestion ? t("Edit Question") : t("Create New Question")}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-blue-600">
+                {editingQuestion
+                  ? t("Update the suggested question details")
+                  : t("Add a new suggested question")}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          {/* Form Content */}
+          <div className="overflow-y-auto px-4 py-4 space-y-4" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+            {/* Question Field */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-700 block">
+                {t("Question")} <span className="text-red-500">*</span>
+              </label>
               <Textarea
                 value={formData.question}
                 onChange={(e) => setFormData((prev) => ({ ...prev, question: e.target.value }))}
                 placeholder={t("Enter question")}
-                className="mt-1 min-h-[100px]"
+                className="min-h-[100px] border-2 border-slate-200 focus:border-blue-400 focus:ring-blue-100 rounded-lg resize-none"
               />
+              {!formData.question.trim() && error && (
+                <p className="text-xs text-red-500">{t("Question is required")}</p>
+              )}
             </div>
-            <div>
-              <label className="text-sm font-medium">{t("Reason Type")}</label>
-              <Select value={formData.reasonType} onValueChange={(value) => 
-                setFormData((prev) => ({ ...prev, reasonType: value, customReason: value === "Other" ? prev.customReason : "" }))
-              }>
-                <SelectTrigger className="mt-1">
+
+            <Separator className="bg-slate-200" />
+
+            {/* Reason Type Field */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-700 block">
+                {t("Reason Type")}
+              </label>
+              <Select 
+                value={formData.reasonType} 
+                onValueChange={(value) => 
+                  setFormData((prev) => ({ 
+                    ...prev, 
+                    reasonType: value, 
+                    customReason: value === "Other" ? prev.customReason : "" 
+                  }))
+                }
+              >
+                <SelectTrigger className="border-2 border-slate-200 focus:border-blue-400 focus:ring-blue-100">
                   <SelectValue placeholder={t("Select reason type")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="FAQ">{t("FAQ")}</SelectItem>
-                  <SelectItem value="Popular Search">{t("Popular Search")}</SelectItem>
-                  <SelectItem value="User Feedback">{t("User Feedback")}</SelectItem>
-                  <SelectItem value="Training Data">{t("Training Data")}</SelectItem>
-                  <SelectItem value="Trending">{t("Trending")}</SelectItem>
-                  <SelectItem value="Other">{t("Other")}</SelectItem>
+                  <SelectItem value="FAQ">
+                    <span className="text-sm">{t("FAQ")}</span>
+                  </SelectItem>
+                  <SelectItem value="Popular Search">
+                    <span className="text-sm">{t("Popular Search")}</span>
+                  </SelectItem>
+                  <SelectItem value="User Feedback">
+                    <span className="text-sm">{t("User Feedback")}</span>
+                  </SelectItem>
+                  <SelectItem value="Training Data">
+                    <span className="text-sm">{t("Training Data")}</span>
+                  </SelectItem>
+                  <SelectItem value="Trending">
+                    <span className="text-sm">{t("Trending")}</span>
+                  </SelectItem>
+                  <SelectItem value="Other">
+                    <span className="text-sm">{t("Other")}</span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Custom Reason Field (shown only when "Other" is selected) */}
             {formData.reasonType === "Other" && (
-              <div>
-                <label className="text-sm font-medium">{t("Custom Reason")}</label>
+              <div className="space-y-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <label className="text-xs font-semibold text-slate-700 block">
+                  {t("Custom Reason")}
+                </label>
                 <Input
                   type="text"
                   value={formData.customReason}
                   onChange={(e) => setFormData((prev) => ({ ...prev, customReason: e.target.value }))}
                   placeholder={t("Enter custom reason")}
-                  className="mt-1"
+                  className="border-2 border-blue-300 focus:border-blue-400 focus:ring-blue-100"
                 />
               </div>
             )}
           </div>
-          <div className="flex justify-end gap-2 mt-4">
+
+          {/* Footer with Actions */}
+          <div className="border-t bg-slate-50 px-4 py-3 flex justify-end gap-2">
             <Button
               variant="outline"
               onClick={() => {
@@ -497,11 +596,12 @@ export function SuggestedQuestionsManagementPage() {
                 setIsEditOpen(false);
                 resetFormData();
               }}
+              className="border-slate-300 hover:bg-slate-100"
             >
               {t("Cancel")}
             </Button>
             <Button
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
               onClick={handleSave}
             >
               {t("Save")}

@@ -82,26 +82,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: "/training",
           },
           {
-            title: "Intents",
+            title: t("Intents"),
             url: "/intents",
           },
           {
-            title: "Entities",
+            title: t("Entities"),
             url: "/entities",
           },
           {
-            title: "Actions",
+            title: t("Actions"),
             url: "/actions",
           },
           {
-            title: "Responses",
+            title: t("Responses"),
             url: "/responses",
           },
           {
-            title: "Rules",
+            title: t("Rules"),
             url: "/rules",
           },
-          { title: "Stories", url: "/stories" },
+          { title: t("Stories"), url: "/stories" },
           // {
           //   title: "Slots",
           //   url: "/slots",
@@ -109,13 +109,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           ...(userRoleLevel === 'admin'
             ? [
               {
-                title: "Chatbot",
+                title: t("Chat Bot"),
                 url: "/chat_bot",
               },
             ]
             : []),
           {
-            title: "UQuestion",
+            title: t("UQuestion"),
             url: "/uquestion",
           },
           {
