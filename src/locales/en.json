@@ -838,5 +838,14 @@
   "Definition": "Definition",
   "View YAML": "View YAML",
   "Name": "Name",
-  "Filters": "Filters"
+  "Filters": "Filters",
+  "Reason Type": "Reason Type",
+  "FAQ": "FAQ",
+  "Popular Search": "Popular Search",
+  "User Feedback": "User Feedback",
+  "Training Data": "Training Data",
+  "Trending": "Trending",
+  "Other": "Other",
+  "Custom Reason": "Custom Reason",
+  "Enter custom reason": "Enter custom reason"
 }

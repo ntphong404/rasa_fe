@@ -18,6 +18,7 @@ import { NavMain } from "./nav-main";
 import { NavConversations } from "./nav-conversations";
 import { NavUser } from "./nav-user";
 import { useAuthStore } from "@/store/auth";
+import { title } from "process";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation();
@@ -66,6 +67,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           { title: t("Add data"), url: "/add-data" },
           { title: t("View details"), url: "/data-info" },
+          { title: t("suggested questions"), url: "/suggested-questions" },
         ]
       },
       {

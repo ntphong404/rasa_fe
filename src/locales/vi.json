@@ -872,5 +872,15 @@
   "Disliked chatbot response details": "Chi tiết các phản hồi chatbot bị đánh giá không tốt",
   "User": "Người dùng",
   "Message ID": "ID tin nhắn",
-  "Please select a chatbot to view message feedback": "Vui lòng chọn một chatbot để xem đánh giá tin nhắn"
+  "Please select a chatbot to view message feedback": "Vui lòng chọn một chatbot để xem đánh giá tin nhắn",
+  "suggested questions": "câu hỏi gợi ý",
+  "Reason Type": "Loại lý do",
+  "FAQ": "Câu hỏi thường gặp",
+  "Popular Search": "Tìm kiếm phổ biến",
+  "User Feedback": "Phản hồi người dùng",
+  "Training Data": "Dữ liệu huấn luyện",
+  "Trending": "Xu hướng",
+  "Other": "Khác",
+  "Custom Reason": "Lý do tùy chỉnh",
+  "Enter custom reason": "Nhập lý do tùy chỉnh"
 }
