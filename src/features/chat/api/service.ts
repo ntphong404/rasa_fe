@@ -44,9 +44,9 @@ export const chatService = {
     onEvent: StreamEventHandler
   ): Promise<void> => {
     const token = localStorage.getItem("authToken");
-    const selectedBotId = useChatbotStore.getState().selectedBotId;
+    const selectedChatBotId = useChatbotStore.getState().selectedChatBotId;
     const scopedBotId =
-      selectedBotId && selectedBotId !== "global" ? selectedBotId : null;
+      selectedChatBotId && selectedChatBotId !== "global" ? selectedChatBotId : null;
 
     const url = new URL(
       ENDPOINTS.CHAT_ENDPOINTS.SEND_MESSAGE_SYSTEM_STREAM,
