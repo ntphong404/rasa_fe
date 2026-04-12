@@ -133,12 +133,19 @@ export function HomeChatDemo() {
   const prevConversationIdRef = useRef<string | null>(null);
   const userId = useCurrentUserId();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const { selectedChatBotId, chatbots, setSelectedChatBotId } = useChatbotStore();
+  const { selectedChatBotId, selectedManagementBotId, chatbots, setSelectedChatBotId } = useChatbotStore();
 
   // Chat conversation always uses the global system chatbot selection.
   const chatScopeBotId = selectedChatBotId;
   const selectedChatbot = chatbots.find((bot) => bot.botId === chatScopeBotId) || chatbots[0];
   const chatbotId = selectedChatbot?._id || "";
+
+  // Sync with management bot selection when it changes
+  useEffect(() => {
+    if (selectedManagementBotId && selectedManagementBotId !== 'global') {
+      setSelectedChatBotId(selectedManagementBotId);
+    }
+  }, [selectedManagementBotId, setSelectedChatBotId]);
 
   // Auto-reset chatbot selection if selected bot not in available chatbots
   useEffect(() => {

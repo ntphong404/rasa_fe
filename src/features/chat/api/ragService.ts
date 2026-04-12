@@ -1,5 +1,5 @@
 import axios from "axios";
-import { RAG_BASE_URL, RAG_ENDPOINTS } from "@/api/rag.endpoints";
+import { RAG_BASE_URL, RAG_ENDPOINTS, buildRagPortUrl, createRagEndpoints } from "@/api/rag.endpoints";
 import {
   ChatCompletionRequest,
   ChatCompletionResponse,
@@ -16,6 +16,18 @@ const ragAxios = axios.create({
   baseURL: RAG_BASE_URL,
   timeout: 60000, // 60s timeout for LLM responses
 });
+
+/**
+ * Create a custom RAG axios instance with specific port
+ * Used for /context-docs page which needs chatbot-specific RAG endpoint
+ */
+export const createRagAxiosInstance = (ragPort?: number) => {
+  const baseURL = ragPort ? buildRagPortUrl(ragPort) : RAG_BASE_URL;
+  return axios.create({
+    baseURL,
+    timeout: 60000,
+  });
+};
 
 type LightRagDocument = {
   id: string;
@@ -327,4 +339,172 @@ export const ragService = {
     );
     return response.data;
   },
+};
+
+/**
+ * Factory function to create RAG service with custom ragPort
+ */
+export const createRagServiceInstance = (ragPort?: number) => {
+  const baseURL = ragPort ? buildRagPortUrl(ragPort) : RAG_BASE_URL;
+  const customRagAxios = axios.create({
+    baseURL,
+    timeout: 60000,
+  });
+  const ragEndpoints = createRagEndpoints(baseURL);
+
+  return {
+    // Use custom axios instance for all methods
+    listDocumentsStatuses: async (): Promise<LightRagDocumentsStatusesResponse> => {
+      const response = await customRagAxios.get<LightRagDocumentsStatusesResponse>(
+        ragEndpoints.DOCUMENTS_LIST
+      );
+      return response.data;
+    },
+
+    uploadDocument: async (file: File): Promise<LightRagDocActionResponse> => {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await customRagAxios.post<LightRagDocActionResponse>(
+        ragEndpoints.DOCUMENTS_UPLOAD,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response.data;
+    },
+
+    ingestFile: async (file: File): Promise<IngestedDocumentsResponse> => {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await customRagAxios.post<LightRagDocActionResponse>(
+          ragEndpoints.DOCUMENTS_UPLOAD,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        if (response.data.status && response.data.status !== "success") {
+          throw new Error(response.data.message || "Upload failed");
+        }
+
+        return await createRagServiceInstance(ragPort).listIngestedDocuments();
+      } catch (error) {
+        if (!shouldFallbackToLegacyIngestApi(error)) {
+          throw error;
+        }
+
+        const response = await customRagAxios.post<IngestedDocumentsResponse>(
+          ragEndpoints.INGEST_FILE,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        return response.data;
+      }
+    },
+
+    listIngestedDocuments: async (): Promise<IngestedDocumentsResponse> => {
+      try {
+        const response = await customRagAxios.get<LightRagDocumentsResponse>(
+          ragEndpoints.DOCUMENTS_LIST
+        );
+        return mapLightRagDocumentsResponse(response.data);
+      } catch (error) {
+        if (!shouldFallbackToLegacyIngestApi(error)) {
+          throw error;
+        }
+
+        const response = await customRagAxios.get<IngestedDocumentsResponse>(
+          ragEndpoints.INGEST_LIST
+        );
+        return response.data;
+      }
+    },
+
+    deleteDocument: async (docId: string): Promise<void> => {
+      await customRagAxios.delete<LightRagDocActionResponse>(
+        ragEndpoints.DOCUMENTS_DELETE,
+        {
+          data: {
+            doc_ids: [docId],
+            delete_file: false,
+            delete_llm_cache: false,
+          },
+        }
+      );
+    },
+
+    deleteDocuments: async (
+      docIds: string[],
+      deleteFile: boolean = false,
+      deleteLlmCache: boolean = false
+    ): Promise<LightRagDocActionResponse> => {
+      const response = await customRagAxios.delete<LightRagDocActionResponse>(
+        ragEndpoints.DOCUMENTS_DELETE,
+        {
+          data: {
+            doc_ids: docIds,
+            delete_file: deleteFile,
+            delete_llm_cache: deleteLlmCache,
+          },
+        }
+      );
+      return response.data;
+    },
+
+    scanDocuments: async (): Promise<LightRagDocActionResponse> => {
+      const response = await customRagAxios.post<LightRagDocActionResponse>(
+        ragEndpoints.DOCUMENTS_SCAN
+      );
+      return response.data;
+    },
+
+    reprocessFailedDocuments: async (): Promise<LightRagDocActionResponse> => {
+      const response = await customRagAxios.post<LightRagDocActionResponse>(
+        ragEndpoints.DOCUMENTS_REPROCESS_FAILED
+      );
+      return response.data;
+    },
+
+    getPipelineStatus: async (): Promise<LightRagPipelineStatusResponse> => {
+      const response = await customRagAxios.get<LightRagPipelineStatusResponse>(
+        ragEndpoints.DOCUMENTS_PIPELINE_STATUS
+      );
+      return response.data;
+    },
+
+    cancelPipeline: async (): Promise<LightRagDocActionResponse> => {
+      const response = await customRagAxios.post<LightRagDocActionResponse>(
+        ragEndpoints.DOCUMENTS_CANCEL_PIPELINE
+      );
+      return response.data;
+    },
+
+    clearDocuments: async (): Promise<LightRagDocActionResponse> => {
+      const response = await customRagAxios.delete<LightRagDocActionResponse>(
+        ragEndpoints.DOCUMENTS_CLEAR
+      );
+      return response.data;
+    },
+
+    clearCache: async (): Promise<{ status: string; message: string }> => {
+      const response = await customRagAxios.post<{ status: string; message: string }>(
+        ragEndpoints.DOCUMENTS_CLEAR_CACHE,
+        {}
+      );
+      return response.data;
+    },
+  };
 };

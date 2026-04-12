@@ -14,6 +14,7 @@ export interface CreateChatBotRequest {
   ip: string;
   rasaPort: number;
   flaskPort: number;
+  ragPort?: number;
   roles?: string[];
 }
 
@@ -24,6 +25,7 @@ export interface UpdateChatBotRequest {
   ip: string;
   rasaPort: number;
   flaskPort: number;
+  ragPort?: number;
   roles?: string[];
 }
 

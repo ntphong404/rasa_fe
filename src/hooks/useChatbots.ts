@@ -36,8 +36,6 @@ export const useChatbots = () => {
     setLoading(true);
     setError(null);
     try {
-      console.log("🔄 Fetching public chatbots from:", `${BASE_URL}/api/v1/chatbot/public/list`);
-      
       // Get token from localStorage to send as Authorization header
       const token = localStorage.getItem('authToken');
       
@@ -46,7 +44,6 @@ export const useChatbots = () => {
       });
       
       const chatbotList = response.data?.data || [];
-      console.log("✅ Fetched public chatbots:", chatbotList);
       setChatbots(chatbotList);
 
       let latestUser = authUser;

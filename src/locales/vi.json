@@ -874,6 +874,7 @@
   "Message ID": "ID tin nhắn",
   "Please select a chatbot to view message feedback": "Vui lòng chọn một chatbot để xem đánh giá tin nhắn",
   "suggested questions": "Câu hỏi gợi ý",
+  "Reason": "Lý do",
   "Reason Type": "Loại lý do",
   "FAQ": "Câu hỏi thường gặp",
   "Popular Search": "Tìm kiếm phổ biến",
@@ -896,6 +897,6 @@
   "Delete Question": "Xóa Câu Hỏi",
   "Are you sure you want to permanently delete this question?": "Bạn có chắc muốn xóa vĩnh viễn câu hỏi này không?",
   "Please select a chatbot to view suggested questions": "Vui lòng chọn một chatbot để xem câu hỏi gợi ý",
-  "Last Seen At": "Lần Cuối Nhìn Thấy",
+  "Last Seen At": "Lần cuối cùng xem",
   "Save": "Lưu"
 }

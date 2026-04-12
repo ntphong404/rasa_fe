@@ -5,6 +5,7 @@ export interface ChatBot {
   ip: string;
   rasaPort: number;
   flaskPort: number;
+  ragPort?: number;
   roles: (string | { _id: string; name?: string })[];
   deleted: boolean;
   createdAt: string;

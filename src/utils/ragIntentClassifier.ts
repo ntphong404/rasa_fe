@@ -176,13 +176,6 @@ export function detectRAGIntent(question: string): RAGIntent {
     }
   }
 
-  // Log để debug
-  console.log("🤖 RAG Intent Detection:", {
-    question: question.substring(0, 50) + "...",
-    scores,
-    detected: detectedIntent,
-  });
-
   return detectedIntent;
 }
 

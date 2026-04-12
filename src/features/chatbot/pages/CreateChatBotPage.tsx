@@ -29,6 +29,7 @@ const createChatBotSchema = z.object({
   ip: z.string().min(1, { message: "IP address is required" }),
   rasaPort: z.number().min(1, { message: "Rasa port is required" }),
   flaskPort: z.number().min(1, { message: "Flask port is required" }),
+  ragPort: z.number().optional(),
   roles: z.array(z.string()).default([]),
 });
 
@@ -53,6 +54,7 @@ export function CreateChatBotDialog({
       ip: "",
       rasaPort: 5005,
       flaskPort: 5000,
+      ragPort: undefined,
       roles: [],
     },
   });
@@ -192,6 +194,25 @@ export function CreateChatBotDialog({
                       )}
                     />
                   </div>
+                  <FormField
+                    control={form.control}
+                    name="ragPort"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("RAG Port")} (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder={t("Enter RAG port (e.g., 8000)")}
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
             </div>

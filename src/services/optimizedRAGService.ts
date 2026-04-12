@@ -24,7 +24,6 @@ export class OptimizedRAGService {
     }
 
     // Fetch from API
-    console.log("🔄 Fetching documents from API");
     const response = await ragService.listIngestedDocuments();
 
     // Cache response

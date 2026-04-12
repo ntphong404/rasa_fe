@@ -41,7 +41,6 @@ export function NavUser() {
   };
 
   if (!user) {
-    console.log("user null");
     return (
       <SidebarMenu>
         <SidebarMenuItem>
@@ -58,7 +57,6 @@ export function NavUser() {
   }
 
   // Nếu đã đăng nhập → Hiện dropdown người dùng
-  console.log("user info when login", user);
 
   return (
     <SidebarMenu>
