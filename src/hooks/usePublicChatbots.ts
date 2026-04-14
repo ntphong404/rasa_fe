@@ -13,11 +13,8 @@ export const usePublicChatbots = () => {
     setLoading(true);
     setError(null);
     try {
-      console.log("📡 Fetching public chatbots from:", `${BASE_URL}/api/v1/chatbot/public/list`);
       const response = await axios.get(`${BASE_URL}/api/v1/chatbot/public/list`);
-      console.log("✅ Response data:", response.data);
       const chatbotList = response.data?.data || response.data || [];
-      console.log("📊 Chatbot list:", chatbotList);
       setChatbots(chatbotList);
       return chatbotList;
     } catch (err: any) {

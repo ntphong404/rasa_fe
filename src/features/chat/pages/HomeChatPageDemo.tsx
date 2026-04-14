@@ -114,6 +114,11 @@ export function HomeChatDemo() {
   const [frozenElapsedLabel, setFrozenElapsedLabel] = useState<string | null>(null);
   const [allSuggestions, setAllSuggestions] = useState<string[]>(DEFAULT_QUICK_SUGGESTIONS);
   const [visibleSuggestions, setVisibleSuggestions] = useState<string[]>(() => DEFAULT_QUICK_SUGGESTIONS.slice(0, 4));
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true);
+  const [apiSuggestionIds, setApiSuggestionIds] = useState<Record<string, string>>({}); // Map question text to ID
+  const [currentSuggestionText, setCurrentSuggestionText] = useState<string | null>(null);
+  const [currentSuggestionIsFromApi, setCurrentSuggestionIsFromApi] = useState(false);
+  const [currentSuggestionId, setCurrentSuggestionId] = useState<string | null>(null);
   const [messageFeedback, setMessageFeedback] = useState<Record<string, MessageFeedback | undefined>>({});
   const feedbackFlushTimerRef = useRef<number | null>(null);
   const pendingFeedbackRef = useRef<Record<string, PendingFeedbackItem>>({});
@@ -128,12 +133,29 @@ export function HomeChatDemo() {
   const prevConversationIdRef = useRef<string | null>(null);
   const userId = useCurrentUserId();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const { selectedChatBotId, chatbots } = useChatbotStore();
+  const { selectedChatBotId, selectedManagementBotId, chatbots, setSelectedChatBotId } = useChatbotStore();
 
   // Chat conversation always uses the global system chatbot selection.
   const chatScopeBotId = selectedChatBotId;
-  const selectedChatbot = chatbots.find((bot) => bot.botId === chatScopeBotId);
-  const chatbotId = selectedChatbot?._id || chatScopeBotId || "";
+  const selectedChatbot = chatbots.find((bot) => bot.botId === chatScopeBotId) || chatbots[0];
+  const chatbotId = selectedChatbot?._id || "";
+
+  // Sync with management bot selection when it changes
+  useEffect(() => {
+    if (selectedManagementBotId && selectedManagementBotId !== 'global') {
+      setSelectedChatBotId(selectedManagementBotId);
+    }
+  }, [selectedManagementBotId, setSelectedChatBotId]);
+
+  // Auto-reset chatbot selection if selected bot not in available chatbots
+  useEffect(() => {
+    if (selectedChatBotId && chatbots.length > 0) {
+      const found = chatbots.find((bot) => bot.botId === selectedChatBotId);
+      if (!found && chatbots[0]) {
+        setSelectedChatBotId(chatbots[0].botId);
+      }
+    }
+  }, [selectedChatBotId, chatbots, setSelectedChatBotId]);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -654,6 +676,21 @@ export function HomeChatDemo() {
     // Normal Rasa chat
     setIsSending(true);
     const messageData = { message: text, userId, isLogined: !!isAuthenticated };
+    
+    // Increment count if message is from API suggestion and matches exactly
+    if (currentSuggestionIsFromApi && currentSuggestionId && chatbotId && text === currentSuggestionText) {
+      try {
+        await chatService.incrementSuggestedQuestionCount(chatbotId, currentSuggestionId);
+      } catch (error) {
+        console.error("Failed to increment count:", error);
+      }
+    }
+    
+    // Clear suggestion tracking
+    setCurrentSuggestionText(null);
+    setCurrentSuggestionIsFromApi(false);
+    setCurrentSuggestionId(null);
+    
     try {
       await sendMessageStream(messageData);
     } catch (err) {
@@ -721,14 +758,23 @@ export function HomeChatDemo() {
   }, [messages, loading, isSending, streamStarted]);
 
   const loadSuggestedQuestions = async () => {
+    setSuggestionsLoading(true);
     if (!chatbotId) {
       setAllSuggestions(DEFAULT_QUICK_SUGGESTIONS);
+      setApiSuggestionIds({});
+      setSuggestionsLoading(false);
       return;
     }
 
     try {
-      const response = await chatService.getSuggestedQuestions(16);
-      const items = Array.isArray(response?.data) ? response.data : [];
+      // Fetch from database
+      const response = await chatService.getSuggestedQuestionsList(chatbotId, { 
+        limit: 16,
+        page: 1 
+      });
+      
+      // Extract questions from nested data structure
+      const items = Array.isArray(response?.data?.data) ? response.data.data : [];
       const fromApi: string[] = Array.from(
         new Set(
           items
@@ -737,16 +783,28 @@ export function HomeChatDemo() {
         )
       );
 
+      // Track API suggestion IDs
+      const idMap: Record<string, string> = {};
+      if (Array.isArray(response?.data?.data)) {
+        response.data.data.forEach((item: any) => {
+          if (item.question && item._id) {
+            idMap[item.question.trim()] = item._id;
+          }
+        });
+      }
+      setApiSuggestionIds(idMap);
+
       if (fromApi.length > 0) {
-        const merged = Array.from(
-          new Set([...fromApi, ...DEFAULT_QUICK_SUGGESTIONS])
-        );
-        setAllSuggestions(merged);
+        setAllSuggestions(fromApi);
       } else {
         setAllSuggestions(DEFAULT_QUICK_SUGGESTIONS);
+        setApiSuggestionIds({});
       }
     } catch {
       setAllSuggestions(DEFAULT_QUICK_SUGGESTIONS);
+      setApiSuggestionIds({});
+    } finally {
+      setSuggestionsLoading(false);
     }
   };
 
@@ -769,12 +827,12 @@ export function HomeChatDemo() {
 
   // Auto-rotate suggestions every 8 seconds while still on the new chat empty state
   useEffect(() => {
-    if (!(messages.length === 0 && contextChat.isNewChat)) return;
+    if (!(messages.length === 0 && contextChat.isNewChat && !suggestionsLoading)) return;
     const id = setInterval(() => {
       setVisibleSuggestions(pickRandomSuggestions(allSuggestions, 4));
     }, 8000);
     return () => clearInterval(id);
-  }, [messages.length, contextChat.isNewChat, allSuggestions]);
+  }, [messages.length, contextChat.isNewChat, allSuggestions, suggestionsLoading]);
 
   const visibleStartIndex = Math.max(messages.length - visibleCount, 0);
   const latestComposerButtonsIndex = [...messages]
@@ -1088,27 +1146,45 @@ export function HomeChatDemo() {
           {/* Quick Suggestions Grid */}
           {messages.length === 0 && contextChat.isNewChat && (
             <div className="relative w-full">
-              <div
-                className="grid grid-cols-1 gap-3 rounded-[1.75rem] border border-slate-200/75 bg-slate-100/65 p-3 sm:grid-cols-2 lg:grid-cols-4 flex-shrink-0 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-slate-900/55"
-                style={{
-                  animation: "fadeIn 1s ease-out 0.4s backwards",
-                }}
-              >
-                {visibleSuggestions.map((suggestion, index) => {
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => handleQuickSuggestion(suggestion)}
-                      className="surface-card relative rounded-2xl border border-slate-200/80 bg-slate-50/95 px-4 py-3.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-800/80 dark:hover:border-white/20 dark:hover:bg-slate-800"
-                      style={{ animation: `fadeInUp 0.5s ease-out ${0.06 * index}s backwards` }}
-                    >
-                      <div className="text-sm font-medium leading-relaxed text-foreground">
-                        {suggestion}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+              {suggestionsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-8 w-8 rounded-full border-2 border-blue-200 border-t-blue-500 animate-spin dark:border-slate-600 dark:border-t-blue-400" />
+                    <p className="text-sm text-muted-foreground">Đang tải gợi ý...</p>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="grid grid-cols-1 gap-3 rounded-[1.75rem] border border-slate-200/75 bg-slate-100/65 p-3 sm:grid-cols-2 lg:grid-cols-4 flex-shrink-0 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-slate-900/55"
+                  style={{
+                    animation: "fadeIn 1s ease-out 0.4s backwards",
+                  }}
+                >
+                  {visibleSuggestions.map((suggestion, index) => {
+                    const isFromApi = !!apiSuggestionIds[suggestion];
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          handleQuickSuggestion(suggestion);
+                          // Track suggestion source for later increment when sending
+                          setCurrentSuggestionText(suggestion);
+                          setCurrentSuggestionIsFromApi(isFromApi);
+                          if (isFromApi) {
+                            setCurrentSuggestionId(apiSuggestionIds[suggestion]);
+                          }
+                        }}
+                        className="surface-card relative rounded-2xl border border-slate-200/80 bg-slate-50/95 px-4 py-3.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-800/80 dark:hover:border-white/20 dark:hover:bg-slate-800"
+                        style={{ animation: `fadeInUp 0.5s ease-out ${0.06 * index}s backwards` }}
+                      >
+                        <div className="text-sm font-medium leading-relaxed text-foreground">
+                          {suggestion}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Suggestions randomized on mount; navigation removed */}
             </div>

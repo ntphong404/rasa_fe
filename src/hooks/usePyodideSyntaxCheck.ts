@@ -18,7 +18,6 @@ export function usePyodideSyntaxCheck(code: string, enabled: boolean = true) {
           indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/",
         });
         setPyodide(py);
-        console.log("Pyodide loaded successfully");
       } catch (err) {
         console.error("Failed to load Pyodide:", err);
       } finally {

@@ -47,7 +47,6 @@ class CacheManager {
     const memoryItem = this.memoryCache.get(key);
     if (memoryItem) {
       if (now - memoryItem.timestamp <= memoryItem.ttl) {
-        console.log(`📦 Cache HIT (memory): ${key}`);
         return memoryItem.data as T;
       } else {
         // Expired
@@ -59,21 +58,18 @@ class CacheManager {
     try {
       const cached = localStorage.getItem(this.CACHE_PREFIX + key);
       if (!cached) {
-        console.log(`❌ Cache MISS: ${key}`);
         return null;
       }
 
       const item: CacheItem<T> = JSON.parse(cached);
 
       if (now - item.timestamp <= item.ttl) {
-        console.log(`📦 Cache HIT (localStorage): ${key}`);
         // Restore to memory cache
         this.memoryCache.set(key, item);
         return item.data;
       } else {
         // Expired
         this.remove(key);
-        console.log(`⏰ Cache EXPIRED: ${key}`);
         return null;
       }
     } catch (error) {

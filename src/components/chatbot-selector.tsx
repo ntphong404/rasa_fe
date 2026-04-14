@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import { useChatbots } from '@/hooks/useChatbots';
 import {
   Select,
@@ -12,7 +13,11 @@ import { Loader2 } from 'lucide-react';
 
 export function ChatbotSelector() {
   const { t } = useTranslation();
+  const location = useLocation();
   const { chatbots, loading, selectedManagementBotId, setSelectedManagementBotId } = useChatbots();
+
+  // Disable global selection on context-docs page
+  const isContextDocsPage = location.pathname === '/context-docs';
 
   if (loading && chatbots.length === 0) {
     return (
@@ -33,7 +38,9 @@ export function ChatbotSelector() {
           <SelectValue placeholder={t('Select chatbot...')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="global">{t('Global (All chatbots)')}</SelectItem>
+          {!isContextDocsPage && (
+            <SelectItem value="global">{t('Global (All chatbots)')}</SelectItem>
+          )}
           {chatbots.map((bot) => (
             <SelectItem key={bot._id} value={bot.botId}>
               {bot.name}

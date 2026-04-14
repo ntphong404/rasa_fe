@@ -60,7 +60,6 @@ export function NavConversations() {
     try {
       isLoadingRef.current = true;
       setLoading(true);
-      console.log(`Loading conversations page ${pageNum}, shouldAppend: ${shouldAppend}`);
       const response = await chatService.getConversations(user._id, {
         page: pageNum,
         limit: 10,
@@ -68,8 +67,6 @@ export function NavConversations() {
       });
 
       if (response.success) {
-        console.log(`Loaded ${response.data.length} conversations, meta.total: ${response.meta.total}, pageNum: ${pageNum}`);
-        
         if (shouldAppend) {
           setConversations((prev) => sortConversations([...prev, ...response.data]));
         } else {
@@ -79,7 +76,6 @@ export function NavConversations() {
         // Backend bug: meta.total seems to be totalPages, not total count
         // So we just compare pageNum with meta.total
         const hasMorePages = pageNum < response.meta.total;
-        console.log(`hasMore: ${hasMorePages} (${pageNum} < ${response.meta.total})`);
         setHasMore(hasMorePages);
         setPage(pageNum);
       }
@@ -107,7 +103,6 @@ export function NavConversations() {
       // Refresh first page to get updated conversations
       // Only refresh if not currently loading
       if (!isLoadingRef.current) {
-        console.log("Auto-refresh: reloading conversations");
         loadConversations(1, false);
       }
     }, 5000); // 5 seconds - faster refresh to catch updates
@@ -222,7 +217,6 @@ export function NavConversations() {
       
       // Call API to delete
       await chatService.deleteConversation(conversationToDelete);
-      console.log("Conversation deleted successfully");
       toast.success(t("Conversation deleted successfully"));
     } catch (error) {
       console.error("Failed to delete conversation:", error);

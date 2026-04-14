@@ -77,6 +77,12 @@ export function ChatBotDetailsDialog({
                     <p className="text-xs text-gray-500 mb-1">{t("Flask Port")}</p>
                     <p className="text-sm font-medium text-gray-900">{chatBot.flaskPort}</p>
                   </div>
+                  {chatBot.ragPort && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">{t("RAG Port")}</p>
+                      <p className="text-sm font-medium text-gray-900">{chatBot.ragPort}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 

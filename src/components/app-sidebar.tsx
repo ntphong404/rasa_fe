@@ -18,6 +18,7 @@ import { NavMain } from "./nav-main";
 import { NavConversations } from "./nav-conversations";
 import { NavUser } from "./nav-user";
 import { useAuthStore } from "@/store/auth";
+import { title } from "process";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation();
@@ -66,6 +67,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           { title: t("Add data"), url: "/add-data" },
           { title: t("View details"), url: "/data-info" },
+          { title: t("suggested questions"), url: "/suggested-questions" },
         ]
       },
       {
@@ -80,26 +82,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: "/training",
           },
           {
-            title: "Intents",
+            title: t("Intents"),
             url: "/intents",
           },
           {
-            title: "Entities",
+            title: t("Entities"),
             url: "/entities",
           },
           {
-            title: "Actions",
+            title: t("Actions"),
             url: "/actions",
           },
           {
-            title: "Responses",
+            title: t("Responses"),
             url: "/responses",
           },
           {
-            title: "Rules",
+            title: t("Rules"),
             url: "/rules",
           },
-          { title: "Stories", url: "/stories" },
+          { title: t("Stories"), url: "/stories" },
           // {
           //   title: "Slots",
           //   url: "/slots",
@@ -107,13 +109,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           ...(userRoleLevel === 'admin'
             ? [
               {
-                title: "Chatbot",
+                title: t("Chat Bot"),
                 url: "/chat_bot",
               },
             ]
             : []),
           {
-            title: "UQuestion",
+            title: t("UQuestion"),
             url: "/uquestion",
           },
           {
@@ -218,7 +220,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
     return { navMain };
   }, [t, userRoleLevel]);
-  console.log("Sidebar data:", data.navMain);
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader

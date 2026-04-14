@@ -7,14 +7,11 @@ export const useRegister = () => {
   const [error, setError] = useState<string | null>(null);
 
   const register = async (data: RegisterRequest) => {
-    console.log("Bắt đầu gọi API đăng ký", data);
     setIsLoading(true);
     setError(null);
 
     try {
       const response = await authService.register(data);
-
-      console.log("Response từ API:", response);
       return response;
     } catch (err: any) {
       console.error("Registration error:", err);

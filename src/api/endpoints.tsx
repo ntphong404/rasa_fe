@@ -119,6 +119,8 @@ export default {
     RUN_ACTION: (id: string) => `/api/v1/chatbot/${id}/run-actions`,
     GET_SUGGESTIONS_SYSTEM: "/api/v1/chatbot/suggestions",
     GET_SUGGESTIONS: (id: string) => `/api/v1/chatbot/${id}/suggestions`,
+    SUGGESTED_QUESTIONS_LIST: (id: string) => `/api/v1/chatbot/${id}/suggested-questions`,
+    SUGGESTED_QUESTION_DETAIL: (id: string, questionId: string) => `/api/v1/chatbot/${id}/suggested-questions/${questionId}`,
     MESSAGE_FEEDBACK: (id: string) => `/api/v1/chatbot/${id}/messages/feedback`,
     MESSAGE_FEEDBACK_LIST: (id: string) => `/api/v1/chatbot/${id}/messages/feedback`,
     MESSAGE_FEEDBACK_DETAIL: (id: string, feedbackId: string) => `/api/v1/chatbot/${id}/messages/feedback/${feedbackId}`,

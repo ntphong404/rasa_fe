@@ -55,6 +55,9 @@ const DocumentStatisticsPage = lazy(() => import("@/features/statistics").then((
 const MessageFeedbackManagementPage = lazy(() =>
   import("@/features/message-feedback").then((module) => ({ default: module.MessageFeedbackManagementPage }))
 );
+const SuggestedQuestionsManagementPage = lazy(() =>
+  import("@/features/suggested-questions").then((module) => ({ default: module.SuggestedQuestionsManagementPage }))
+);
 
 function RouteLoader() {
   return (
@@ -134,6 +137,7 @@ const router = createBrowserRouter([
       },
       { path: "uquestion", element: withSuspense(<UQuestionManagement />) },
       { path: "message-feedback", element: withSuspense(<MessageFeedbackManagementPage />) },
+      { path: "suggested-questions", element: withSuspense(<SuggestedQuestionsManagementPage />) },
       {
         path: "stories",
         children: [

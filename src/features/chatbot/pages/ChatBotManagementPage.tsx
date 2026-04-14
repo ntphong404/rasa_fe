@@ -577,6 +577,15 @@ export function ChatBotManagement() {
               ),
             },
             {
+              accessorKey: "ragPort",
+              header: t("RAG Port"),
+              cell: ({ row }) => (
+                <div className="text-sm">
+                  {row.getValue("ragPort") ? row.getValue("ragPort") : "-"}
+                </div>
+              ),
+            },
+            {
               accessorKey: "createdAt",
               header: ({ column }) => (
                 <Button
