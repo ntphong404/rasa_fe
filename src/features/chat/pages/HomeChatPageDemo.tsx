@@ -12,7 +12,7 @@ import {
   ThumbsUp,
   Loader2,
 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { Fragment, useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useChat } from "@/hooks/useChat";
 import { useSpeechToText } from "@/hooks/useSpeechToText";
@@ -512,8 +512,8 @@ export function HomeChatDemo() {
   };
 
 
-  const handleSendMessage = async () => {
-    const text = inputMessage.trim();
+  const submitMessage = async (rawText: string) => {
+    const text = rawText.trim();
     if (!text) return;
 
     // Prevent synchronous double-submit (before React re-renders loading state)
@@ -664,6 +664,15 @@ export function HomeChatDemo() {
     }
   };
 
+  const handleSendMessage = async () => {
+    await submitMessage(inputMessage);
+  };
+
+  const handleComposerButtonClick = async (payload: string) => {
+    setInputMessage("");
+    await submitMessage(payload);
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -768,6 +777,14 @@ export function HomeChatDemo() {
   }, [messages.length, contextChat.isNewChat, allSuggestions]);
 
   const visibleStartIndex = Math.max(messages.length - visibleCount, 0);
+  const latestComposerButtonsIndex = [...messages]
+    .map((message, index) => ({ message, index }))
+    .reverse()
+    .find(({ message }) => message.recipient_id !== userId && Array.isArray(message.buttons) && message.buttons.length > 0)?.index ?? -1;
+  const composerButtons = latestComposerButtonsIndex >= 0 &&
+    !messages.slice(latestComposerButtonsIndex + 1).some((message) => message.recipient_id === userId)
+    ? (messages[latestComposerButtonsIndex].buttons ?? []).filter((button) => button.type !== "web_url")
+    : [];
 
   const getFeedbackKey = (message: { messageId?: string }, absoluteIndex: number) => {
     if (message.messageId) return message.messageId;
@@ -912,9 +929,8 @@ export function HomeChatDemo() {
                       arr[arr.length - 1]?.text && arr[arr.length - 1].text.length > 0;
 
                     return (
-                      <>
+                      <Fragment key={feedbackKey}>
                         <div
-                          key={feedbackKey}
                           className={`group flex ${isUser ? "justify-end" : "justify-start"}`}
                         >
                           <div className={`flex min-w-[120px] flex-col ${isUser ? "max-w-[78%]" : "max-w-[90%]"}`}>
@@ -1035,7 +1051,7 @@ export function HomeChatDemo() {
                             </div>
                           </div>
                         )}
-                      </>
+                      </Fragment>
                     );
                   })}
                   {/* Pending (queued) messages shown dimmed while bot is busy */}
@@ -1105,6 +1121,22 @@ export function HomeChatDemo() {
               animation: "fadeInUp 0.8s ease-out 0.6s backwards",
             }}
           >
+            {composerButtons.length > 0 && (
+              <div className="surface-card-strong overflow-hidden rounded-2xl border border-slate-200/80 bg-background/95 px-3 py-2 backdrop-blur dark:border-white/15">
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {composerButtons.map((button, index) => (
+                    <button
+                      key={`${button.payload}-${index}`}
+                      onClick={() => void handleComposerButtonClick(button.payload)}
+                      className="shrink-0 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium whitespace-nowrap text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200 dark:hover:bg-blue-500/20"
+                    >
+                      {button.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="relative group">
               <div className="surface-card-strong relative rounded-2xl border border-slate-200/80 bg-background/95 backdrop-blur dark:border-white/15">
                 <Input
