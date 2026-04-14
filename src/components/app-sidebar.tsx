@@ -231,7 +231,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       >
         <div className="flex items-center gap-4">
           <img
-            src="/logo2.png"
+            src="/logo-tapchi.png"
             alt="@logo"
             className="h-10 w-10 rounded-full shadow-lg"
           />
@@ -239,7 +239,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             className="font-semibold text-xl"
             style={{ fontFamily: "'audiowide', 'Orbitron', sans-serif" }}
           >
-            KMA Chatbot
+            Tạp Chí ATTT Chatbot
           </span>
         </div>
       </SidebarHeader>

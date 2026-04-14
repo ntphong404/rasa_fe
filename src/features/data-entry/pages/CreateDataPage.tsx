@@ -133,7 +133,9 @@ export function CreateDataPage() {
     }
 
     function buildResponseDefine(responseName: string, responseText: string) {
-        const textBlock = responseText ? responseText.trim().split('\n').map((ln) => `      ${ln}`).join('\n') : "";
+        // Convert escaped \n back to actual newlines for formatting
+        const unescapedText = responseText ? responseText.replace(/\\n/g, '\n') : "";
+        const textBlock = unescapedText ? unescapedText.trim().split('\n').map((ln) => `      ${ln}`).join('\n') : "";
         const lines: string[] = [];
         lines.push(`${responseName}:`);
         lines.push(`  - text: |`);

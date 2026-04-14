@@ -105,7 +105,7 @@ export function ResetPasswordPage({
           <div className="mx-auto mb-4 w-20 h-20">
             <AspectRatio ratio={1}>
               <img
-                src="/logo2.png"
+                src="/logo-tapchi.png"
                 alt="Logo"
                 className="rounded-md object-contain"
               />

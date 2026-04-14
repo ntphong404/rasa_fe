@@ -83,7 +83,9 @@ export async function parseCSV(text: string): Promise<ParsedRow[]> {
  *   utter_ask_program:
  *     - text: "KMA có các chương trình..."
  *   utter_ask_admission:
- *     - text: "Để đăng ký vào KMA..."
+ *     - text: |
+ *         Để đăng ký vào KMA...
+ *         Dòng thứ 2
  */
 export async function parseResponseYAML(text: string): Promise<ResponseMap> {
     const lines = text.split(/\r?\n/);
@@ -116,16 +118,84 @@ export async function parseResponseYAML(text: string): Promise<ResponseMap> {
             continue;
         }
 
-        // Match text content (e.g., "- text: "...")
+        // Match text content (e.g., "- text: "..." or "- text: |")
         if (currentUtter && trimmed.startsWith('- text:')) {
-            const textMatch = trimmed.match(/^-\s+text:\s*["']?(.+?)["']?\s*$/);
-            if (textMatch) {
-                responseMap[currentUtter] = textMatch[1].trim();
+            // Check if this is a multi-line format with | or |-
+            if (trimmed.includes('|')) {
+                // Multi-line text format: collect the text from subsequent lines
+                const baseIndent = line.match(/^(\s*)/)?.[1].length ?? 0;
+                const textIndent = baseIndent + 4; // Text lines should be indented more than "- text:"
+                const textLines: string[] = [];
+                let lastWasEmpty = false;
+                
+                // Read subsequent lines until we hit a non-indented line or another response
+                for (let j = i + 1; j < lines.length; j++) {
+                    const nextLine = lines[j];
+                    const nextTrimmed = nextLine.trim();
+                    
+                    // Handle empty lines
+                    if (!nextTrimmed) {
+                        // Check if next non-empty line is a new section or utterance
+                        let isEndOfText = false;
+                        for (let k = j + 1; k < lines.length; k++) {
+                            const checkLine = lines[k].trim();
+                            if (checkLine && !checkLine.startsWith('#')) {
+                                const checkIndent = lines[k].match(/^(\s*)/)?.[1].length ?? 0;
+                                if (checkIndent <= baseIndent) {
+                                    isEndOfText = true;
+                                }
+                                break;
+                            }
+                        }
+                        if (isEndOfText) break;
+                        
+                        // Track empty lines to preserve paragraph breaks
+                        if (!lastWasEmpty) {
+                            textLines.push(''); // Add one empty line marker
+                            lastWasEmpty = true;
+                        }
+                        continue;
+                    }
+                    
+                    // Check indentation
+                    const nextIndent = nextLine.match(/^(\s*)/)?.[1].length ?? 0;
+                    if (nextIndent < textIndent && nextTrimmed) {
+                        // End of this text block
+                        break;
+                    }
+                    
+                    // Also stop if we hit another utterance or response marker
+                    if (nextTrimmed.match(/^[A-Za-z0-9_-]+:$/) || nextTrimmed.startsWith('- text:')) {
+                        break;
+                    }
+                    
+                    textLines.push(nextTrimmed);
+                    lastWasEmpty = false;
+                    i = j; // Update the main loop index
+                }
+                
+                // Join and clean up the text
+                // Keep newlines as \n escape sequences for proper storage
+                const fullText = textLines
+                    .join('\n')
+                    .replace(/\n\n+/g, '\n')
+                    .trim()
+                    .replace(/\n/g, '\\n'); // Convert newlines to escaped \n for database storage
+                
+                if (fullText) {
+                    responseMap[currentUtter] = fullText;
+                }
             } else {
-                // Multi-line text handling
-                const simpleText = trimmed.substring(7).trim().replace(/^["']|["']$/g, '');
-                if (simpleText) {
-                    responseMap[currentUtter] = simpleText;
+                // Single-line text format
+                const textMatch = trimmed.match(/^-\s+text:\s*["']?(.+?)["']?\s*$/);
+                if (textMatch) {
+                    responseMap[currentUtter] = textMatch[1].trim();
+                } else {
+                    // Fallback: extract everything after "text:"
+                    const simpleText = trimmed.substring(7).trim().replace(/^["']|["']$/g, '');
+                    if (simpleText) {
+                        responseMap[currentUtter] = simpleText;
+                    }
                 }
             }
         }

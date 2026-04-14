@@ -427,7 +427,9 @@ export function ImportIntentPage() {
     }
 
     function buildResponseDefine(responseName: string, responseText: string) {
-        const textBlock = responseText ? responseText.trim().split('\n').map((ln) => `      ${ln}`).join('\n') : "";
+        // Convert escaped \n back to actual newlines for formatting
+        const unescapedText = responseText ? responseText.replace(/\\n/g, '\n') : "";
+        const textBlock = unescapedText ? unescapedText.trim().split('\n').map((ln) => `      ${ln}`).join('\n') : "";
         const lines: string[] = [];
         lines.push(`${responseName}:`);
         lines.push(`  - text: |`);
@@ -641,6 +643,13 @@ export function ImportIntentPage() {
                     try {
                         createdIntent = await intentService.createIntent(intentPayload as any);
                     } catch (intentErr: any) {
+                        // Check for 429 Too Many Requests
+                        if (intentErr?.response?.status === 429 || intentErr?.status === 429) {
+                            setIsImporting(false);
+                            toast.error(t("Rate limit exceeded. Too many requests sent in a short time. Please wait a moment and try again."));
+                            return;
+                        }
+                        
                         if (!isDuplicateKeyError(intentErr)) {
                             throw intentErr;
                         }
@@ -693,6 +702,13 @@ export function ImportIntentPage() {
                         try {
                             createdResponse = await responseService.createResponse(responsePayload as any);
                         } catch (responseErr: any) {
+                            // Check for 429 Too Many Requests
+                            if (responseErr?.response?.status === 429 || responseErr?.status === 429) {
+                                setIsImporting(false);
+                                toast.error(t("Rate limit exceeded. Too many requests sent in a short time. Please wait a moment and try again."));
+                                return;
+                            }
+                            
                             if (!isDuplicateKeyError(responseErr)) {
                                 throw responseErr;
                             }
@@ -750,6 +766,13 @@ export function ImportIntentPage() {
                         try {
                             await ruleService.createRule(rulePayload as any);
                         } catch (ruleErr: any) {
+                            // Check for 429 Too Many Requests
+                            if (ruleErr?.response?.status === 429 || ruleErr?.status === 429) {
+                                setIsImporting(false);
+                                toast.error(t("Rate limit exceeded. Too many requests sent in a short time. Please wait a moment and try again."));
+                                return;
+                            }
+                            
                             // Rule name can collide on re-import; keep import idempotent.
                             if (!isDuplicateKeyError(ruleErr)) {
                                 throw ruleErr;
@@ -768,6 +791,13 @@ export function ImportIntentPage() {
                 });
                 successCount++;
             } catch (err: any) {
+                // Check for 429 Too Many Requests immediately and stop import
+                if (err?.response?.status === 429 || err?.status === 429) {
+                    setIsImporting(false);
+                    toast.error(t("Rate limit exceeded. Too many requests sent in a short time. Please wait a moment and try again."));
+                    return;
+                }
+                
                 const rootErr = err?.original || err;
                 const botPrefix = err?.botId ? `[${err.botId}] ` : "";
                 const errorMsg = `${botPrefix}${formatImportError(rootErr, row)}`;
@@ -1012,6 +1042,18 @@ export function ImportIntentPage() {
                                 {/* NLU File Upload */}
                                 <div
                                     onClick={handleClickChooseNLU}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+                                            const f = e.dataTransfer.files[0];
+                                            if (f.name.endsWith('.yaml') || f.name.endsWith('.yml')) {
+                                                setNluFile(f);
+                                            } else {
+                                                toast.error(t("Please select a YAML file (.yaml or .yml)"));
+                                            }
+                                        }
+                                    }}
+                                    onDragOver={(e) => e.preventDefault()}
                                     className="cursor-pointer rounded-lg border-2 border-dashed border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50 p-6 text-center shadow-sm transition-all hover:border-purple-400 hover:shadow-lg dark:border-purple-400/50 dark:from-slate-900 dark:to-slate-900 dark:hover:border-purple-300"
                                     role="button"
                                 >
@@ -1024,7 +1066,7 @@ export function ImportIntentPage() {
                                     />
                                     <Upload className="h-8 w-8 text-purple-400 mx-auto mb-2" />
                                     <div className="font-semibold text-purple-900 dark:text-purple-200">
-                                        {nluFile ? `${t("Selected")}: ${nluFile.name}` : t("Choose NLU file (.yaml)")}
+                                        {nluFile ? `${t("Selected")}: ${nluFile.name}` : t("Drag NLU file or click to browse")}
                                     </div>
                                     <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">
                                         {t("Contains intent definitions and examples")}
@@ -1034,6 +1076,18 @@ export function ImportIntentPage() {
                                 {/* Domain File Upload */}
                                 <div
                                     onClick={handleClickChooseDomain}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+                                            const f = e.dataTransfer.files[0];
+                                            if (f.name.endsWith('.yaml') || f.name.endsWith('.yml')) {
+                                                setDomainFile(f);
+                                            } else {
+                                                toast.error(t("Please select a YAML file (.yaml or .yml)"));
+                                            }
+                                        }
+                                    }}
+                                    onDragOver={(e) => e.preventDefault()}
                                     className="cursor-pointer rounded-lg border-2 border-dashed border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50 p-6 text-center shadow-sm transition-all hover:border-purple-400 hover:shadow-lg dark:border-purple-400/50 dark:from-slate-900 dark:to-slate-900 dark:hover:border-purple-300"
                                     role="button"
                                 >
@@ -1046,7 +1100,7 @@ export function ImportIntentPage() {
                                     />
                                     <Upload className="h-8 w-8 text-purple-400 mx-auto mb-2" />
                                     <div className="font-semibold text-purple-900 dark:text-purple-200">
-                                        {domainFile ? `${t("Selected")}: ${domainFile.name}` : t("Choose Domain/Response file (.yaml)")}
+                                        {domainFile ? `${t("Selected")}: ${domainFile.name}` : t("Drag Domain/Response file or click to browse")}
                                     </div>
                                     <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">
                                         {t("Contains response definitions (utterances)")}
