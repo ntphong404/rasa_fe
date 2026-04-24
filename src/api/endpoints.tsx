@@ -14,6 +14,8 @@ export default {
     UPDATE_PREFERRED_CHATBOT: "/api/v1/auth/me/preferred-chatbot",
     GET_SYSTEM_CHATBOT: "/api/v1/auth/system-chatbot",
     UPDATE_SYSTEM_CHATBOT: "/api/v1/auth/system-chatbot",
+    UPDATE_AVATAR: "/api/v1/auth/me/avatar",
+    UPDATE_PASSWORD: "/api/v1/auth/me/password",
   },
   USER_ENDPOINTS: {
     PROFILE: "/api/v1/user/profile",

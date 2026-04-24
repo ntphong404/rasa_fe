@@ -47,35 +47,44 @@ const normalizeCellValue = (value: unknown): string => {
 };
 
 const parseSheetRows = (raw: unknown[][], sheetLabel: string): ParsedRow[] => {
-  // Some files have 2 header rows, others only 1; pick the start row that yields most valid data.
-  const candidates = [2, 1, 0];
-  let best: ParsedRow[] = [];
+  let startRow = 0;
 
-  for (const startIndex of candidates) {
-    const current: ParsedRow[] = [];
-
-    for (let i = startIndex; i < raw.length; i++) {
-      const row = raw[i] as unknown[] | undefined;
-      const rawColB = normalizeCellValue(row?.[1]);
-      const rawColC = normalizeCellValue(row?.[2]);
-
-      if (!rawColB && !rawColC) continue;
-
-      current.push({
-        rawName: rawColB,
-        name: formatIntentName(rawColB || rawColC || ""),
-        examples: [rawColB],
-        label: sheetLabel || undefined,
-        response: rawColC,
-      });
-    }
-
-    if (current.length > best.length) {
-      best = current;
+  if (raw.length > 0) {
+    const row0 = raw[0] || [];
+    const r0Text = row0.map(v => normalizeCellValue(v)).join(" ").toLowerCase();
+    
+    if (/\b(stt|cau hoi|câu hỏi|intent|vi du|ví dụ|ví dụ mẫu|example)\b/.test(r0Text)) {
+      startRow = 1;
+      
+      if (raw.length > 1) {
+        const row1 = raw[1] || [];
+        const r1Text = row1.map(v => normalizeCellValue(v)).join(" ").toLowerCase();
+        if (/\b(cau hoi|câu hỏi|câu trả lời|question|answer|examples|vi du|ví dụ)\b/.test(r1Text)) {
+          startRow = 2;
+        }
+      }
     }
   }
 
-  return best;
+  const out: ParsedRow[] = [];
+
+  for (let i = startRow; i < raw.length; i++) {
+    const row = raw[i] as unknown[] | undefined;
+    const rawColB = normalizeCellValue(row?.[1]);
+    const rawColC = normalizeCellValue(row?.[2]);
+
+    if (!rawColB && !rawColC) continue;
+
+    out.push({
+      rawName: rawColB,
+      name: formatIntentName(rawColB || rawColC || ""),
+      examples: [rawColB],
+      label: sheetLabel || undefined,
+      response: rawColC,
+    });
+  }
+
+  return out;
 };
 
 export const parseXlsxFromBuffer = async (arrayBuffer: ArrayBuffer): Promise<ParsedRow[]> => {

@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+//===profile== page
+//=====
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -8,6 +10,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import {
   Popover,
   PopoverContent,
@@ -27,6 +31,7 @@ import {
   SlidersHorizontal,
   Trash2,
   UserRound,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   Select,
@@ -61,7 +66,7 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 export const UserProfilePage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   //   const {
   //     getProfile,
   //     updateProfile,
@@ -73,13 +78,54 @@ export const UserProfilePage = () => {
   //   const setUser = useUserStore((state) => state.setUser);
   const user = useAuthStore((state) => state.user);
 
-  const { getMe, updateMe } = useMe();
+  const { getMe, updateMe, updateAvatar, updatePassword } = useMe();
 
   const [isEditing, setIsEditing] = useState(false);
 
   // Dialog để đổi avatar
   const [openAvatarDialog, setOpenAvatarDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imgSrc, setImgSrc] = useState("");
+  const [crop, setCrop] = useState<Crop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Helper để cắt ảnh
+  const getCroppedImg = async (image: HTMLImageElement, crop: PixelCrop, fileName: string): Promise<File> => {
+    const canvas = document.createElement("canvas");
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    canvas.width = crop.width;
+    canvas.height = crop.height;
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      throw new Error("No 2d context");
+    }
+
+    ctx.drawImage(
+      image,
+      crop.x * scaleX,
+      crop.y * scaleY,
+      crop.width * scaleX,
+      crop.height * scaleY,
+      0,
+      0,
+      crop.width,
+      crop.height
+    );
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Canvas is empty"));
+          return;
+        }
+        const file = new File([blob], fileName, { type: "image/jpeg" });
+        resolve(file);
+      }, "image/jpeg");
+    });
+  };
 
   // Dialog để đổi mật khẩu
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
@@ -122,6 +168,7 @@ export const UserProfilePage = () => {
         if (!userProfile) return;
         reset({
           firstName: userProfile.firstName,
+          lastName: userProfile.lastName,
           phoneNumber: userProfile.phoneNumber,
           gender: userProfile.gender,
           dateOfBirth: userProfile.dateOfBirth.substring(0, 10),
@@ -242,15 +289,14 @@ export const UserProfilePage = () => {
     try {
       const updatedUser = await updateMe(data);
       if (!updatedUser) return;
-      toast.success("Cập nhật thông tin thành công");
+      toast.success(t("Profile updated successfully"));
       setIsEditing(false);
-      window.location.reload();
     } catch (error) {
       console.error("Error updating profile:", error);
     }
   };
 
-  if (!user) return <div>Đang tải...</div>;
+  if (!user) return <div>{t("Loading...")}</div>;
 
   const genderValue = watch("gender", user.gender);
 
@@ -262,7 +308,7 @@ export const UserProfilePage = () => {
           className="absolute top-4 left-4 text-gray-600 hover:bg-gray-200"
           onClick={() => navigate(-1)} // Quay lại trang trước đó
         >
-          ← Quay lại
+          ← {t("Back")}
         </Button>
         <div className="flex items-center space-x-4 relative">
           {/* Avatar có nút sửa */}
@@ -298,7 +344,7 @@ export const UserProfilePage = () => {
           {/* Thông tin người dùng */}
           <div>
             <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
-              {user.firstName}
+              {i18n.language === 'en' ? `${user.firstName} ${user.lastName}` : `${user.lastName} ${user.firstName}`}
             </h3>
             <p className="text-sm md:text-base text-muted-foreground dark:text-gray-300">
               {user.email}
@@ -313,7 +359,7 @@ export const UserProfilePage = () => {
               if (isEditing) reset(user); // reset khi bấm Cancel
             }}
           >
-            {isEditing ? "Hủy" : "Chỉnh sửa"}
+            {isEditing ? t("Cancel") : t("Edit")}
           </Button>
         </div>
       </div>
@@ -322,25 +368,41 @@ export const UserProfilePage = () => {
         onSubmit={handleSubmit(onSubmit)}
         className="bg-card text-card-foreground rounded-xl shadow p-6 grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300 dark:bg-gray-800 dark:text-white"
       >
-        <div>
-          <label className="text-sm md:text-base font-medium">Họ và tên</label>
-          {isEditing ? (
-            <Input
-              {...register("firstName")} // name="firstName"
-              placeholder="Nhập tên của bạn"
-              className="text-sm mt-1 md:text-base dark:bg-gray-700 dark:text-white"
-            />
-          ) : (
-            <p className="mt-1">{user.firstName + " " + user.lastName}</p>
-          )}
-          {errors.firstName && (
-            <p className="text-red-500 text-sm">{errors.firstName.message}</p>
-          )}
-        </div>
+        {isEditing ? (
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="text-sm md:text-base font-medium">{t("Last Name")}</label>
+              <Input
+                {...register("lastName")}
+                placeholder={t("Last Name")}
+                className="text-sm mt-1 md:text-base dark:bg-gray-700 dark:text-white"
+              />
+              {errors.lastName && (
+                <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>
+              )}
+            </div>
+            <div className="flex-1">
+              <label className="text-sm md:text-base font-medium">{t("First Name")}</label>
+              <Input
+                {...register("firstName")}
+                placeholder={t("First Name")}
+                className="text-sm mt-1 md:text-base dark:bg-gray-700 dark:text-white"
+              />
+              {errors.firstName && (
+                <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div>
+            <label className="text-sm md:text-base font-medium">{t("Full Name")}</label>
+            <p className="mt-1">{user.lastName} {user.firstName}</p>
+          </div>
+        )}
 
         <div>
           <label className="text-sm md:text-base font-medium">
-            Ngày sinh
+            {t("Date of Birth")}
           </label>
           {isEditing ? (
             <Popover>
@@ -354,7 +416,7 @@ export const UserProfilePage = () => {
                 >
                   {watch("dateOfBirth")
                     ? format(new Date(watch("dateOfBirth")), "dd/MM/yyyy")
-                    : "Chọn ngày sinh"}
+                    : t("Date of Birth")}
                   <CalendarIcon className="ml-auto float-right h-5 w-5 opacity-50" />
                 </button>
               </PopoverTrigger>
@@ -365,6 +427,11 @@ export const UserProfilePage = () => {
                     watch("dateOfBirth")
                       ? new Date(watch("dateOfBirth"))
                       : undefined
+                  }
+                  defaultMonth={
+                    watch("dateOfBirth")
+                      ? new Date(watch("dateOfBirth"))
+                      : new Date()
                   }
                   onSelect={(date) => {
                     if (date) {
@@ -394,7 +461,7 @@ export const UserProfilePage = () => {
         </div>
 
         <div>
-          <label className="text-sm md:text-base font-medium">Giới tính</label>
+          <label className="text-sm md:text-base font-medium">{t("Gender")}</label>
           {isEditing ? (
             <Select
               onValueChange={(val) =>
@@ -403,24 +470,24 @@ export const UserProfilePage = () => {
               value={genderValue}
             >
               <SelectTrigger className="w-full text-sm mt-1 md:text-base dark:bg-gray-700 dark:text-white">
-                <SelectValue placeholder="Chọn giới tính" />
+                <SelectValue placeholder={t("Select Gender")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="MALE">Nam</SelectItem>
-                <SelectItem value="FEMALE">Nữ</SelectItem>
+                <SelectItem value="MALE">{t("Male")}</SelectItem>
+                <SelectItem value="FEMALE">{t("Female")}</SelectItem>
               </SelectContent>
             </Select>
           ) : (
-            <p className="mt-1">{user.gender === "MALE" ? "Nam" : "Nữ"}</p>
+            <p className="mt-1">{user.gender === "MALE" ? t("Male") : t("Female")}</p>
           )}
         </div>
 
         <div>
-          <label className="text-sm md:text-base font-medium">Địa chỉ</label>
+          <label className="text-sm md:text-base font-medium">{t("Address")}</label>
           {isEditing ? (
             <Input
               {...register("address")}
-              placeholder="Nhập địa chỉ của bạn"
+              placeholder={t("Enter your address")}
               className="text-sm mt-1 md:text-base dark:bg-gray-700 dark:text-white"
             />
           ) : (
@@ -429,11 +496,11 @@ export const UserProfilePage = () => {
         </div>
 
         <div>
-          <label className="text-sm md:text-base font-medium">Số điện thoại</label>
+          <label className="text-sm md:text-base font-medium">{t("Phone Number")}</label>
           {isEditing ? (
             <Input
               {...register("phoneNumber")}
-              placeholder="Nhập số điện thoại"
+              placeholder={t("Enter phone number")}
               className="text-sm mt-1 md:text-base dark:bg-gray-700 dark:text-white"
             />
           ) : (
@@ -442,7 +509,7 @@ export const UserProfilePage = () => {
         </div>
 
         <div className="text-sm md:text-base ">
-          <label className="text-sm md:text-base font-medium">Email</label>
+          <label className="text-sm md:text-base font-medium">{t("Email")}</label>
           <div className="flex items-center gap-2">
             <p className="mt-1">{user.email}</p>
           </div>
@@ -450,16 +517,16 @@ export const UserProfilePage = () => {
 
         {isEditing && (
           <div className="col-span-2 flex justify-end">
-            <Button type="submit">Save</Button>
+            <Button type="submit">{t("Save")}</Button>
           </div>
         )}
       </form>
 
       <div className="bg-white rounded-xl shadow p-6 grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300 dark:bg-gray-800 dark:text-white">
-        <p className="text-sm md:text-base font-medium">Change Password</p>
+        <p className="text-sm md:text-base font-medium">{t("Change Password")}</p>
         <div className="col-span-4 flex justify-start items-center gap-4">
           <Button onClick={() => setOpenPasswordDialog(true)}>
-            Change Password
+            {t("Change Password")}
           </Button>
         </div>
       </div>
@@ -467,7 +534,7 @@ export const UserProfilePage = () => {
       <div className="bg-white rounded-xl shadow p-6 transition-all duration-300 dark:bg-gray-800 dark:text-white">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-base md:text-lg font-semibold">Lịch sử chat đã lưu trữ</h3>
+            <h3 className="text-base md:text-lg font-semibold">{t("Archived chats")}</h3>
             <p className="text-sm text-muted-foreground">
               {t("Manage your conversation data in one place")}
             </p>
@@ -651,22 +718,170 @@ export const UserProfilePage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Change Password */}
-      <Dialog open={openPasswordDialog} onOpenChange={setOpenPasswordDialog}>
-        <DialogContent className="bg-card text-card-foreground">
-          <DialogHeader>
-            <DialogTitle>Đổi mật khẩu</DialogTitle>
+      {/* Dialog Change Avatar */}
+      <Dialog open={openAvatarDialog} onOpenChange={(open) => {
+        setOpenAvatarDialog(open);
+        if (!open) {
+          setSelectedFile(null);
+          setImgSrc("");
+          setCrop(undefined);
+          setCompletedCrop(undefined);
+        }
+      }}>
+        <DialogContent className="max-w-xl flex flex-col p-0 overflow-hidden bg-card text-card-foreground">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 dark:border-white/10">
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <ImageIcon className="h-6 w-6 text-blue-600" />
+              {t("Change Avatar")}
+            </DialogTitle>
+            <p className="text-sm text-gray-600 dark:text-slate-400 mt-1">
+              {t("Upload and crop an image to use as your new avatar.")}
+            </p>
           </DialogHeader>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            <div className="flex flex-col gap-6 items-center">
+              {!imgSrc ? (
+                <div className="w-full flex flex-col items-center gap-4">
+                  <Avatar className="w-40 h-40 border-4 border-muted shadow-lg">
+                    <AvatarImage src={user.avatar} className="object-cover" />
+                    <AvatarFallback className="text-4xl">{user.firstName?.[0] || "?"}</AvatarFallback>
+                  </Avatar>
+                  <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors shadow-sm">
+                    {t("Choose image from device")}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setCrop(undefined);
+                          const reader = new FileReader();
+                          reader.addEventListener("load", () =>
+                            setImgSrc(reader.result?.toString() || "")
+                          );
+                          reader.readAsDataURL(e.target.files[0]);
+                          setSelectedFile(e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              ) : (
+                <div className="w-full flex flex-col items-center gap-4">
+                  <div className="border rounded-xl p-2 bg-muted/20 w-full max-h-[50vh] overflow-hidden flex justify-center">
+                    <ReactCrop
+                      crop={crop}
+                      onChange={(_, percentCrop) => setCrop(percentCrop)}
+                      onComplete={(c) => setCompletedCrop(c)}
+                      aspect={1}
+                      circularCrop
+                    >
+                      <img
+                        ref={imgRef}
+                        src={imgSrc}
+                        alt="Crop me"
+                        className="max-h-[50vh] object-contain"
+                        onLoad={(e) => {
+                          const { width, height } = e.currentTarget;
+                          const minDim = Math.min(width, height);
+                          setCrop({
+                            unit: 'px',
+                            width: minDim,
+                            height: minDim,
+                            x: (width - minDim) / 2,
+                            y: (height - minDim) / 2
+                          });
+                        }}
+                      />
+                    </ReactCrop>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setImgSrc("");
+                      setSelectedFile(null);
+                      setCrop(undefined);
+                      setCompletedCrop(undefined);
+                    }}
+                  >
+                    {t("Choose another image")}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="px-6 py-4 border-t bg-muted/10 flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setOpenAvatarDialog(false);
+                setSelectedFile(null);
+                setImgSrc("");
+              }}
+            >
+              {t("Cancel")}
+            </Button>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={async () => {
+                if (!imgSrc || !imgRef.current) {
+                  // No image uploaded
+                  return;
+                }
+                try {
+                  let fileToUpload = selectedFile;
+                  if (completedCrop && completedCrop.width > 0 && completedCrop.height > 0) {
+                    fileToUpload = await getCroppedImg(imgRef.current, completedCrop, "avatar.jpg");
+                  }
+                  
+                  if (!fileToUpload) return;
+
+                  await updateAvatar(fileToUpload);
+                  setOpenAvatarDialog(false);
+                  setSelectedFile(null);
+                  setImgSrc("");
+                } catch (error) {
+                  console.error("Failed to update avatar", error);
+                }
+              }}
+              disabled={!imgSrc}
+            >
+              {t("Save Avatar")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Change Password */}
+      <Dialog open={openPasswordDialog} onOpenChange={setOpenPasswordDialog}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0 bg-card text-card-foreground">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 dark:border-white/10">
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <Shield className="h-6 w-6 text-cyan-600" />
+              {t("Change Password")}
+            </DialogTitle>
+            <p className="text-sm text-gray-600 dark:text-slate-400 mt-1">
+              {t("Update a new password to protect your account.")}
+            </p>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="border rounded-xl p-4 bg-muted/20 space-y-4">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground mb-4">
+                <Shield className="h-4 w-4 text-cyan-600" />
+                {t("Security Information")}
+              </h3>
+              <div className="flex flex-col gap-4">
             {/* Old Password */}
             <div className="relative">
               <label className="text-sm font-medium mb-1 block">
-                Mật khẩu hiện tại
+                {t("Current Password")}
               </label>
               <Input
                 type={showOldPass ? "text" : "password"}
-                placeholder="Nhập mật khẩu hiện tại"
+                placeholder={t("Enter current password")}
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
                 className="bg-background text-foreground"
@@ -682,11 +897,11 @@ export const UserProfilePage = () => {
             {/* New Password */}
             <div className="relative">
               <label className="text-sm font-medium mb-1 block">
-                Mật khẩu mới
+                {t("New Password")}
               </label>
               <Input
                 type={showNewPass ? "text" : "password"}
-                placeholder="Nhập mật khẩu mới"
+                placeholder={t("Enter new password")}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="bg-background text-foreground"
@@ -702,11 +917,11 @@ export const UserProfilePage = () => {
             {/* Confirm Password */}
             <div className="relative">
               <label className="text-sm font-medium mb-1 block">
-                Nhập lại mật khẩu mới
+                {t("Confirm new password")}
               </label>
               <Input
                 type={showConfirmPass ? "text" : "password"}
-                placeholder="Nhập lại mật khẩu mới"
+                placeholder={t("Confirm new password")}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="bg-background text-foreground"
@@ -722,48 +937,47 @@ export const UserProfilePage = () => {
             {passwordError && (
               <p className="text-red-500 text-sm">{passwordError}</p>
             )}
+              </div>
+            </div>
           </div>
 
-          <DialogFooter className="mt-4 flex justify-end gap-2">
+          <div className="px-6 py-4 border-t bg-muted/10 flex justify-end gap-2">
             <Button
               variant="outline"
               onClick={() => setOpenPasswordDialog(false)}
             >
-              Hủy
+              {t("Cancel")}
             </Button>
             <Button
-            // onClick={async () => {
-            //   setPasswordError("");
-            //   if (!oldPassword || !newPassword || !confirmPassword) {
-            //     setPasswordError("Vui lòng nhập đầy đủ thông tin");
-            //     return;
-            //   }
-            //   if (newPassword !== confirmPassword) {
-            //     setPasswordError("Mật khẩu mới và nhập lại không khớp");
-            //     return;
-            //   }
+              className="bg-cyan-600 hover:bg-cyan-700 text-white"
+              onClick={async () => {
+                // setPasswordError("");
+                if (!oldPassword || !newPassword || !confirmPassword) {
+                  toast.error(t("Please enter all information"));
+                  return;
+                }
+                if (newPassword !== confirmPassword) {
+                  toast.error(t("New password and confirm password do not match"));
+                  return;
+                }
 
-            //   try {
-            //     await updatePassword({
-            //       oldPassword,
-            //       newPassword,
-            //       newPasswordConfirm: confirmPassword,
-            //     });
-            //     toast.success("Đổi mật khẩu thành công!");
-            //     setOpenPasswordDialog(false);
-            //     setOldPassword("");
-            //     setNewPassword("");
-            //     setConfirmPassword("");
-            //   } catch (err) {
-            //     setPasswordError(
-            //       "Đổi mật khẩu không thành công, thử lại sau"
-            //     );
-            //   }
-            // }}
+                try {
+                  await updatePassword({
+                    oldPassword,
+                    newPassword,
+                  });
+                  setOpenPasswordDialog(false);
+                  setOldPassword("");
+                  setNewPassword("");
+                  setConfirmPassword("");
+                } catch (err: any) {
+                  toast.error(err.response?.data?.message || t("Password change failed, please try again"));
+                }
+              }}
             >
-              Lưu
+              {t("Save")}
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -818,58 +1032,6 @@ export const UserProfilePage = () => {
             </Button>
             <Button variant="destructive" onClick={() => void confirmDeleteArchivedConversation()}>
               Xóa vĩnh viễn
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={openAvatarDialog} onOpenChange={setOpenAvatarDialog}>
-        <DialogContent className="bg-card text-card-foreground">
-          <DialogHeader>
-            <DialogTitle>Đổi ảnh đại diện</DialogTitle>
-          </DialogHeader>
-
-          {selectedFile && (
-            <div className="mb-4">
-              <img
-                src={URL.createObjectURL(selectedFile)}
-                alt="Selected Avatar"
-                className="w-32 h-32 object-cover rounded-full"
-              />
-            </div>
-          )}
-
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              if (e.target.files?.[0]) setSelectedFile(e.target.files[0]);
-            }}
-            className="bg-background text-foreground"
-          />
-
-          <DialogFooter className="mt-4 flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setOpenAvatarDialog(false)}
-            >
-              Hủy
-            </Button>
-            <Button
-            // onClick={async () => {
-            //   if (!selectedFile) return;
-            //   try {
-            //     const userUpdated = await updateAvatar(selectedFile);
-            //     toast.success("Cập nhật avatar thành công!");
-            //     if (!userUpdated) return;
-            //     setUser(userUpdated);
-            //     setSelectedFile(null);
-            //     setOpenAvatarDialog(false);
-            //   } catch (err) {
-            //     console.error("Lỗi khi cập nhật avatar:", err);
-            //   }
-            // }}
-            >
-              Lưu ảnh
             </Button>
           </DialogFooter>
         </DialogContent>

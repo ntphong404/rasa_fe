@@ -12,6 +12,8 @@ export interface IChatMessage {
   sourceType?: "rasa" | "rag" | "system" | "unknown";
   answerKey?: string;
   isStreaming?: boolean;
+  intent?: string;
+  confidence?: number;
 }
 
 export interface ISendMessageRequest {

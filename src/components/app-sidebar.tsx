@@ -231,7 +231,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       >
         <div className="flex items-center gap-4">
           <img
-            src="/logo-tapchi.png"
+            src={import.meta.env.VITE_APP_LOGO}
             alt="@logo"
             className="h-10 w-10 rounded-full shadow-lg"
           />
@@ -239,7 +239,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             className="font-semibold text-xl"
             style={{ fontFamily: "'audiowide', 'Orbitron', sans-serif" }}
           >
-            Tạp Chí ATTT Chatbot
+            {import.meta.env.VITE_APP_TITLE}
           </span>
         </div>
       </SidebarHeader>

@@ -105,7 +105,7 @@ export function ResetPasswordPage({
           <div className="mx-auto mb-4 w-20 h-20">
             <AspectRatio ratio={1}>
               <img
-                src="/logo-tapchi.png"
+                src={import.meta.env.VITE_APP_LOGO}
                 alt="Logo"
                 className="rounded-md object-contain"
               />

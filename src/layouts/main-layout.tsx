@@ -5,7 +5,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { ChatbotSelector } from "@/components/chatbot-selector";
 import { useAuthStore } from "@/store/auth";
 import { ThemeModeToggle } from "@/components/theme-mode-toggle";
@@ -17,10 +17,13 @@ import { useChatbots } from "@/hooks/useChatbots";
 export function MainLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
+  const location = useLocation();
   useChatbots();
   const isAdmin = Boolean(
     user?.roles?.some((role) => role.name?.toUpperCase() === "ADMIN")
   );
+  // Ẩn bộ chọn chatbot ở trang chat vì trang chat dùng system chatbot được cấu hình trong Settings
+  const isChatPage = location.pathname === "/" || location.pathname === "/home_chat" || location.pathname === "/home_chat_demo";
 
   // Yêu cầu quyền hiển thị Notification khi load lần đầu
   useEffect(() => {
@@ -43,7 +46,7 @@ export function MainLayout() {
           <div className="min-w-0 flex-1">
             <AppChatHeaderInfo />
           </div>
-          {isAuthenticated && isAdmin && <ChatbotSelector />}
+          {isAuthenticated && isAdmin && !isChatPage && <ChatbotSelector />}
           <GlobalHelpPopover />
           <ThemeModeToggle />
           {/* <LanguageSwicher />

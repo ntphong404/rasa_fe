@@ -23,6 +23,12 @@ import { generateTemplate } from "../utils/templateGenerator";
 
 type Row = ParsedRow;
 
+const isRateLimitError = (err: any) => {
+    if (err?.response?.status === 429 || err?.status === 429) return true;
+    const msg = String(err?.response?.data?.message || err?.message || "");
+    return msg.includes("429") || msg.includes("Too Many Requests") || msg.includes("Quota exceeded");
+};
+
 export function ImportIntentPage() {
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -350,9 +356,13 @@ export function ImportIntentPage() {
             // Auto-expand this row
             setExpandedRows((prev) => ({ ...prev, [rowIdx]: true }));
             toast.success(t("Added new examples", { count: returnedExamples.length }));
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            toast.error(t("Failed to generate examples automatically"));
+            if (isRateLimitError(err)) {
+                toast.error(t("Rate limit exceeded. Too many requests sent in a short time. Please wait a moment and try again."));
+            } else {
+                toast.error(t("Failed to generate examples automatically"));
+            }
         } finally {
             setGeneratingRowIdx(null);
         }
@@ -366,48 +376,61 @@ export function ImportIntentPage() {
 
         setIsGenerating(true);
         try {
-            // Use first row as seed example
-            const seed = rows[0].rawName || "";
-            const seedResponse = rows[0].response || "";
+            let generatedCount = 0;
+            let hitRateLimit = false;
 
-            if (!seed.trim() || !seedResponse.trim()) {
-                return toast.error(t("The first row must include both question and answer"));
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row.examples[0] || !row.response) {
+                    continue;
+                }
+
+                try {
+                    const payload = { example: row.examples[0], num: 5, response: row.response };
+                    const gen = await intentService.geminiExamples(payload);
+                    const genAny: any = gen;
+                    const returnedExamples: string[] = Array.isArray(genAny)
+                        ? genAny
+                        : (Array.isArray(genAny?.data?.examples) ? genAny.data.examples : []);
+
+                    if (returnedExamples && returnedExamples.length > 0) {
+                        setRows(prev => {
+                            const updated = [...prev];
+                            const newExamples = [...updated[i].examples, ...returnedExamples.map(ex => ex.trim())];
+                            const uniqueExamples = Array.from(new Set(newExamples));
+                            updated[i] = {
+                                ...updated[i],
+                                examples: uniqueExamples,
+                                validationError: undefined
+                            };
+                            return updated;
+                        });
+                        generatedCount += returnedExamples.length;
+                    }
+                } catch (err: any) {
+                    if (isRateLimitError(err)) {
+                        hitRateLimit = true;
+                        break;
+                    }
+                    console.error(`Failed to generate examples for row ${i}`, err);
+                }
             }
 
-            const payload = { example: seed, num: 5, response: seedResponse };
-            const gen = await intentService.geminiExamples(payload);
-            const genAny: any = gen;
-            const returnedExamples: string[] = Array.isArray(genAny)
-                ? genAny
-                : (Array.isArray(genAny?.data?.examples) ? genAny.data.examples : []);
-
-            if (!returnedExamples || returnedExamples.length === 0) {
-                return toast.error(t("No examples were generated"));
+            if (generatedCount > 0) {
+                toast.success(t("Added new examples", { count: generatedCount }));
+            } else if (!hitRateLimit) {
+                toast.error(t("No examples were generated"));
             }
 
-            // Add generated examples as new rows
-            const newRows: Row[] = returnedExamples.map((ex) => ({
-                rawName: ex.trim(),
-                name: formatIntentName(ex.trim()),
-                examples: [ex.trim()],
-                response: seedResponse, // Use same response as seed
-            }));
-
-            setRows((prev) => [...prev, ...newRows]);
-
-            // Auto-select new rows
-            setSelected((prev) => {
-                const updated = { ...prev };
-                newRows.forEach((_, i) => {
-                    updated[rows.length + i] = true;
-                });
-                return updated;
-            });
-
-            toast.success(t("Created new intents", { count: returnedExamples.length }));
+            if (hitRateLimit) {
+                // Delay slightly to ensure it appears on top of the success toast
+                setTimeout(() => {
+                    toast.error(t("Rate limit exceeded. Too many requests sent in a short time. Please wait a moment and try again."));
+                }, 100);
+            }
         } catch (err) {
             console.error(err);
-            toast.error(t("Failed to generate intents automatically"));
+            toast.error(t("Failed to generate examples automatically"));
         } finally {
             setIsGenerating(false);
         }
@@ -644,7 +667,7 @@ export function ImportIntentPage() {
                         createdIntent = await intentService.createIntent(intentPayload as any);
                     } catch (intentErr: any) {
                         // Check for 429 Too Many Requests
-                        if (intentErr?.response?.status === 429 || intentErr?.status === 429) {
+                        if (isRateLimitError(intentErr)) {
                             setIsImporting(false);
                             toast.error(t("Rate limit exceeded. Too many requests sent in a short time. Please wait a moment and try again."));
                             return;
@@ -703,7 +726,7 @@ export function ImportIntentPage() {
                             createdResponse = await responseService.createResponse(responsePayload as any);
                         } catch (responseErr: any) {
                             // Check for 429 Too Many Requests
-                            if (responseErr?.response?.status === 429 || responseErr?.status === 429) {
+                            if (isRateLimitError(responseErr)) {
                                 setIsImporting(false);
                                 toast.error(t("Rate limit exceeded. Too many requests sent in a short time. Please wait a moment and try again."));
                                 return;
@@ -767,7 +790,7 @@ export function ImportIntentPage() {
                             await ruleService.createRule(rulePayload as any);
                         } catch (ruleErr: any) {
                             // Check for 429 Too Many Requests
-                            if (ruleErr?.response?.status === 429 || ruleErr?.status === 429) {
+                            if (isRateLimitError(ruleErr)) {
                                 setIsImporting(false);
                                 toast.error(t("Rate limit exceeded. Too many requests sent in a short time. Please wait a moment and try again."));
                                 return;
@@ -792,7 +815,7 @@ export function ImportIntentPage() {
                 successCount++;
             } catch (err: any) {
                 // Check for 429 Too Many Requests immediately and stop import
-                if (err?.response?.status === 429 || err?.status === 429) {
+                if (isRateLimitError(err)) {
                     setIsImporting(false);
                     toast.error(t("Rate limit exceeded. Too many requests sent in a short time. Please wait a moment and try again."));
                     return;

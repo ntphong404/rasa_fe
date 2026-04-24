@@ -67,7 +67,12 @@ export const useChat = (): UseChatReturn => {
           const message = typeof chatItem.message === "string"
             ? chatItem.message
             : chatItem.message[0] || "";
-          historyMessages.push({ recipient_id: conversation.userId._id, text: message });
+          historyMessages.push({ 
+            ...(chatItem as any),
+            recipient_id: conversation.userId._id, 
+            text: message,
+            messageId: (chatItem as any)._id || (chatItem as any).messageId || (chatItem as any).id
+          });
         } else if (chatItem.role === "bot") {
           const msgs = Array.isArray(chatItem.message)
             ? chatItem.message
@@ -76,7 +81,12 @@ export const useChat = (): UseChatReturn => {
           if (msgs.length > 0) {
             // Join history messages into a single string separated by double newline
             const combinedText = msgs.join('\n\n');
-            historyMessages.push({ recipient_id: "bot", text: combinedText });
+            historyMessages.push({ 
+              ...(chatItem as any),
+              recipient_id: "bot", 
+              text: combinedText,
+              messageId: (chatItem as any)._id || (chatItem as any).messageId || (chatItem as any).id
+            });
           }
         }
       });
@@ -235,10 +245,13 @@ export const useChat = (): UseChatReturn => {
 
       let botMessageCreated = false;
       let rawBotText = "";
+      let eventMessageId: string | undefined = undefined;
+      let currentIntent: string | undefined = undefined;
+      let currentConfidence: number | undefined = undefined;
       let botButtons: IChatMessage["buttons"] = undefined;
       let sourceType: IChatMessage["sourceType"] = "unknown";
 
-      const updateBotMessage = (text: string) => {
+      const updateBotMessage = (text: string, mId?: string) => {
         setMessages(prev => {
           if (prev.length === 0) return prev;
           const updated = [...prev];
@@ -248,6 +261,9 @@ export const useChat = (): UseChatReturn => {
             text,
             sourceType,
             buttons: botButtons,
+            intent: currentIntent,
+            confidence: currentConfidence,
+            messageId: mId || eventMessageId || updated[lastIndex].messageId
           };
           return updated;
         });
@@ -294,14 +310,22 @@ export const useChat = (): UseChatReturn => {
         ]);
       };
 
-      await chatService.sendMessageStream(completeMessageData, async (event) => {
+      await chatService.sendMessageStream(completeMessageData, async (event: any) => {
         if (event.type === "start") {
           setStreamStarted(true);
           return;
         }
 
+        const eventId = event.messageId || event.id || event.message_id;
+        if (eventId) {
+          console.log("[useChat] Received messageId from stream:", eventId);
+          eventMessageId = eventId;
+        }
+
         if (event.type === "meta") {
           sourceType = event.streaming ? "rag" : "rasa";
+          if (event.intent) currentIntent = event.intent;
+          if (event.confidence) currentConfidence = event.confidence;
           return;
         }
 
@@ -356,7 +380,10 @@ export const useChat = (): UseChatReturn => {
               text: stripThinkTags(rawBotText),
               sourceType,
               buttons: botButtons,
+              intent: currentIntent,
+              confidence: currentConfidence,
               isStreaming: false,
+              messageId: eventMessageId || updated[lastIndex].messageId
             };
             return updated;
           });
@@ -377,7 +404,10 @@ export const useChat = (): UseChatReturn => {
           text: stripThinkTags(rawBotText),
           sourceType,
           buttons: botButtons,
+          intent: currentIntent,
+          confidence: currentConfidence,
           isStreaming: false,
+          messageId: eventMessageId || updated[lastIndex].messageId
         };
         return updated;
       });

@@ -32,7 +32,7 @@ import ENDPOINTS from "@/api/endpoints";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const FEEDBACK_DELAY_MS = 3 * 60 * 1000;
+const FEEDBACK_DELAY_MS = 3 * 60 * 1000;//5000;
 const FEEDBACK_QUEUE_KEY = "chat_message_feedback_queue_v2";
 
 type MessageFeedback = "like" | "dislike";
@@ -133,29 +133,12 @@ export function HomeChatDemo() {
   const prevConversationIdRef = useRef<string | null>(null);
   const userId = useCurrentUserId();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const { selectedChatBotId, selectedManagementBotId, chatbots, setSelectedChatBotId } = useChatbotStore();
+  const { selectedChatBotId, chatbots } = useChatbotStore();
 
-  // Chat conversation always uses the global system chatbot selection.
+  // Chat conversation always uses the system chatbot (selectedChatBotId), set from Settings page.
   const chatScopeBotId = selectedChatBotId;
   const selectedChatbot = chatbots.find((bot) => bot.botId === chatScopeBotId) || chatbots[0];
   const chatbotId = selectedChatbot?._id || "";
-
-  // Sync with management bot selection when it changes
-  useEffect(() => {
-    if (selectedManagementBotId && selectedManagementBotId !== 'global') {
-      setSelectedChatBotId(selectedManagementBotId);
-    }
-  }, [selectedManagementBotId, setSelectedChatBotId]);
-
-  // Auto-reset chatbot selection if selected bot not in available chatbots
-  useEffect(() => {
-    if (selectedChatBotId && chatbots.length > 0) {
-      const found = chatbots.find((bot) => bot.botId === selectedChatBotId);
-      if (!found && chatbots[0]) {
-        setSelectedChatBotId(chatbots[0].botId);
-      }
-    }
-  }, [selectedChatBotId, chatbots, setSelectedChatBotId]);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -220,7 +203,8 @@ export function HomeChatDemo() {
       return false;
     }
 
-    const url = `${window.location.origin}${ENDPOINTS.CHATBOT_ENDPOINTS.MESSAGE_FEEDBACK(item.chatbotId)}`;
+    const baseUrl = import.meta.env.VITE_BASE_URL || "http://localhost:8888";
+    const url = `${baseUrl}${ENDPOINTS.CHATBOT_ENDPOINTS.MESSAGE_FEEDBACK(item.chatbotId)}`;
     const body = JSON.stringify({
       messageId: item.messageId,
       userId: item.userId,
@@ -253,18 +237,20 @@ export function HomeChatDemo() {
           continue;
         }
 
-        await chatService.submitMessageFeedback(item.chatbotId, {
-          messageId: item.messageId,
-          userId: item.userId,
-          sourceType: item.sourceType,
-          questionText: item.questionText,
-          answerText: item.answerText,
-          vote: voteToNumber(item.vote),
-        });
-
         if (item.action === "upsert") {
+          console.log(`[Feedback] Sending ${item.vote} for message ${item.messageId}...`);
+          await chatService.submitMessageFeedback(item.chatbotId, {
+            messageId: item.messageId,
+            userId: item.userId,
+            sourceType: item.sourceType,
+            questionText: item.questionText,
+            answerText: item.answerText,
+            vote: voteToNumber(item.vote),
+          });
+          console.log(`[Feedback] Successfully sent feedback for ${item.messageId}`);
           syncedFeedbackRef.current[item.messageId] = item.vote;
         } else {
+          console.log(`[Feedback] Removing feedback for message ${item.messageId}`);
           delete syncedFeedbackRef.current[item.messageId];
         }
       } catch {
@@ -281,8 +267,10 @@ export function HomeChatDemo() {
     }
 
     feedbackFlushTimerRef.current = window.setTimeout(() => {
+      console.log("[Feedback] 3-minute delay reached. Flushing feedback queue...");
       void flushPendingFeedback(false);
     }, FEEDBACK_DELAY_MS);
+    console.log(`[Feedback] Scheduled flush in ${FEEDBACK_DELAY_MS / 1000}s`);
   };
 
   useEffect(() => {
@@ -676,7 +664,7 @@ export function HomeChatDemo() {
     // Normal Rasa chat
     setIsSending(true);
     const messageData = { message: text, userId, isLogined: !!isAuthenticated };
-    
+
     // Increment count if message is from API suggestion and matches exactly
     if (currentSuggestionIsFromApi && currentSuggestionId && chatbotId && text === currentSuggestionText) {
       try {
@@ -685,12 +673,12 @@ export function HomeChatDemo() {
         console.error("Failed to increment count:", error);
       }
     }
-    
+
     // Clear suggestion tracking
     setCurrentSuggestionText(null);
     setCurrentSuggestionIsFromApi(false);
     setCurrentSuggestionId(null);
-    
+
     try {
       await sendMessageStream(messageData);
     } catch (err) {
@@ -768,11 +756,11 @@ export function HomeChatDemo() {
 
     try {
       // Fetch from database
-      const response = await chatService.getSuggestedQuestionsList(chatbotId, { 
+      const response = await chatService.getSuggestedQuestionsList(chatbotId, {
         limit: 16,
-        page: 1 
+        page: 1
       });
-      
+
       // Extract questions from nested data structure
       const items = Array.isArray(response?.data?.data) ? response.data.data : [];
       const fromApi: string[] = Array.from(
@@ -883,7 +871,7 @@ export function HomeChatDemo() {
     });
 
     if (!message.messageId) {
-      toast.error("Tin nhắn này chưa có messageId nên chưa gửi được đánh giá");
+      toast.error("Tin nhắn này chưa được cấp mã định danh (messageId). Vui lòng thử lại sau giây lát hoặc tải lại trang.");
       return;
     }
 
@@ -927,6 +915,7 @@ export function HomeChatDemo() {
     }
 
     persistFeedbackQueue();
+    console.log(`[Feedback] ${nextVote || "remove"} queued for message ${message.messageId}. Waiting 3 minutes...`);
     scheduleFeedbackFlush();
   };
 
@@ -975,7 +964,7 @@ export function HomeChatDemo() {
                   )}
                   {messages.slice(visibleStartIndex).map((message, index, arr) => {
                     const isUser = message.recipient_id === userId;
-                    const canVote = !!message.messageId;
+                    const canVote = !isUser && isAuthenticated;
                     const absoluteIndex = visibleStartIndex + index;
                     const feedbackKey = getFeedbackKey(message, absoluteIndex);
                     const feedback = messageFeedback[feedbackKey];
@@ -994,6 +983,13 @@ export function HomeChatDemo() {
                           <div className={`flex min-w-[120px] flex-col ${isUser ? "max-w-[78%]" : "max-w-[90%]"}`}>
                             <div className={`mb-0.5 flex items-baseline gap-2 text-[11px] font-medium uppercase tracking-wide ${isUser ? "text-right text-slate-500 dark:text-slate-400" : "text-slate-600 dark:text-slate-300"}`}>
                               {isUser ? "Bạn" : "Trợ lý"}
+                              {!isUser && message.intent && (
+                                <span className="ml-1 opacity-50 font-normal lowercase">
+                                  ({message.intent}
+                                  {message.confidence && ` - ${Math.round(message.confidence * 100)}%`}
+                                  )
+                                </span>
+                              )}
                               {!isUser && isLastMessage && frozenElapsedLabel && !message.isStreaming && message.text && (
                                 <span className="normal-case tracking-normal font-mono text-xs text-slate-400 dark:text-slate-500">
                                   {frozenElapsedLabel}
@@ -1029,12 +1025,15 @@ export function HomeChatDemo() {
                               )}
 
                               {!message.isStreaming && <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                                {/* Timestamp ẩn tạm — chưa có dữ liệu thời gian từ BE
                                 <span>
                                   {new Date().toLocaleTimeString("vi-VN", {
                                     hour: "2-digit",
                                     minute: "2-digit",
                                   })}
                                 </span>
+                                */}
+                                <span></span>
                                 <div className="flex items-center gap-1">
                                   <button
                                     onClick={() => handleCopyMessage(message.text)}
@@ -1043,14 +1042,14 @@ export function HomeChatDemo() {
                                   >
                                     <Copy className="h-3.5 w-3.5" />
                                   </button>
-                                  {!isUser && (
+                                  {!isUser && isAuthenticated && (
                                     <>
                                       <button
                                         onClick={() => void toggleMessageFeedback(feedbackKey, message, "like", absoluteIndex, message.text, message.sourceType)}
                                         disabled={!canVote}
                                         aria-pressed={feedback === "like"}
                                         className={`rounded px-2 py-1 transition-colors ${feedback === "like" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"} ${!canVote ? "cursor-not-allowed opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
-                                        title={canVote ? t("Like response") : "Tin nhắn này chưa hỗ trợ đánh giá"}
+                                        title={isAuthenticated ? t("Like response") : t("Please login to vote")}
                                       >
                                         <ThumbsUp className="h-3.5 w-3.5" />
                                       </button>
@@ -1059,7 +1058,7 @@ export function HomeChatDemo() {
                                         disabled={!canVote}
                                         aria-pressed={feedback === "dislike"}
                                         className={`rounded px-2 py-1 transition-colors ${feedback === "dislike" ? "bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-500/15 dark:text-rose-300" : "hover:bg-slate-200/70 dark:hover:bg-slate-700"} ${!canVote ? "cursor-not-allowed opacity-40 hover:bg-transparent dark:hover:bg-transparent" : ""}`}
-                                        title={canVote ? t("Dislike response") : "Tin nhắn này chưa hỗ trợ đánh giá"}
+                                        title={isAuthenticated ? t("Dislike response") : t("Please login to vote")}
                                       >
                                         <ThumbsDown className="h-3.5 w-3.5" />
                                       </button>

@@ -65,6 +65,18 @@ export const authService = {
     const response = await axiosInstance.put(ENDPOINTS.AUTH_ENDPOINTS.UPDATE_ME, data);
     return response.data.data;
   },
+  updateAvatar: async (formData: FormData): Promise<IUser> => {
+    const response = await axiosInstance.put(ENDPOINTS.AUTH_ENDPOINTS.UPDATE_AVATAR, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data;
+  },
+  updatePassword: async (data: any): Promise<any> => {
+    const response = await axiosInstance.put(ENDPOINTS.AUTH_ENDPOINTS.UPDATE_PASSWORD, data);
+    return response.data.data;
+  },
   updatePreferredChatbot: async (preferredChatbotId: string | null): Promise<IUser> => {
     const response = await axiosInstance.patch(
       ENDPOINTS.AUTH_ENDPOINTS.UPDATE_PREFERRED_CHATBOT,
