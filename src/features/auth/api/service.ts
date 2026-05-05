@@ -84,13 +84,13 @@ export const authService = {
     );
     return response.data.data;
   },
-  getSystemChatbot: async (): Promise<{ systemChatbotId: string | null }> => {
+  getSystemChatbot: async (): Promise<{ systemChatbotId: string | null; chatbotId: string | null }> => {
     const response = await axiosInstance.get(ENDPOINTS.AUTH_ENDPOINTS.GET_SYSTEM_CHATBOT);
     return response.data.data;
   },
   updateSystemChatbot: async (
     preferredChatbotId: string | null
-  ): Promise<{ systemChatbotId: string | null }> => {
+  ): Promise<{ systemChatbotId: string | null; chatbotId: string | null }> => {
     const response = await axiosInstance.patch(
       ENDPOINTS.AUTH_ENDPOINTS.UPDATE_SYSTEM_CHATBOT,
       { preferredChatbotId }

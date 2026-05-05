@@ -22,6 +22,7 @@ import { trainingService } from "../api/service";
 import { IRule } from "@/interfaces/rule.interface";
 import { IStory } from "@/interfaces/story.interface";
 import { IChatbot } from "@/interfaces/chatbot.interface";
+import { useTranslation } from "react-i18next";
 
 interface TrainModelDialogProps {
   open: boolean;
@@ -34,6 +35,7 @@ export function TrainModelDialog({
   onOpenChange,
   onTrainSuccess,
 }: TrainModelDialogProps) {
+  const { t } = useTranslation();
   // Form state
   const [selectedChatbot, setSelectedChatbot] = useState<string>("");
   const [selectedRules, setSelectedRules] = useState<string[]>([]);
@@ -72,7 +74,7 @@ export function TrainModelDialog({
       }
     } catch (error) {
       console.error("Error loading data:", error);
-      toast.error("Không thể tải dữ liệu");
+      toast.error(t("Failed to load data"));
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +102,7 @@ export function TrainModelDialog({
         setSelectedStories([]);
       } catch (error) {
         console.error("Error loading train items by chatbot:", error);
-        toast.error("Không thể tải Rules/Stories theo chatbot");
+        toast.error(t("Failed to load rules and stories by chatbot"));
       } finally {
         setIsLoading(false);
       }
@@ -127,12 +129,12 @@ export function TrainModelDialog({
 
   const handleTrain = async () => {
     if (!selectedChatbot) {
-      toast.error("Vui lòng chọn chatbot");
+      toast.error(t("Please select a chatbot"));
       return;
     }
 
     if (selectedRules.length === 0 && selectedStories.length === 0) {
-      toast.error("Vui lòng chọn ít nhất một Rule hoặc một Story");
+      toast.error(t("Please select at least one rule or one story"));
       return;
     }
 
@@ -144,7 +146,7 @@ export function TrainModelDialog({
         firetune: false,
       });
 
-      toast.success("Bắt đầu huấn luyện thành công");
+      toast.success(t("Training started successfully"));
       onTrainSuccess();
       onOpenChange(false);
 
@@ -153,7 +155,7 @@ export function TrainModelDialog({
       setSelectedStories([]);
     } catch (error) {
       console.error("Error training model:", error);
-      toast.error("Không thể bắt đầu huấn luyện");
+      toast.error(t("Failed to start training"));
     } finally {
       setIsTraining(false);
     }
@@ -168,29 +170,32 @@ export function TrainModelDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[85vw] h-[85vh] flex flex-col p-0">
-        <DialogHeader className="px-4 pt-4 pb-1 border-b">
-          <DialogTitle className="flex items-center gap-2 text-2xl">
-            <Train className="h-6 w-6 text-green-600" />
-            Huấn luyện mô hình
+      <DialogContent className="max-w-6xl h-[88vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="px-6 py-5 bg-gradient-to-r from-cyan-50 to-blue-50 border-b">
+          <DialogTitle className="flex items-center gap-3 text-2xl font-bold text-cyan-900">
+            <div className="p-2 bg-white rounded-lg shadow-sm">
+              <Train className="h-6 w-6 text-cyan-600" />
+            </div>
+            {t("Train model")}
           </DialogTitle>
-          <DialogDescription className="text-base mt-2">
-            Chọn Rules, Stories và cấu hình các tùy chọn huấn luyện
+          <DialogDescription className="text-cyan-700 text-base mt-1">
+            {t("Select rules, stories, and configure training options")}
           </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
+          <div className="flex-1 flex items-center justify-center gap-3 text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>{t("Loading data...")}</span>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col gap-4 overflow-hidden px-6">
+          <div className="flex-1 flex flex-col gap-4 overflow-hidden px-6 py-5 bg-slate-50/40">
             {/* Chatbot Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="chatbot" className="text-base font-semibold">Chọn Chatbot</Label>
+            <div className="bg-white border rounded-lg p-4 shadow-sm space-y-2">
+              <Label htmlFor="chatbot" className="text-base font-semibold text-slate-800">{t("Select chatbot")}</Label>
               <Select value={selectedChatbot} onValueChange={setSelectedChatbot}>
                 <SelectTrigger className="h-auto py-3">
-                  <SelectValue placeholder="Chọn một chatbot" />
+                  <SelectValue placeholder={t("Select a chatbot")} />
                 </SelectTrigger>
                 <SelectContent>
                   {chatbots.map((chatbot) => (
@@ -209,17 +214,17 @@ export function TrainModelDialog({
 
             <div className="flex-1 flex gap-6 min-h-0">
               {/* Rules Selection */}
-              <div className="flex-1 flex flex-col bg-white rounded-lg border shadow-sm">
-                <div className="px-5 py-3 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex items-center justify-between">
+              <div className="flex-1 flex flex-col bg-white rounded-lg border shadow-sm overflow-hidden">
+                <div className="px-5 py-3 border-b bg-gradient-to-r from-blue-50 to-cyan-50 flex items-center justify-between">
                   <Label className="text-base font-semibold text-blue-900">
-                    Chọn Rules
+                    {t("Select rules")}
                     <span className="ml-2 px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">
                       {selectedRules.length}
                     </span>
                   </Label>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => {
                       if (selectedRules.length === rules.length) {
@@ -228,20 +233,20 @@ export function TrainModelDialog({
                         setSelectedRules(rules.map(r => r._id));
                       }
                     }}
-                    className="text-xs h-7 px-2 text-blue-700 hover:text-blue-900 hover:bg-blue-100"
+                    className="text-xs h-8 px-3 border-blue-200 text-blue-700 hover:text-blue-900"
                   >
-                    {selectedRules.length === rules.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                    {selectedRules.length === rules.length ? t("Unselect all") : t("Select all")}
                   </Button>
                 </div>
                 <div className="flex-1 overflow-y-auto">
                   {rules.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-12">
-                      Không có Rules nào
+                      {t("No rules available")}
                     </p>
                   ) : (
                     <div>
                       {rules.map((rule) => (
-                        <div key={rule._id} className="flex items-start space-x-3 px-4 py-2 hover:bg-blue-50/50 transition-colors border-b border-slate-100 last:border-0">
+                        <div key={rule._id} className="flex items-start space-x-3 px-4 py-2 hover:bg-blue-50/70 transition-colors border-b border-slate-100 last:border-0">
                           <Checkbox
                             id={`rule-${rule._id}`}
                             checked={selectedRules.includes(rule._id)}
@@ -269,17 +274,17 @@ export function TrainModelDialog({
               </div>
 
               {/* Stories Selection */}
-              <div className="flex-1 flex flex-col bg-white rounded-lg border shadow-sm">
-                <div className="px-5 py-3 border-b bg-gradient-to-r from-purple-50 to-purple-100/50 flex items-center justify-between">
+              <div className="flex-1 flex flex-col bg-white rounded-lg border shadow-sm overflow-hidden">
+                <div className="px-5 py-3 border-b bg-gradient-to-r from-purple-50 to-fuchsia-50 flex items-center justify-between">
                   <Label className="text-base font-semibold text-purple-900">
-                    Chọn Stories
+                    {t("Select stories")}
                     <span className="ml-2 px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">
                       {selectedStories.length}
                     </span>
                   </Label>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => {
                       if (selectedStories.length === stories.length) {
@@ -288,20 +293,20 @@ export function TrainModelDialog({
                         setSelectedStories(stories.map(s => s._id));
                       }
                     }}
-                    className="text-xs h-7 px-2 text-purple-700 hover:text-purple-900 hover:bg-purple-100"
+                    className="text-xs h-8 px-3 border-purple-200 text-purple-700 hover:text-purple-900"
                   >
-                    {selectedStories.length === stories.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                    {selectedStories.length === stories.length ? t("Unselect all") : t("Select all")}
                   </Button>
                 </div>
                 <div className="flex-1 overflow-y-auto">
                   {stories.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-12">
-                      Không có Stories nào
+                      {t("No stories available")}
                     </p>
                   ) : (
                     <div>
                       {stories.map((story) => (
-                        <div key={story._id} className="flex items-start space-x-3 px-4 py-2 hover:bg-purple-50/50 transition-colors border-b border-slate-100 last:border-0">
+                        <div key={story._id} className="flex items-start space-x-3 px-4 py-2 hover:bg-purple-50/70 transition-colors border-b border-slate-100 last:border-0">
                           <Checkbox
                             id={`story-${story._id}`}
                             checked={selectedStories.includes(story._id)}
@@ -330,29 +335,29 @@ export function TrainModelDialog({
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 justify-end pt-4 pb-6 border-t">
+            <div className="flex gap-3 justify-end pt-4 pb-2 border-t bg-white/80">
               <Button
                 variant="outline"
                 onClick={handleClose}
                 disabled={isTraining}
                 className="px-6"
               >
-                Hủy
+                {t("Cancel")}
               </Button>
               <Button
                 onClick={handleTrain}
                 disabled={isTraining || !selectedChatbot || (selectedRules.length === 0 && selectedStories.length === 0)}
-                className="bg-green-600 hover:bg-green-700 text-white px-6"
+                className="bg-cyan-600 hover:bg-cyan-700 text-white px-6"
               >
                 {isTraining ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Đang huấn luyện...
+                    {t("Training...")}
                   </>
                 ) : (
                   <>
                     <Train className="mr-2 h-4 w-4" />
-                    Bắt đầu huấn luyện
+                    {t("Start training")}
                   </>
                 )}
               </Button>

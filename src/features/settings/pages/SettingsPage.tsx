@@ -28,8 +28,10 @@ export function SettingsPage() {
   const user = useAuthStore((state) => state.user);
   const { chatbots } = useChatbots();
   const selectedChatBotId = useChatbotStore((state) => state.selectedChatBotId);
+  const selectedChatbotObjectId = useChatbotStore((state) => state.selectedChatbotObjectId);
   const setSelectedChatBotId = useChatbotStore((state) => state.setSelectedChatBotId);
   const [systemChatbotId, setSystemChatbotId] = useState<string | null>(null);
+  const [systemChatbotObjectId, setSystemChatbotObjectId] = useState<string | null>(null);
   const isAdmin = useMemo(
     () => Boolean(user?.roles?.some((role) => role.name?.toUpperCase() === "ADMIN")),
     [user?.roles]
@@ -45,9 +47,10 @@ export function SettingsPage() {
       try {
         const response = await authService.getSystemChatbot();
         setSystemChatbotId(response.systemChatbotId || null);
+        setSystemChatbotObjectId(response.chatbotId || null);
 
-        if (response.systemChatbotId) {
-          setSelectedChatBotId(response.systemChatbotId);
+        if (response.systemChatbotId && response.chatbotId) {
+          setSelectedChatBotId(response.systemChatbotId, response.chatbotId);
         }
       } catch (error) {
         console.error("Failed to load system chatbot setting:", error);
@@ -75,8 +78,9 @@ export function SettingsPage() {
     try {
       const updatedSetting = await authService.updateSystemChatbot(preferredChatbotId);
       setSystemChatbotId(updatedSetting.systemChatbotId || null);
-      if (preferredChatbotId) {
-        setSelectedChatBotId(preferredChatbotId);
+      setSystemChatbotObjectId(updatedSetting.chatbotId || null);
+      if (preferredChatbotId && updatedSetting.chatbotId) {
+        setSelectedChatBotId(preferredChatbotId, updatedSetting.chatbotId);
       }
       toast.success(t("Settings updated"));
     } catch (error) {

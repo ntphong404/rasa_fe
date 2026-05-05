@@ -32,19 +32,25 @@ import {
   Train,
   SearchIcon,
   SlidersHorizontal,
-  // Download,
+  Upload,
+  Trash2,
+  Link2,
+  Loader2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { IModel } from "@/interfaces/train.interface";
-import { trainingService } from "../api/service";
+import { trainingService, myModelService } from "../api/service";
 import { Command } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { TrainModelDialog } from "../components/TrainModelDialog";
 import { ModelDetailsDialog } from "../components/ModelDetailsDialog";
+import { PushModelDialog } from "../components/PushModelDialog";
 import { useChatbotStore } from "@/store/chatbot";
+import { toast } from "sonner";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -62,8 +68,13 @@ export function TrainingManagementPage() {
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [trainDialogOpen, setTrainDialogOpen] = useState(false);
+  const [pushDialogOpen, setPushDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+  const [modelToDelete, setModelToDelete] = useState<IModel | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deletingModelId, setDeletingModelId] = useState<string | null>(null);
+  const [realUrlLoadingId, setRealUrlLoadingId] = useState<string | null>(null);
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -83,7 +94,7 @@ export function TrainingManagementPage() {
     },
   });
 
-  // Fetch models data
+  // Fetch models data — dùng GET /api/v1/my-model
   const fetchModelsData = async (query: any) => {
     try {
       setIsDataLoading(true);
@@ -98,7 +109,7 @@ export function TrainingManagementPage() {
       });
     } catch (error) {
       console.error("Error fetching models:", error);
-      setError("Failed to load models");
+      setError(t("Failed to load models"));
       setModelsData([]);
     } finally {
       setIsDataLoading(false);
@@ -133,7 +144,6 @@ export function TrainingManagementPage() {
   };
 
   const handleTrainSuccess = () => {
-    // Refresh the models list after successful training
     const currentValues = form.getValues();
     fetchModelsData({
       ...currentValues,
@@ -141,9 +151,58 @@ export function TrainingManagementPage() {
     });
   };
 
+  const handlePushSuccess = () => {
+    // Reload trang sau khi push model thành công — GET /api/v1/my-model
+    fetchModelsData({
+      page: 1,
+      limit: pagination.limit,
+      sort: "DESC",
+    });
+  };
+
   const handleViewDetails = (model: IModel) => {
     setSelectedModelId(model._id);
     setDetailsDialogOpen(true);
+  };
+
+  // Xem presigned GET URL (status / download) — GET /api/v1/my-model/:id/real-url
+  const handleViewRealUrl = async (model: IModel) => {
+    if (!model.url) {
+      toast.warning(t("This model has no file uploaded to MinIO yet"));
+      return;
+    }
+    try {
+      setRealUrlLoadingId(model._id);
+      const res = await myModelService.getRealUrl(model._id);
+      window.open(res.data.realUrl, "_blank");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || t("Failed to get model URL"));
+    } finally {
+      setRealUrlLoadingId(null);
+    }
+  };
+
+  const handleAskDeleteModel = (model: IModel) => {
+    setModelToDelete(model);
+    setConfirmDeleteOpen(true);
+  };
+
+  // Xóa model — DELETE /api/v1/my-model/:id
+  const handleConfirmDeleteModel = async () => {
+    if (!modelToDelete) return;
+    try {
+      setDeletingModelId(modelToDelete._id);
+      await myModelService.deleteModel(modelToDelete._id);
+      const currentValues = form.getValues();
+      await fetchModelsData({ ...currentValues, page: pagination.page });
+      setModelToDelete(null);
+    } catch (err: any) {
+      throw new Error(
+        err?.response?.data?.message || t("Failed to delete model")
+      );
+    } finally {
+      setDeletingModelId(null);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -262,11 +321,26 @@ export function TrainingManagementPage() {
           </Drawer>
 
           <div className="flex-1"></div>
+
+          {/* Nút Push Model lên MinIO */}
+          <Button
+            onClick={() => setPushDialogOpen(true)}
+            variant="default"
+            className="bg-purple-600 hover:bg-purple-700 gap-2"
+            type="button"
+            id="push-model-btn"
+          >
+            <Upload className="h-4 w-4" />
+            {t("Push Model")}
+          </Button>
+
+          {/* Nút Train Model */}
           <Button
             onClick={handleTrainModel}
             variant="default"
             className="bg-green-600 hover:bg-green-700"
             type="button"
+            id="train-model-btn"
           >
             <Train className="mr-2 h-4 w-4" />
             {t("Train Model")}
@@ -298,14 +372,14 @@ export function TrainingManagementPage() {
                   onCheckedChange={(value) =>
                     table.toggleAllPageRowsSelected(!!value)
                   }
-                  aria-label="Select all"
+                  aria-label={t("Select all")}
                 />
               ),
               cell: ({ row }) => (
                 <Checkbox
                   checked={row.getIsSelected()}
                   onCheckedChange={(value) => row.toggleSelected(!!value)}
-                  aria-label="Select row"
+                  aria-label={t("Select row")}
                 />
               ),
               enableSorting: false,
@@ -400,29 +474,56 @@ export function TrainingManagementPage() {
               header: t("Actions"),
               cell: ({ row }) => {
                 const model = row.original as IModel;
+                const isDeleting = deletingModelId === model._id;
+                const isLoadingUrl = realUrlLoadingId === model._id;
 
                 return (
                   <div className="flex items-center gap-2">
+                    {/* View Details — GET /api/v1/my-model/:id */}
                     <Button
                       size="sm"
                       variant="outline"
                       className="bg-blue-600 hover:bg-blue-700 text-white"
                       title={t("View Details")}
                       onClick={() => handleViewDetails(model)}
+                      id={`view-details-btn-${model._id}`}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    {/* Temporarily hidden download button */}
-                    {/* {model.url && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-green-600 hover:bg-green-700 text-white"
-                        title={t("Download Model")}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    )} */}
+
+                    {/* View Status / Real URL — GET /api/v1/my-model/:id/real-url */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-amber-500 hover:bg-amber-600 text-white"
+                      title={model.url ? t("View Model Status (MinIO URL)") : t("No file in MinIO")}
+                      onClick={() => handleViewRealUrl(model)}
+                      disabled={isLoadingUrl || !model.url}
+                      id={`view-url-btn-${model._id}`}
+                    >
+                      {isLoadingUrl ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Link2 className="h-4 w-4" />
+                      )}
+                    </Button>
+
+                    {/* Delete — DELETE /api/v1/my-model/:id */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                      title={t("Delete Model")}
+                      onClick={() => handleAskDeleteModel(model)}
+                      disabled={isDeleting}
+                      id={`delete-model-btn-${model._id}`}
+                    >
+                      {isDeleting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
                   </div>
                 );
               },
@@ -444,11 +545,38 @@ export function TrainingManagementPage() {
         onTrainSuccess={handleTrainSuccess}
       />
 
+      {/* Push Model to MinIO Dialog */}
+      <PushModelDialog
+        open={pushDialogOpen}
+        onOpenChange={setPushDialogOpen}
+        onPushSuccess={handlePushSuccess}
+      />
+
       {/* Model Details Dialog */}
       <ModelDetailsDialog
         open={detailsDialogOpen}
         onOpenChange={setDetailsDialogOpen}
         modelId={selectedModelId}
+      />
+
+      <ConfirmDeleteDialog
+        open={confirmDeleteOpen}
+        onOpenChange={(open) => {
+          setConfirmDeleteOpen(open);
+          if (!open) {
+            setModelToDelete(null);
+          }
+        }}
+        onConfirm={handleConfirmDeleteModel}
+        title={t("Delete model")}
+        description={
+          modelToDelete
+            ? `${t("Are you sure you want to delete model")} "${modelToDelete.name}"? ${t("This action cannot be undone.")}`
+            : t("Are you sure you want to delete this item? This action cannot be undone.")
+        }
+        confirmLabel={t("Delete permanently")}
+        successMessage={t("Model deleted successfully")}
+        errorMessage={t("Failed to delete model")}
       />
     </div>
   );

@@ -103,9 +103,10 @@ function UQuestionDetailsDialog({
               </label>
               <p className="mt-1">
                 <Badge variant="outline">
-                  {typeof uquestion.chatbotId === "object"
+                  {uquestion.botId ||
+                    (typeof uquestion.chatbotId === "object"
                     ? uquestion.chatbotId.name || uquestion.chatbotId._id
-                    : uquestion.chatbotId}
+                    : uquestion.chatbotId)}
                 </Badge>
               </p>
             </div>

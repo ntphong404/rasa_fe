@@ -74,6 +74,7 @@ const filterSchema = z.object({
 export function ResponseManagement() {
   const { t } = useTranslation();
   const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const selectedManagementBotObjectId = useChatbotStore((state) => state.selectedManagementBotObjectId);
   const chatbots = useChatbotStore((state) => state.chatbots);
   const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
   const [rowSelection, setRowSelection] = useState({});
@@ -113,7 +114,8 @@ export function ResponseManagement() {
     },
   });
 
-  const selectedChatbot = chatbots.find((bot) => bot.botId === selectedBotId);
+  // Use ObjectId from store instead of looking up from list
+  const effectiveChatbotId = selectedManagementBotObjectId;
   const effectiveBotId = selectedBotId && selectedBotId !== "global" ? selectedBotId : undefined;
 
   const getTrainedModelsForResponse = (responseId: string): ModelDetail[] => {
@@ -124,7 +126,7 @@ export function ResponseManagement() {
 
   useEffect(() => {
     const fetchModels = async () => {
-      if (!selectedChatbot?._id) {
+      if (!effectiveChatbotId) {
         setModels([]);
         return;
       }
@@ -133,7 +135,7 @@ export function ResponseManagement() {
         const response = await myModelService.getPaginate({
           page: 1,
           limit: 200,
-          chatbotId: selectedChatbot._id,
+          chatbotId: effectiveChatbotId,
           deleted: false,
         });
         setModels(response.data || []);
@@ -144,7 +146,7 @@ export function ResponseManagement() {
     };
 
     fetchModels();
-  }, [selectedChatbot?._id]);
+  }, [effectiveChatbotId]);
 
   const fetchResponsesData = async (
     filters?: z.infer<typeof filterSchema> & { botId?: string }

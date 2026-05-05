@@ -983,6 +983,7 @@ export function HomeChatDemo() {
                           <div className={`flex min-w-[120px] flex-col ${isUser ? "max-w-[78%]" : "max-w-[90%]"}`}>
                             <div className={`mb-0.5 flex items-baseline gap-2 text-[11px] font-medium uppercase tracking-wide ${isUser ? "text-right text-slate-500 dark:text-slate-400" : "text-slate-600 dark:text-slate-300"}`}>
                               {isUser ? "Bạn" : "Trợ lý"}
+                              {/* Show intent confidence */}
                               {!isUser && message.intent && (
                                 <span className="ml-1 opacity-50 font-normal lowercase">
                                   ({message.intent}

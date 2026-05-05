@@ -156,6 +156,14 @@ export default {
     GET_MODELS: "/api/v1/my-model",
     GET_MODEL_BY_ID: (id: string) => `/api/v1/my-model/${id}`,
   },
+  MY_MODEL_ENDPOINTS: {
+    GET_ALL_PAGINATED: "/api/v1/my-model",
+    GET_BY_ID: (id: string) => `/api/v1/my-model/${id}`,
+    PRESIGN: "/api/v1/my-model/presign",
+    PUSH: "/api/v1/my-model/push",
+    GET_REAL_URL: (id: string) => `/api/v1/my-model/${id}/real-url`,
+    HARD_DELETE: (id: string) => `/api/v1/my-model/${id}`,
+  },
   IMPORT_ENDPOINTS: {
     GET_BATCHES: "/api/v1/import/batches",
     TOGGLE_BATCH: (batchId: string) => `/api/v1/import/batches/${batchId}/activate`,

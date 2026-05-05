@@ -146,7 +146,6 @@ export function ChatBotOperationsDialog({
       const result = await myModelService.getPaginate({
         page: 1,
         limit: 100,
-        chatbotId: chatBot._id
       });
       setMongoModelsList(result.data || []);
       toast.success(`${t("Found")} ${result.data?.length || 0} ${t("models in MongoDB")}`);
