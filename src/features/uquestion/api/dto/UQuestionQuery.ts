@@ -16,7 +16,9 @@ export default function createUQuestionQuery(query: UQuestionQuery): string {
   if (query.limit !== undefined) params.append("limit", query.limit.toString());
   if (query.search) params.append("search", query.search);
   if (query.sort) params.append("sort", query.sort);
-  if (query.chatbotId) params.append("chatbotId", query.chatbotId);
+  if (query.chatbotId && query.chatbotId !== "global") {
+    params.append("chatbotId", query.chatbotId);
+  }
   if (query.reason) params.append("reason", query.reason);
   if (query.startDate) params.append("startDate", query.startDate);
   if (query.endDate) params.append("endDate", query.endDate);

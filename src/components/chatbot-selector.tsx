@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { useChatbots } from '@/hooks/useChatbots';
@@ -16,8 +16,21 @@ export function ChatbotSelector() {
   const location = useLocation();
   const { chatbots, loading, selectedManagementBotId, setSelectedManagementBotId } = useChatbots();
 
-  // Disable global selection on context-docs page
-  const isContextDocsPage = location.pathname === '/context-docs';
+  // Disable global selection on pages that require a concrete chatbot id.
+  const disableGlobalSelectionPaths = ['/context-docs', '/uquestion', '/suggested-questions'];
+  const isGlobalSelectionDisabled = disableGlobalSelectionPaths.some((path) =>
+    location.pathname.endsWith(path)
+  );
+
+  useEffect(() => {
+    if (!isGlobalSelectionDisabled) return;
+    if (selectedManagementBotId !== 'global') return;
+
+    const firstBot = chatbots[0];
+    if (firstBot) {
+      setSelectedManagementBotId(firstBot.botId, firstBot._id);
+    }
+  }, [isGlobalSelectionDisabled, selectedManagementBotId, chatbots, setSelectedManagementBotId]);
 
   if (loading && chatbots.length === 0) {
     return (
@@ -38,7 +51,7 @@ export function ChatbotSelector() {
           <SelectValue placeholder={t('Select chatbot...')} />
         </SelectTrigger>
         <SelectContent>
-          {!isContextDocsPage && (
+          {!isGlobalSelectionDisabled && (
             <SelectItem value="global">{t('Global (All chatbots)')}</SelectItem>
           )}
           {chatbots.map((bot) => (
