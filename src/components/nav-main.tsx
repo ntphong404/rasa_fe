@@ -28,6 +28,7 @@ export function NavMain({
     items?: {
       title: string;
       url: string;
+      external?: boolean;
     }[];
   }[];
 }) {
@@ -56,20 +57,36 @@ export function NavMain({
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    {item.items?.map((subItem) => (
-                      <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton asChild>
-                          <Link
-                            to={subItem.url}
-                            className="transition-all line-clamp-1 duration-200 transform hover:translate-x-1"
-                          >
-                            <span className="inline-block whitespace-nowrap">
-                              {subItem.title}
-                            </span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
+                    {item.items?.map((subItem) => {
+                      const isExternal = subItem.external || /^https?:\/\//.test(subItem.url);
+                      return (
+                        <SidebarMenuSubItem key={subItem.title}>
+                          <SidebarMenuSubButton asChild>
+                            {isExternal ? (
+                              <a
+                                href={subItem.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="transition-all line-clamp-1 duration-200 transform hover:translate-x-1"
+                              >
+                                <span className="inline-block whitespace-nowrap">
+                                  {subItem.title}
+                                </span>
+                              </a>
+                            ) : (
+                              <Link
+                                to={subItem.url}
+                                className="transition-all line-clamp-1 duration-200 transform hover:translate-x-1"
+                              >
+                                <span className="inline-block whitespace-nowrap">
+                                  {subItem.title}
+                                </span>
+                              </Link>
+                            )}
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      );
+                    })}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </SidebarMenuItem>

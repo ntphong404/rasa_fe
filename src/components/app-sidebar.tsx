@@ -128,6 +128,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: t("Api docs"),
             url: "/api-docs",
+            external: true,
           },
         ],
       },

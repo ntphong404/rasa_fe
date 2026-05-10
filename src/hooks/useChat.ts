@@ -361,10 +361,10 @@ export const useChat = (): UseChatReturn => {
           return;
         }
 
+        // Hide reference/token lists sent by the RAG backend to avoid showing
+        // internal token/reference metadata in the chat UI.
         if (event.type === "references" && Array.isArray(event.items) && event.items.length > 0) {
-          await appendSegmentWithAnimation(
-            `\n\nTài liệu tham khảo:\n- ${event.items.join("\n- ")}`
-          );
+          // Intentionally ignore reference items
           return;
         }
 
