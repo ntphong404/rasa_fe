@@ -16,12 +16,16 @@ interface ConfirmRestoreDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
+  title?: string;
+  description?: string;
 }
 // Restore Dialog - Restore deleted item
 export function ConfirmRestoreDialog({
   open,
   onOpenChange,
   onConfirm,
+  title,
+  description,
 }: ConfirmRestoreDialogProps) {
   const { t } = useTranslation();
 
@@ -44,11 +48,15 @@ export function ConfirmRestoreDialog({
           <div className="bg-green-100 p-3 rounded-full">
             <RotateCcw className="text-green-600 w-8 h-8" />
           </div>
-          <DialogTitle className="text-lg">{t("Restore item")}</DialogTitle>
+          <DialogTitle className="text-lg">{title || t("Restore item")}</DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
-            {t("Are you sure you want to restore this item?")}
-            <br />
-            <span className="text-green-600 font-medium">{t("It will be moved back to active list.")}</span>
+            {description || t("Are you sure you want to restore this item?")}
+            {!description ? (
+              <>
+                <br />
+                <span className="text-green-600 font-medium">{t("It will be moved back to active list.")}</span>
+              </>
+            ) : null}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex justify-center gap-4 pt-2">

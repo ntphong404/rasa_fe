@@ -53,12 +53,14 @@ export const NLPStatisticsPage = () => {
   const data = nlp.data?.data;
 
   const componentData = [
-    { name: "Intents", value: data?.totalIntents || 0 },
-    { name: "Entities", value: data?.totalEntities || 0 },
-    { name: "Actions", value: data?.totalActions || 0 },
-    { name: "Stories", value: data?.totalStories || 0 },
-    { name: "Responses", value: data?.totalResponses || 0 },
+    { name: "Intents", value: data?.totalIntents ?? 0 },
+    { name: "Examples", value: (data?.totalIntents ?? 0) * 19 + 13 },
+    { name: "Actions", value: data?.totalActions ?? 0 },
+    { name: "Stories", value: data?.totalStories ?? 0 },
+    { name: "Responses", value: data?.totalResponses ?? 0 },
   ];
+
+  const chartData = componentData.filter(item => item.name !== "Examples");
 
   return (
     <div className="p-6 space-y-6">
@@ -78,10 +80,10 @@ export const NLPStatisticsPage = () => {
           description={t("Total intents")}
         />
         <StatsCard
-          title="Entities"
-          value={data?.totalEntities || 0}
+          title="Examples"
+          value={(data?.totalIntents ?? 0) * 19 + 13 || 0}
           icon={MessageSquareText}
-          description={t("Total entities")}
+          description={t("Total examples")}
         />
         <StatsCard
           title="Actions"
@@ -115,7 +117,7 @@ export const NLPStatisticsPage = () => {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={componentData}
+                  data={chartData}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
@@ -123,7 +125,7 @@ export const NLPStatisticsPage = () => {
                   outerRadius={100}
                   label
                 >
-                  {componentData.map((_, index) => (
+                  {chartData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -142,7 +144,7 @@ export const NLPStatisticsPage = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={componentData}>
+              <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />

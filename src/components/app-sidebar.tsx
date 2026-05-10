@@ -85,10 +85,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: t("Intents"),
             url: "/intents",
           },
-          {
-            title: t("Entities"),
-            url: "/entities",
-          },
+          // {
+          //   title: t("Entities"),
+          //   url: "/entities",
+          // },
           {
             title: t("Actions"),
             url: "/actions",
@@ -101,11 +101,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: t("Rules"),
             url: "/rules",
           },
-          { title: t("Stories"), url: "/stories" },
-          // {
-          //   title: "Slots",
-          //   url: "/slots",
-          // },
+          { 
+            title: t("Stories"),
+            url: "/stories" 
+          },
+          {
+            title: "Slots",
+            url: "/slots",
+          },
           ...(userRoleLevel === 'admin'
             ? [
               {
@@ -121,6 +124,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: t("Message Feedback"),
             url: "/message-feedback",
+          },
+          {
+            title: t("Api docs"),
+            url: "/api-docs",
           },
         ],
       },

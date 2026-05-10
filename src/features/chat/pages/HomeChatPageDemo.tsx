@@ -11,6 +11,7 @@ import {
   ThumbsDown,
   ThumbsUp,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { Fragment, useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -147,6 +148,17 @@ export function HomeChatDemo() {
   // File upload states
   const [uploadedFiles, setUploadedFiles] = useState<IngestedDocument[]>([]);
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+
+  // Suggestions panel toggle (shown after at least one message has been sent)
+  const [showSuggestionsPanel, setShowSuggestionsPanel] = useState(false);
+  const [currentSuggestionPage, setCurrentSuggestionPage] = useState(0);
+  const suggestionsPanelRef = useRef<HTMLDivElement>(null);
+  const suggestionsToggleBtnRef = useRef<HTMLButtonElement>(null);
+  const suggestionsScrollRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragScrollLeftRef = useRef(0);
+  const dragMovedRef = useRef(false);
 
   // Speech-to-text
   const {
@@ -709,6 +721,98 @@ export function HomeChatDemo() {
     setInputMessage(text);
   };
 
+  const handleSuggestionsDragStart = (e: React.MouseEvent) => {
+    if (!suggestionsScrollRef.current) return;
+    isDraggingRef.current = true;
+    dragMovedRef.current = false;
+    dragStartXRef.current = e.pageX;
+    dragScrollLeftRef.current = suggestionsScrollRef.current.scrollLeft;
+  };
+
+  const handleSuggestionsDragMove = (e: React.MouseEvent) => {
+    if (!isDraggingRef.current || !suggestionsScrollRef.current) return;
+    const dx = e.pageX - dragStartXRef.current;
+    if (Math.abs(dx) > 4) dragMovedRef.current = true;
+    suggestionsScrollRef.current.scrollLeft = dragScrollLeftRef.current - dx;
+  };
+
+  const handleSuggestionsDragEnd = () => {
+    if (!suggestionsScrollRef.current) {
+      isDraggingRef.current = false;
+      return;
+    }
+    const wasDragging = isDraggingRef.current;
+    isDraggingRef.current = false;
+    if (!wasDragging) return;
+    const el = suggestionsScrollRef.current;
+    const pageWidth = el.clientWidth;
+    if (pageWidth === 0) return;
+    const targetPage = Math.round(el.scrollLeft / pageWidth);
+    el.scrollTo({ left: targetPage * pageWidth, behavior: "smooth" });
+    setCurrentSuggestionPage(targetPage);
+  };
+
+  const goToSuggestionPage = (pageIdx: number) => {
+    if (!suggestionsScrollRef.current) return;
+    const pageWidth = suggestionsScrollRef.current.clientWidth;
+    suggestionsScrollRef.current.scrollTo({ left: pageIdx * pageWidth, behavior: "smooth" });
+    setCurrentSuggestionPage(pageIdx);
+  };
+
+  const handleBannerSuggestionClick = (suggestion: string) => {
+    if (dragMovedRef.current) {
+      dragMovedRef.current = false;
+      return;
+    }
+    const isFromApi = !!apiSuggestionIds[suggestion];
+    handleQuickSuggestion(suggestion);
+    setCurrentSuggestionText(suggestion);
+    setCurrentSuggestionIsFromApi(isFromApi);
+    if (isFromApi) {
+      setCurrentSuggestionId(apiSuggestionIds[suggestion]);
+    }
+    setShowSuggestionsPanel(false);
+  };
+
+  // Close suggestions panel when clicking outside of it (and outside the toggle button)
+  useEffect(() => {
+    if (!showSuggestionsPanel) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        suggestionsPanelRef.current && !suggestionsPanelRef.current.contains(target) &&
+        suggestionsToggleBtnRef.current && !suggestionsToggleBtnRef.current.contains(target)
+      ) {
+        setShowSuggestionsPanel(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [showSuggestionsPanel]);
+
+  // Reset to first page each time the suggestions panel is opened
+  useEffect(() => {
+    if (showSuggestionsPanel) {
+      setCurrentSuggestionPage(0);
+      requestAnimationFrame(() => {
+        if (suggestionsScrollRef.current) suggestionsScrollRef.current.scrollLeft = 0;
+      });
+    }
+  }, [showSuggestionsPanel]);
+
+  // Track which page is currently visible while user scrolls (e.g. trackpad / drag end)
+  useEffect(() => {
+    const el = suggestionsScrollRef.current;
+    if (!el || !showSuggestionsPanel) return;
+    const onScroll = () => {
+      const pageWidth = el.clientWidth;
+      if (pageWidth === 0) return;
+      setCurrentSuggestionPage(Math.round(el.scrollLeft / pageWidth));
+    };
+    el.addEventListener("scroll", onScroll);
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [showSuggestionsPanel]);
+
   const toggleFileUpload = () => {
     setShowFileUpload(!showFileUpload);
   };
@@ -1213,6 +1317,70 @@ export function HomeChatDemo() {
               </div>
             )}
 
+            {/* Suggestions Banner: same look as the empty-state grid (4 cards), drag horizontally to flip page of next 4 */}
+            {messages.length > 0 && showSuggestionsPanel && (() => {
+              const SUGGESTIONS_PER_PAGE = 4;
+              const pageSource = allSuggestions.length > 0 ? allSuggestions : DEFAULT_QUICK_SUGGESTIONS;
+              const pages: string[][] = [];
+              for (let i = 0; i < pageSource.length; i += SUGGESTIONS_PER_PAGE) {
+                pages.push(pageSource.slice(i, i + SUGGESTIONS_PER_PAGE));
+              }
+              return (
+                <div
+                  ref={suggestionsPanelRef}
+                  className="rounded-[1.75rem] border border-slate-200/75 bg-slate-100/65 p-3 shadow-sm backdrop-blur-sm animate-fadeInUp dark:border-white/10 dark:bg-slate-900/55"
+                >
+                  <div
+                    ref={suggestionsScrollRef}
+                    onMouseDown={handleSuggestionsDragStart}
+                    onMouseMove={handleSuggestionsDragMove}
+                    onMouseUp={handleSuggestionsDragEnd}
+                    onMouseLeave={handleSuggestionsDragEnd}
+                    className="suggestions-banner flex select-none overflow-x-auto cursor-grab active:cursor-grabbing"
+                    style={{ scrollSnapType: "x mandatory" }}
+                  >
+                    {pages.map((page, pageIdx) => (
+                      <div
+                        key={pageIdx}
+                        className="w-full shrink-0"
+                        style={{ scrollSnapAlign: "start" }}
+                      >
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                          {page.map((suggestion, idx) => (
+                            <button
+                              key={`${pageIdx}-${idx}`}
+                              onClick={() => handleBannerSuggestionClick(suggestion)}
+                              className="surface-card relative rounded-2xl border border-slate-200/80 bg-slate-50/95 px-4 py-3.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-800/80 dark:hover:border-white/20 dark:hover:bg-slate-800"
+                            >
+                              <div className="text-sm font-medium leading-relaxed text-foreground">
+                                {suggestion}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {pages.length > 1 && (
+                    <div className="mt-3 flex items-center justify-center gap-1.5">
+                      {pages.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => goToSuggestionPage(idx)}
+                          aria-label={`Trang gợi ý ${idx + 1}`}
+                          className={`h-1.5 rounded-full transition-all duration-200 ${idx === currentSuggestionPage
+                            ? "w-6 bg-blue-500"
+                            : "w-1.5 bg-slate-300 hover:bg-slate-400 dark:bg-slate-600 dark:hover:bg-slate-500"
+                            }`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             <div className="relative group">
               <div className="surface-card-strong relative rounded-2xl border border-slate-200/80 bg-background/95 backdrop-blur dark:border-white/15">
                 <Input
@@ -1220,8 +1388,25 @@ export function HomeChatDemo() {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="min-h-[58px] resize-none rounded-2xl border-none bg-transparent py-3 pl-5 pr-32 text-base text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className={`min-h-[58px] resize-none rounded-2xl border-none bg-transparent py-3 ${messages.length > 0 ? "pl-16" : "pl-5"} pr-32 text-base text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0`}
                 />
+
+                {/* Left Button: Toggle suggestions panel (only when there are messages) */}
+                {messages.length > 0 && (
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <button
+                      ref={suggestionsToggleBtnRef}
+                      onClick={() => setShowSuggestionsPanel((prev) => !prev)}
+                      title={showSuggestionsPanel ? "Ẩn gợi ý" : "Hiện gợi ý"}
+                      className={`h-10 w-10 rounded-xl flex items-center justify-center border transition-all duration-200 hover:scale-105 active:scale-95 ${showSuggestionsPanel
+                        ? "border-blue-400/60 bg-blue-50 text-blue-600 dark:border-blue-400/40 dark:bg-blue-500/15 dark:text-blue-300"
+                        : "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                        }`}
+                    >
+                      <Sparkles className="h-5 w-5" />
+                    </button>
+                  </div>
+                )}
 
                 {/* Right Buttons */}
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2">
@@ -1330,6 +1515,15 @@ export function HomeChatDemo() {
         /* Input focus enhancement */
         .group:focus-within input {
           caret-color: #3b82f6;
+        }
+
+        /* Suggestions banner: hide scrollbar (drag-to-scroll like a banner) */
+        .suggestions-banner {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .suggestions-banner::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </div>

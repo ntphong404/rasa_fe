@@ -17,10 +17,13 @@ const ForgotPasswordPage = lazy(() => import("@/features/auth/pages/ForgotPasswo
 const ResetPasswordPage = lazy(() => import("@/features/auth/pages/ResetPasswordPage").then((module) => ({ default: module.ResetPasswordPage })));
 
 const RoleManagement = lazy(() => import("@/features/roles").then((module) => ({ default: module.RoleManagement })));
-const EntityManagement = lazy(() => import("@/features/entity").then((module) => ({ default: module.EntityManagement })));
+// const EntityManagement = lazy(() => import("@/features/entity").then((module) => ({ default: module.EntityManagement })));
 const IntentManagementPage = lazy(() => import("@/features/intents").then((module) => ({ default: module.IntentManagementPage })));
 const CreateIntentPage = lazy(() => import("@/features/intents").then((module) => ({ default: module.CreateIntentPage })));
 const EditIntentPage = lazy(() => import("@/features/intents").then((module) => ({ default: module.EditIntentPage })));
+const SlotManagementPage = lazy(() => import("@/features/slots").then((module) => ({ default: module.SlotManagementPage })));
+const CreateSlotPage = lazy(() => import("@/features/slots").then((module) => ({ default: module.CreateSlotPage })));
+const EditSlotPage = lazy(() => import("@/features/slots").then((module) => ({ default: module.EditSlotPage })));
 const ResponseManagement = lazy(() => import("@/features/reponses").then((module) => ({ default: module.ResponseManagement })));
 const ActionManagement = lazy(() => import("@/features/action").then((module) => ({ default: module.ActionManagement })));
 const RuleManagementPage = lazy(() => import("@/features/rules").then((module) => ({ default: module.RuleManagementPage })));
@@ -100,13 +103,21 @@ const router = createBrowserRouter([
       { path: "profile", element: withSuspense(<UserProfilePage />) },
       { path: "roles", element: withSuspense(<RoleManagement />) },
       { path: "permissions", element: withSuspense(<PermissionManagement />) },
-      { path: "entities", element: withSuspense(<EntityManagement />) },
+      // { path: "entities", element: withSuspense(<EntityManagement />) },
       {
         path: "intents",
         children: [
           { index: true, element: withSuspense(<IntentManagementPage />) },
           { path: "new", element: withSuspense(<CreateIntentPage />) },
           { path: "edit", element: withSuspense(<EditIntentPage />) },
+        ],
+      },
+      {
+        path: "slots",
+        children: [
+          { index: true, element: withSuspense(<SlotManagementPage />) },
+          { path: "new", element: withSuspense(<CreateSlotPage />) },
+          { path: "edit", element: withSuspense(<EditSlotPage />) },
         ],
       },
       { path: "actions", element: withSuspense(<ActionManagement />) },

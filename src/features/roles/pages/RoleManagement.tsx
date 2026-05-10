@@ -258,17 +258,30 @@ export function RoleManagement() {
     setIsDataLoadingPermissionsChatbots,
   ] = useState(false);
   useEffect(() => {
-    setIsDataLoadingPermissionsChatbots(true);
-    fetchPermissions("?page=1&limit=100")
-      .then((res) => {
-        setPermissionsList(res.data);
-      })
-      .catch((error) => {
+    const loadAllPermissions = async () => {
+      setIsDataLoadingPermissionsChatbots(true);
+      try {
+        const limit = 100;
+        let page = 1;
+        let totalPages = 1;
+        const allPermissions: Permission[] = [];
+
+        do {
+          const res = await fetchPermissions(`page=${page}&limit=${limit}`);
+          allPermissions.push(...res.data);
+          totalPages = res.meta?.totalPages || 1;
+          page += 1;
+        } while (page <= totalPages);
+
+        setPermissionsList(allPermissions);
+      } catch (error) {
         console.error("Error fetching permissions:", error);
-      })
-      .finally(() => {
+      } finally {
         setIsDataLoadingPermissionsChatbots(false);
-      });
+      }
+    };
+
+    loadAllPermissions();
   }, []);
 
   const form = useForm<z.infer<typeof filterSchema>>({
@@ -670,12 +683,12 @@ export function RoleManagement() {
                             </h4>
                             <div className="space-y-2">
                               {permissions.map((permId) => {
-                                console.log("list permission", permissionsList);
+                                // console.log("list permission", permissionsList);
 
                                 const permission = permissionsList.find(
                                   (p) => p._id === permId
                                 );
-                                console.log("permission", permission);
+                                // console.log("permission", permission);
 
                                 return (
                                   <div

@@ -474,8 +474,8 @@ ${exampleLines || "    - example1"}`;
                       <li>• <strong>{t("Intent")}</strong>: <code className="bg-white dark:bg-gray-900 px-1 rounded">book_flight</code></li>
                       <li>• <strong>{t("Entities")}</strong>: 
                         <ul className="ml-4 mt-1">
-                          <li>- <code className="bg-white dark:bg-gray-900 px-1 rounded">city</code>: "Hanoi"</li>
-                          <li>- <code className="bg-white dark:bg-gray-900 px-1 rounded">time</code>: "tomorrow"</li>
+                          <li>- <code className="bg-white dark:bg-gray-900 px-1 rounded">city</code>: "{t("Hanoi")}"</li>
+                          <li>- <code className="bg-white dark:bg-gray-900 px-1 rounded">time</code>: "{t("tomorrow")}"</li>
                         </ul>
                       </li>
                     </ul>
@@ -511,8 +511,8 @@ ${exampleLines || "    - example1"}`;
                   <div className="p-3 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
                     <p className="text-sm font-medium mb-2">3. {t("Entity Integration")}:</p>
                     <ul className="text-sm space-y-1 text-gray-700 dark:text-gray-300 ml-4">
-                      <li>• {t("Format")}: <code className="bg-white dark:bg-gray-900 px-1 rounded">[value]([entity_id])</code></li>
-                      <li>• {t("Example")}: <code className="bg-white dark:bg-gray-900 px-1 rounded">[Hanoi]([city_entity_id])</code></li>
+                      <li>• {t("Format")}: <code className="bg-white dark:bg-gray-900 px-1 rounded">[{t("value")}]([entity_id])</code></li>
+                      <li>• {t("Example")}: <code className="bg-white dark:bg-gray-900 px-1 rounded">[{t("Hanoi")}]([city_entity_id])</code></li>
                       <li>• {t("Click on selected entities to insert patterns easily")}</li>
                     </ul>
                   </div>
@@ -601,13 +601,14 @@ ${exampleLines || "    - example1"}`;
           </Button>
         )}
 
-        <Popover open={entitySearchOpen} onOpenChange={setEntitySearchOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <Search className="h-4 w-4" />
-              {t("Add Entity")}
-            </Button>
-          </PopoverTrigger>
+        <div className="hidden">
+          <Popover open={entitySearchOpen} onOpenChange={setEntitySearchOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Search className="h-4 w-4" />
+                {t("Add Entity")}
+              </Button>
+            </PopoverTrigger>
           <PopoverContent className="w-[300px] p-0" align="start">
             <Command shouldFilter={false}>
               <CommandInput
@@ -646,6 +647,7 @@ ${exampleLines || "    - example1"}`;
             </Command>
           </PopoverContent>
         </Popover>
+        </div>
       </div>
 
       {/* Form */}
@@ -658,10 +660,10 @@ ${exampleLines || "    - example1"}`;
             value={name}
             onChange={(e) => setName(e.target.value)}
             onBlur={(e) => setName(toSnakeCase(e.target.value))}
-            placeholder={t("e.g., greet, ask_weather")}
+            placeholder={t("Ví dụ: greet, ask_weather")}
           />
           <p className="text-xs text-muted-foreground">
-            {t("Use lowercase and underscores (e.g., my_intent_name)")}
+            {t("Sử dụng chữ thường và dấu gạch dưới (ví dụ: my_intent_name)")}
           </p>
         </div>
 
@@ -672,7 +674,7 @@ ${exampleLines || "    - example1"}`;
             id="intent-desc"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder={t("Describe what this intent is for")}
+            placeholder={t("Mô tả mục đích của intent này")}
             rows={3}
           />
         </div>
@@ -765,7 +767,7 @@ ${exampleLines || "    - example1"}`;
                 variant="outline"
                 size="sm"
                 onClick={handleAddExample}
-                className="gap-1"
+                className="gap-1 hidden"
               >
                 <Plus className="h-3 w-3" />
                 {t("Add Example")}
@@ -784,7 +786,7 @@ ${exampleLines || "    - example1"}`;
                     onChange={(e) => handleUpdateExample(index, e.target.value)}
                     onFocus={() => setFocusedExampleIndex(index)}
                     onBlur={() => setFocusedExampleIndex(null)}
-                    placeholder={t("Enter example phrase")}
+                    placeholder={t("Nhập ví dụ")}
                     className="flex-1"
                   />
                   {examples.length > 1 && (
@@ -802,7 +804,7 @@ ${exampleLines || "    - example1"}`;
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              {t("Add training examples for this intent. Click inside an example field, then click an entity to insert it.")}
+              {t("Thêm ví dụ huấn luyện cho intent này. Nhấp vào ô ví dụ, rồi nhấp vào entity để chèn.")}
             </p>
           </div>
         ) : (
@@ -815,7 +817,7 @@ ${exampleLines || "    - example1"}`;
               value={yamlDefine}
               onChange={(e) => setYamlDefine(e.target.value)}
               onBlur={() => validateYAML()}
-              placeholder={t("Enter YAML definition or generate template")}
+              placeholder={t("Nhập định nghĩa YAML hoặc tạo mẫu")}
               className="font-mono text-sm min-h-[300px]"
             />
           </div>
@@ -841,7 +843,7 @@ ${exampleLines || "    - example1"}`;
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              {t("This shows how your YAML will look with entity names instead of IDs")}
+              {t("Điều này hiển thị cách YAML của bạn sẽ trông như thế nào với tên entity thay vì ID")}
             </p>
           </div>
         )}

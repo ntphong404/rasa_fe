@@ -46,19 +46,22 @@ export default function RoleDetailsDialog({
 
       const fetchData = async () => {
         try {
-          const permissionQuery = new URLSearchParams({
-            page: "1",
-            limit: "100",
-          }).toString();
-          const permissionResponse = await fetchPermissions(
-            `?${permissionQuery}`
-          );
-          setPermissionsList(permissionResponse.data);
+          const limit = 100;
+          let page = 1;
+          let totalPages = 1;
+          const allPermissions: Permission[] = [];
 
-          const chatbotQuery = new URLSearchParams({
-            page: "1",
-            limit: "100",
-          }).toString();
+          do {
+            const permissionResponse = await fetchPermissions(
+              `page=${page}&limit=${limit}`
+            );
+            allPermissions.push(...permissionResponse.data);
+            totalPages = permissionResponse.meta?.totalPages || 1;
+            page += 1;
+          } while (page <= totalPages);
+
+          setPermissionsList(allPermissions);
+
           // const chatbotResponse = await fetchChatBots(`?${chatbotQuery}`);
           // setChatbotsList(chatbotResponse.data);
         } catch (error) {

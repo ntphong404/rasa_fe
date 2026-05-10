@@ -46,7 +46,6 @@ const filterSchema = z.object({
 
 export function SuggestedQuestionsManagementPage() {
   const { t } = useTranslation();
-  const [rowSelection, setRowSelection] = useState({});
   const [questionsData, setQuestionsData] = useState<SuggestedQuestion[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -388,8 +387,6 @@ export function SuggestedQuestionsManagementPage() {
           isLoading={isDataLoading}
           meta={pagination}
           onChangePage={handlePageChange}
-          rowSelection={rowSelection}
-          setRowSelection={setRowSelection}
         />
       )}
 

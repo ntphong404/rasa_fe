@@ -23,8 +23,8 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   meta: ITableMeta;
-  rowSelection: RowSelectionState;
-  setRowSelection: OnChangeFn<RowSelectionState>;
+  rowSelection?: RowSelectionState;
+  setRowSelection?: OnChangeFn<RowSelectionState>;
   onChangePage: (page: number) => void;
   isLoading: boolean;
 }
@@ -34,7 +34,7 @@ export function DataTable<TData, TValue>({
   data,
   meta,
   onChangePage,
-  rowSelection,
+  rowSelection = {},
   setRowSelection,
   isLoading,
 }: DataTableProps<TData, TValue>) {

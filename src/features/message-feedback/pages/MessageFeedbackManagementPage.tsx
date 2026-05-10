@@ -48,7 +48,9 @@ export function MessageFeedbackManagementPage() {
 
   const { selectedBotId, chatbots } = useChatbotStore();
   const selectedChatbot = chatbots.find((bot) => bot.botId === selectedBotId);
-  const chatbotId = selectedChatbot?._id || selectedBotId || "";
+  const chatbotId =
+    selectedChatbot?._id ||
+    (selectedBotId && selectedBotId !== "global" ? selectedBotId : "");
 
   const [pagination, setPagination] = useState({
     total: 0,

@@ -79,6 +79,8 @@ export function ConfirmSoftDeleteDialog({
   open,
   onOpenChange,
   onConfirm,
+  title,
+  description,
 }: ConfirmDeleteDialogProps) {
   const { t } = useTranslation();
 
@@ -101,11 +103,15 @@ export function ConfirmSoftDeleteDialog({
           <div className="bg-orange-100 p-3 rounded-full">
             <Archive className="text-orange-600 w-8 h-8" />
           </div>
-          <DialogTitle className="text-lg">{t("Move to trash")}</DialogTitle>
+          <DialogTitle className="text-lg">{title || t("Move to trash")}</DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
-            {t("Are you sure you want to move this item to trash?")}
-            <br />
-            <span className="text-orange-600 font-medium">{t("You can restore it later.")}</span>
+            {description || t("Are you sure you want to move this item to trash?")}
+            {!description ? (
+              <>
+                <br />
+                <span className="text-orange-600 font-medium">{t("You can restore it later.")}</span>
+              </>
+            ) : null}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex justify-center gap-4 pt-2">
@@ -129,6 +135,8 @@ export function ConfirmHardDeleteDialog({
   open,
   onOpenChange,
   onConfirm,
+  title,
+  description,
 }: ConfirmDeleteDialogProps) {
   const { t } = useTranslation();
 
@@ -151,11 +159,15 @@ export function ConfirmHardDeleteDialog({
           <div className="bg-red-100 p-3 rounded-full">
             <AlertTriangle className="text-red-500 w-8 h-8" />
           </div>
-          <DialogTitle className="text-lg text-red-600">{t("Delete permanently")}</DialogTitle>
+          <DialogTitle className="text-lg text-red-600">{title || t("Delete permanently")}</DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
-            {t("Are you sure you want to permanently delete this item?")}
-            <br />
-            <span className="text-red-600 font-bold">{t("This action cannot be undone!")}</span>
+            {description || t("Are you sure you want to permanently delete this item?")}
+            {!description ? (
+              <>
+                <br />
+                <span className="text-red-600 font-bold">{t("This action cannot be undone!")}</span>
+              </>
+            ) : null}
           </DialogDescription>
         </DialogHeader>
         <div className="bg-red-50 border border-red-200 rounded-md p-3">

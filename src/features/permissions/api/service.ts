@@ -5,7 +5,11 @@ import { PermissionCreateRequest } from "./dto/PermissionCreateRequest";
 
 export const permissionsService = {
     fetchPermissions: async (query: string): Promise<ListPermissionResponse> => {
-        const response = await axiosInstance.get(`${ENDPOINTS.PERMISSION_ENDPOINTS.GET_ALL_PAGINATED}?${query}`);
+        const normalizedQuery = query.startsWith("?") ? query.slice(1) : query;
+        const url = normalizedQuery
+            ? `${ENDPOINTS.PERMISSION_ENDPOINTS.GET_ALL_PAGINATED}?${normalizedQuery}`
+            : ENDPOINTS.PERMISSION_ENDPOINTS.GET_ALL_PAGINATED;
+        const response = await axiosInstance.get(url);
         return response.data;
     },
     deletePermission: async (id: string): Promise<void> => {

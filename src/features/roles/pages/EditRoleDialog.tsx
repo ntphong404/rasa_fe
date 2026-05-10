@@ -76,14 +76,20 @@ export default function EditRoleDialog({
 
       const fetchData = async () => {
         try {
-          const permissionQuery = new URLSearchParams({
-            page: "1",
-            limit: "100",
-          }).toString();
-          const permissionResponse = await fetchPermissions(
-            `?${permissionQuery}`
-          );
-          const permissions = permissionResponse.data;
+          const limit = 100;
+          let page = 1;
+          let totalPages = 1;
+          const permissions: Permission[] = [];
+
+          do {
+            const permissionResponse = await fetchPermissions(
+              `page=${page}&limit=${limit}`
+            );
+            permissions.push(...permissionResponse.data);
+            totalPages = permissionResponse.meta?.totalPages || 1;
+            page += 1;
+          } while (page <= totalPages);
+
           setPermissionsList(permissions);
 
           // Group permissions by module
@@ -100,10 +106,6 @@ export default function EditRoleDialog({
           );
           setGroupedPermissions(grouped);
 
-          const chatbotQuery = new URLSearchParams({
-            page: "1",
-            limit: "100",
-          }).toString();
           //   const chatbotResponse = await fetchChatBots(`?${chatbotQuery}`);
           //   setChatbotsList(chatbotResponse.data);
         } catch (error) {

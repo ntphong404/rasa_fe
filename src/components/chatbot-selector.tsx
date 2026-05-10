@@ -17,20 +17,34 @@ export function ChatbotSelector() {
   const { chatbots, loading, selectedManagementBotId, setSelectedManagementBotId } = useChatbots();
 
   // Disable global selection on pages that require a concrete chatbot id.
-  const disableGlobalSelectionPaths = ['/context-docs', '/uquestion', '/suggested-questions'];
+  const disableGlobalSelectionPaths = ['/context-docs', '/uquestion', '/suggested-questions', '/message-feedback'];
   const isGlobalSelectionDisabled = disableGlobalSelectionPaths.some((path) =>
     location.pathname.endsWith(path)
   );
 
+  // Auto-switch from global to first bot when landing on pages that disable global selection
   useEffect(() => {
-    if (!isGlobalSelectionDisabled) return;
-    if (selectedManagementBotId !== 'global') return;
-
+    if (!isGlobalSelectionDisabled || selectedManagementBotId !== 'global' || chatbots.length === 0) {
+      return;
+    }
+    
     const firstBot = chatbots[0];
     if (firstBot) {
       setSelectedManagementBotId(firstBot.botId, firstBot._id);
     }
-  }, [isGlobalSelectionDisabled, selectedManagementBotId, chatbots, setSelectedManagementBotId]);
+  }, [isGlobalSelectionDisabled, location.pathname]);
+  
+  // Keep the state in sync when chatbots list changes
+  useEffect(() => {
+    if (!isGlobalSelectionDisabled || selectedManagementBotId !== 'global' || chatbots.length === 0) {
+      return;
+    }
+    
+    const firstBot = chatbots[0];
+    if (firstBot) {
+      setSelectedManagementBotId(firstBot.botId, firstBot._id);
+    }
+  }, [chatbots, isGlobalSelectionDisabled, selectedManagementBotId, setSelectedManagementBotId]);
 
   if (loading && chatbots.length === 0) {
     return (
