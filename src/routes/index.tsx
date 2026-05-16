@@ -61,6 +61,9 @@ const MessageFeedbackManagementPage = lazy(() =>
 const SuggestedQuestionsManagementPage = lazy(() =>
   import("@/features/suggested-questions").then((module) => ({ default: module.SuggestedQuestionsManagementPage }))
 );
+const DataExtractionPage = lazy(() =>
+  import("@/features/data-extraction").then((module) => ({ default: module.DataExtractionPage }))
+);
 
 function RouteLoader() {
   return (
@@ -149,6 +152,7 @@ const router = createBrowserRouter([
       { path: "uquestion", element: withSuspense(<UQuestionManagement />) },
       { path: "message-feedback", element: withSuspense(<MessageFeedbackManagementPage />) },
       { path: "suggested-questions", element: withSuspense(<SuggestedQuestionsManagementPage />) },
+      { path: "data-extraction", element: withSuspense(<DataExtractionPage />) },
       {
         path: "stories",
         children: [

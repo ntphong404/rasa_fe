@@ -1,8 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Loader2,
   ArrowLeft,
@@ -12,6 +26,7 @@ import {
   MessageSquare,
   BookOpen,
   Check,
+  Search,
 } from "lucide-react";
 import { ruleService } from "@/features/rules/api/service";
 import { intentService } from "@/features/intents/api/service";
@@ -20,6 +35,7 @@ import { actionService } from "@/features/action/api/service";
 import { IRule } from "@/interfaces/rule.interface";
 import { IMyResponse } from "@/interfaces/response.interface";
 import { IntentDetailResponse } from "@/features/intents/api/dto/IntentResponse";
+import { IEntity } from "@/interfaces/entity.interface";
 import { useChatbotStore } from "@/store/chatbot";
 import toast from "react-hot-toast";
 
@@ -54,6 +70,15 @@ export default function DataInfoDetailPage() {
   const [descriptionText, setDescriptionText] = useState<string>("");
   const [savingDescription, setSavingDescription] = useState(false);
 
+  // Entity management
+  const [selectedIntentId, setSelectedIntentId] = useState<string | null>(null);
+  const [selectedEntities, setSelectedEntities] = useState<IEntity[]>([]);
+  const [entitySearchOpen, setEntitySearchOpen] = useState(false);
+  const [entitySearchQuery, setEntitySearchQuery] = useState("");
+  const [entitySearchResults, setEntitySearchResults] = useState<IEntity[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   useEffect(() => {
     const load = async () => {
       if (!ruleId) {
@@ -81,16 +106,12 @@ export default function DataInfoDetailPage() {
 
         const intentPromises = (r.intents || []).map((itOrId: any) => {
           if (!itOrId) return Promise.resolve(null);
-          if (typeof itOrId === "string") {
-            return intentService
-              .getIntentById(String(itOrId))
-              .then((r) => ({ ...(r as any), _id: String(itOrId) }))
-              .catch((e) => null);
-          }
-          return Promise.resolve({
-            ...(itOrId as any),
-            _id: String((itOrId as any)._id),
-          });
+          const intentId = typeof itOrId === "string" ? itOrId : (itOrId as any)._id;
+          // Always fetch full intent to ensure examples are populated
+          return intentService
+            .getIntentById(String(intentId))
+            .then((intent) => ({ ...(intent as any), _id: String(intentId) }))
+            .catch((e) => null);
         });
 
         const responsePromises = (r.responses || []).map((rOrId: any) => {
@@ -138,6 +159,82 @@ export default function DataInfoDetailPage() {
     load();
   }, [ruleId, selectedBotId, t]);
 
+  // Entity search effect
+  useEffect(() => {
+    if (entitySearchQuery.length > 0) {
+      const debounce = setTimeout(async () => {
+        try {
+          setIsSearching(true);
+          const results = await intentService.searchEntityForIntent(entitySearchQuery);
+          setEntitySearchResults(results);
+        } catch (error) {
+          console.error("Error searching entities:", error);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 300);
+
+      return () => clearTimeout(debounce);
+    } else {
+      setEntitySearchResults([]);
+    }
+  }, [entitySearchQuery]);
+
+  // Load entities for current intent
+  useEffect(() => {
+    if (selectedIntentId) {
+      const intent = intents.find((i) => String(i._id) === String(selectedIntentId));
+      if (intent && (intent as any).entities) {
+        const entityIds = (intent as any).entities.map((e: any) =>
+          typeof e === "string" ? e : e._id
+        );
+        setSelectedEntities(entityIds.length > 0 ? entityIds : []);
+      } else {
+        setSelectedEntities([]);
+      }
+    }
+  }, [selectedIntentId, intents]);
+
+  // Handle add entity
+  const handleAddEntity = (entity: IEntity) => {
+    setSelectedEntities((prev) => {
+      const exists = prev.some((e) => (typeof e === "string" ? e : e._id) === entity._id);
+      if (exists) return prev;
+      return [...prev, entity];
+    });
+    setEntitySearchQuery("");
+    setEntitySearchOpen(false);
+  };
+
+  // Handle remove entity
+  const handleRemoveEntity = (entityId: string) => {
+    setSelectedEntities((prev) =>
+      prev.filter((e) => (typeof e === "string" ? e : e._id) !== entityId)
+    );
+  };
+
+  // Handle entity click - insert pattern into textarea
+  const handleEntityClick = (entity: IEntity | string) => {
+    if (!textareaRef.current) return;
+    
+    const entityId = typeof entity === "string" ? entity : entity._id;
+    const pattern = `[value]([${entityId}])`;
+    
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = editingIntentText;
+    
+    const newText = text.substring(0, start) + pattern + text.substring(end);
+    setEditingIntentText(newText);
+    
+    setTimeout(() => {
+      textarea.focus();
+      const cursorPos = start + pattern.length;
+      textarea.setSelectionRange(cursorPos, cursorPos);
+    }, 0);
+  };
+
   const handleSaveIntent = async (intentId: string) => {
     const intent = intents.find((i) => i._id === intentId);
     if (!intent) {
@@ -145,44 +242,49 @@ export default function DataInfoDetailPage() {
       return;
     }
 
-    // ✅ Lấy giá trị mới từ editingIntentText
     const lines = editingIntentText
       .split(/\r?\n/)
       .map((l) => l.trim())
       .filter(Boolean);
-    const newDefine = `- intent: ${
-      (intent as any).name
-    }\n  examples: |\n    - ${lines.join("\n    - ")}`;
+
     const updatedIntent = {
       _id: intent._id,
-      name: intent.name,
-      description: intent.description,
-      define: newDefine,
-      label: intent.label,
-      botId: (intent as any).botId || (selectedBotId && selectedBotId !== "global" ? selectedBotId : "global"),
-      entities: (intent.entities || []).map((entity: any) =>
+      name: (intent as any).name,
+      description: (intent as any).description,
+      examples: lines,
+      label: (intent as any).label,
+      botIds: (intent as any).botIds || [(selectedBotId && selectedBotId !== "global" ? selectedBotId : "global")],
+      entities: selectedEntities.map((entity: any) =>
         typeof entity === "string" ? entity : entity._id
       ),
-      roles: intent.roles || [],
-      deleted: !!intent.deleted,
-      createdAt: intent.createdAt,
-      updatedAt: intent.updatedAt,
-      deletedAt: intent.deletedAt,
+      roles: (intent as any).roles || [],
+      deleted: !!(intent as any).deleted,
+      createdAt: (intent as any).createdAt,
+      updatedAt: (intent as any).updatedAt,
+      deletedAt: (intent as any).deletedAt,
     };
 
     setSavingIntentId(intentId);
     try {
       await intentService.updateIntent(intentId, updatedIntent as any);
 
-      // ✅ Cập nhật state sau khi save thành công
+      const updatedExamples = lines.map((text, idx) => {
+        const existing = ((intent as any).examples || [])[idx];
+        return { _id: existing?._id || `new_${idx}`, text };
+      });
+
       setIntents((prev) =>
         prev.map((it) =>
-          String(it._id) === String(intentId) ? updatedIntent : it
+          String(it._id) === String(intentId)
+            ? ({ ...it, examples: updatedExamples } as any)
+            : it
         )
       );
 
       setEditingIntentId(null);
       setEditingIntentText("");
+      setSelectedIntentId(null);
+      setSelectedEntities([]);
 
       toast.success("Lưu câu hỏi thành công!", {
         duration: 3000,
@@ -468,16 +570,11 @@ export default function DataInfoDetailPage() {
                 return res;
               };
 
-              const extractIntentExamples = (defineText?: string) => {
-                if (!defineText) return [] as string[];
-                const m = defineText.match(/examples:\s*\|([\s\S]*)/m);
-                if (!m) return [];
-                const block = m[1];
-                const lines = block
-                  .split(/\r?\n/)
-                  .map((l) => l.replace(/^\s*-\s*/, "").trim())
+              const getIntentExamples = (intentObj: any): string[] => {
+                if (!intentObj?.examples) return [];
+                return (intentObj.examples as Array<{ _id: string; text: string }>)
+                  .map((e) => e.text)
                   .filter(Boolean);
-                return lines;
               };
 
               const extractResponseText = (defineText?: string) => {
@@ -584,11 +681,11 @@ export default function DataInfoDetailPage() {
               }
 
               return filteredPairs.map((p, idx) => {
-                const intentExamples = extractIntentExamples(p.intent?.define);
+                const intentExamples = getIntentExamples(p.intent);
                 const primary =
                   intentExamples.length > 0
                     ? intentExamples[0]
-                    : p.intent?.define || "";
+                    : "";
                 const similar = intentExamples.slice(1);
                 const answer = extractResponseText(p.nextData?.define) || "-";
 
@@ -615,6 +712,8 @@ export default function DataInfoDetailPage() {
                                     onClick={() => {
                                       setEditingIntentId(null);
                                       setEditingIntentText("");
+                                      setSelectedIntentId(null);
+                                      setSelectedEntities([]);
                                     }}
                                     className="gap-1 bg-white dark:bg-slate-900"
                                   >
@@ -633,15 +732,14 @@ export default function DataInfoDetailPage() {
                                         .split(/\r?\n/)
                                         .map((l) => l.trim())
                                         .filter(Boolean);
-                                      const newDefine = `- intent: ${
-                                        (p.intent as any).name
-                                      }\n  examples: |\n    - ${lines.join(
-                                        "\n    - "
-                                      )}`;
+                                      const updatedExamples = lines.map((text, idx) => {
+                                        const existing = ((p.intent as any).examples || [])[idx];
+                                        return { _id: existing?._id || `new_${idx}`, text };
+                                      });
                                       setIntents((prev) =>
                                         prev.map((it) =>
                                           String(it._id) === String(p.intent._id)
-                                            ? { ...it, define: newDefine }
+                                            ? { ...it, examples: updatedExamples }
                                             : it
                                         )
                                       );
@@ -676,6 +774,7 @@ export default function DataInfoDetailPage() {
                                       String((p.intent as any)._id)
                                     );
                                     setEditingIntentText(combined);
+                                    setSelectedIntentId(String((p.intent as any)._id));
                                   }}
                                   className="gap-1 hover:bg-white/50 dark:hover:bg-slate-800/70"
                                 >
@@ -688,13 +787,107 @@ export default function DataInfoDetailPage() {
                           ))}
                       </div>
                       {editingIntentId === String(p.intent?._id) ? (
-                        <textarea
-                          className="mt-2 w-full rounded-lg border-2 border-indigo-200 bg-white p-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:border-indigo-500/60 dark:bg-slate-900"
-                          rows={3}
-                          value={editingIntentText}
-                          onChange={(e) => setEditingIntentText(e.target.value)}
-                          placeholder="Nhập câu hỏi..."
-                        />
+                        <div className="space-y-3 mt-3">
+                          {/* Entity Management Section */}
+                          <div className="flex items-center gap-2">
+                            <Popover open={entitySearchOpen} onOpenChange={setEntitySearchOpen}>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" className="gap-2" size="sm">
+                                  <Search className="h-4 w-4" />
+                                  {t("Add Entity")}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[300px] p-0" align="start">
+                                <Command shouldFilter={false}>
+                                  <CommandInput
+                                    placeholder={t("Search entities...")}
+                                    value={entitySearchQuery}
+                                    onValueChange={setEntitySearchQuery}
+                                  />
+                                  <CommandList className="max-h-[200px] overflow-y-auto">
+                                    <CommandEmpty>
+                                      {isSearching
+                                        ? t("Searching...")
+                                        : t("No entities found")}
+                                    </CommandEmpty>
+                                    {entitySearchResults.length > 0 && (
+                                      <CommandGroup>
+                                        {entitySearchResults.map((entity) => (
+                                          <CommandItem
+                                            key={entity._id}
+                                            value={entity._id}
+                                            onSelect={() => handleAddEntity(entity)}
+                                            className="cursor-pointer"
+                                          >
+                                            <div className="flex flex-col">
+                                              <span className="font-medium">{entity.name}</span>
+                                              {entity.description && (
+                                                <span className="text-xs text-muted-foreground">
+                                                  {entity.description}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    )}
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+
+                          {/* Selected Entities Display */}
+                          {selectedEntities.length > 0 && (
+                            <div className="space-y-2">
+                              <div className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                                Các entity đã chọn ({selectedEntities.length})
+                              </div>
+                              <div className="flex flex-wrap gap-2 p-3 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg">
+                                {selectedEntities.map((entity) => {
+                                  const isString = typeof entity === "string";
+                                  const entityId = isString ? entity : entity._id;
+                                  const entityName = isString ? entity : entity.name;
+                                  return (
+                                    <Badge
+                                      key={entityId}
+                                      variant="secondary"
+                                      className="gap-2 pr-1 cursor-pointer hover:bg-secondary/80 transition-colors"
+                                      onClick={() => handleEntityClick(entity)}
+                                      title={t("Click to insert entity pattern")}
+                                    >
+                                      <span>{entityName}</span>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-4 w-4 p-0 hover:bg-transparent"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleRemoveEntity(entityId);
+                                        }}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </Button>
+                                    </Badge>
+                                  );
+                                })}
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                💡 {t("Click on an entity to insert its pattern at cursor position")}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Textarea for editing */}
+                          <textarea
+                            ref={textareaRef}
+                            className="mt-2 w-full rounded-lg border-2 border-indigo-200 bg-white p-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:border-indigo-500/60 dark:bg-slate-900"
+                            rows={3}
+                            value={editingIntentText}
+                            onChange={(e) => setEditingIntentText(e.target.value)}
+                            placeholder="Nhập câu hỏi..."
+                          />
+                        </div>
                       ) : (
                         <div className="text-lg font-medium leading-relaxed text-foreground">
                           {primary}

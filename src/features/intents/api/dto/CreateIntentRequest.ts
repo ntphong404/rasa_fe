@@ -1,7 +1,7 @@
 export interface CreateIntentRequest {
   name: string
   description: string
-  define: string
+  examples: string[]
   botIds: string[]
   label?: string
   entities: string[]

@@ -13,13 +13,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { intentService } from "@/features/intents/api/service";
-import { responseService } from "@/features/reponses/api/service";
-import { ruleService } from "@/features/rules/api/service";
 import { useChatbotStore } from "@/store/chatbot";
 import { useChatbots } from "@/hooks/useChatbots";
 import { useAuthStore } from "@/store/auth";
 import { parseFile, formatIntentName, type ParsedRow, parseYAML, parseResponseYAML, mergeNLUWithResponses, type ResponseMap } from "../utils/fileParser";
 import { generateTemplate } from "../utils/templateGenerator";
+import { UnifiedQAImportTable, type UnifiedQARow } from "../components/UnifiedQAImportTable";
+import { useUnifiedQAConverter } from "../hooks/useUnifiedQAConverter";
 
 type Row = ParsedRow;
 
@@ -43,21 +43,8 @@ export function ImportIntentPage() {
     const [nluFile, setNluFile] = useState<File | null>(null); // For YAML mode
     const [domainFile, setDomainFile] = useState<File | null>(null); // For YAML mode
     const [isParsing, setIsParsing] = useState(false);
-    const [isImporting, setIsImporting] = useState(false);
-    const [rows, setRows] = useState<Row[]>([]);
-    const [selected, setSelected] = useState<Record<number, boolean>>({});
-    const [progress, setProgress] = useState({ done: 0, total: 0 });
-    const [editingRow, setEditingRow] = useState<number | null>(null);
-    const [editIntentName, setEditIntentName] = useState("");
-    const [editAnswer, setEditAnswer] = useState("");
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
-    const [editingExample, setEditingExample] = useState<{ rowIdx: number; exampleIdx: number } | null>(null);
-    const [editExampleText, setEditExampleText] = useState("");
-    const [generatingRowIdx, setGeneratingRowIdx] = useState<number | null>(null);
-    const [hasImported, setHasImported] = useState(false);
-    const [duplicateStrategy, setDuplicateStrategy] = useState<"skip" | "overwrite" | "fail">("overwrite");
-    const [commonImportLabel, setCommonImportLabel] = useState("");
+    const [rows, setRows] = useState<UnifiedQARow[]>([]);
+    const { convertFromExcel } = useUnifiedQAConverter();
     const inputRef = useRef<HTMLInputElement | null>(null);
     const nluInputRef = useRef<HTMLInputElement | null>(null);
     const domainInputRef = useRef<HTMLInputElement | null>(null);
@@ -122,19 +109,16 @@ export function ImportIntentPage() {
             // Merge NLU with responses
             const merged = mergeNLUWithResponses(parsedNLU, parsedResponses);
 
-            // Update response field from responseContent
-            const merged2 = merged.map(m => ({
-                ...m,
-                response: m.responseContent || (m.response || ""),
+            // Convert to UnifiedQARow format
+            const converted = merged.map((m: any, idx: number) => ({
+                id: `yaml_${idx}`,
+                question: m.intentName || "",
+                answer: m.responseContent || (m.response || ""),
+                examples: m.examples || [],
             }));
 
-            setRows(merged2);
-            // mark all selected by default
-            const sel: Record<number, boolean> = {};
-            merged2.forEach((_, i) => (sel[i] = true));
-            setSelected(sel);
-            setHasImported(false);
-            toast.success(t("Read intents successfully from files", { count: merged2.length, nluName: nlu.name, domainName: domain.name }));
+            setRows(converted);
+            toast.success(t("Read intents successfully from files", { count: converted.length, nluName: nlu.name, domainName: domain.name }));
         } catch (err) {
             console.error(err);
             const errorMessage = err instanceof Error ? err.message : t("Unable to read file");
@@ -162,16 +146,11 @@ export function ImportIntentPage() {
         setIsParsing(true);
         try {
             const parsed = await parseFile(f);
+            const converted = convertFromExcel(parsed);
 
-            setRows(parsed);
-            // mark all selected by default
-            const sel: Record<number, boolean> = {};
-            parsed.forEach((_, i) => (sel[i] = true));
-            setSelected(sel);
-            setHasImported(false);
-            // Hide file upload area after successful parse
+            setRows(converted);
             setFile(null);
-            toast.success(t("Read rows successfully from file", { count: parsed.length, fileName: f.name }));
+            toast.success(t("Read rows successfully from file", { count: converted.length, fileName: f.name }));
         } catch (err) {
             console.error(err);
             const errorMessage = err instanceof Error ? err.message : t("Unable to read file");
@@ -643,176 +622,39 @@ export function ImportIntentPage() {
             }
 
             const row = rows[i];
+            const formattedName = row.name;
+            const resolvedLabel = importMode === "yaml"
+                ? (sharedLabel || undefined)
+                : (row.label?.trim() || undefined);
+            const examplesArr: string[] = row.examples.filter(ex => ex.trim());
+
             try {
-                const formattedName = row.name;
-                const resolvedLabel = importMode === "yaml"
-                    ? (sharedLabel || undefined)
-                    : (row.label?.trim() || undefined);
-                // Use all examples from the row
-                const examplesArr: string[] = row.examples.filter(ex => ex.trim());
-
-                try {
-                    // Create intent with all examples and all selected bots
-                    const intentPayload = {
-                        name: formattedName,
-                        description: "",
-                        define: buildIntentDefine(formattedName, examplesArr),
-                        label: resolvedLabel,
-                        botIds: importBotIds,
-                        entities: [],
-                    };
-                    const intentDefine = intentPayload.define;
-                    let createdIntent: any = null;
-                    try {
-                        createdIntent = await intentService.createIntent(intentPayload as any);
-                    } catch (intentErr: any) {
-                        // Check for 429 Too Many Requests
-                        if (isRateLimitError(intentErr)) {
-                            setIsImporting(false);
-                            toast.error(t("Rate limit exceeded. Too many requests sent in a short time. Please wait a moment and try again."));
-                            return;
-                        }
-                        
-                        if (!isDuplicateKeyError(intentErr)) {
-                            throw intentErr;
-                        }
-                        const existingIntent = await findExistingIntentByName(formattedName, importBotIds[0]);
-                        if (!existingIntent?._id) {
-                            throw intentErr;
-                        }
-
-                        if (duplicateStrategy === "fail") {
-                            throw new Error(t("Intent already exists: {{name}}", { name: formattedName }));
-                        }
-
-                        const sameContent =
-                            normalizeForCompare(existingIntent.define) === normalizeForCompare(intentDefine);
-                        const labelChanged = Boolean(resolvedLabel) && existingIntent.label !== resolvedLabel;
-                        const missingBots = importBotIds.filter(bid => !existingIntent.botIds?.includes(bid));
-
-                        if (duplicateStrategy === "overwrite" && (!sameContent || labelChanged || missingBots.length > 0)) {
-                            await intentService.updateIntent(existingIntent._id, {
-                                ...existingIntent,
-                                name: formattedName,
-                                description: existingIntent.description || "",
-                                define: intentDefine,
-                                label: resolvedLabel || existingIntent.label,
-                                botIds: Array.from(new Set([...(existingIntent.botIds || []), ...importBotIds])),
-                                entities: existingIntent.entities || [],
-                                roles: existingIntent.roles || [],
-                                deleted: !!existingIntent.deleted,
-                                createdAt: existingIntent.createdAt,
-                                updatedAt: existingIntent.updatedAt,
-                                deletedAt: existingIntent.deletedAt,
-                            } as any);
-                        }
-
-                        createdIntent = existingIntent;
-                    }
-
-                    // Create response with answer text
-                    let createdResponse = null;
-                    if (row.response && row.response.trim()) {
-                        const respName = row.responseName?.trim() || `utter_${formattedName}`;
-                        const responsePayload = {
-                            name: respName,
-                            description: "",
-                            define: buildResponseDefine(respName, row.response.trim()),
-                            label: resolvedLabel,
-                            botIds: importBotIds,
-                        };
-                        const responseDefine = responsePayload.define;
-                        try {
-                            createdResponse = await responseService.createResponse(responsePayload as any);
-                        } catch (responseErr: any) {
-                            // Check for 429 Too Many Requests
-                            if (isRateLimitError(responseErr)) {
-                                setIsImporting(false);
-                                toast.error(t("Rate limit exceeded. Too many requests sent in a short time. Please wait a moment and try again."));
-                                return;
-                            }
-                            
-                            if (!isDuplicateKeyError(responseErr)) {
-                                throw responseErr;
-                            }
-                            const existingResponse = await findExistingResponseByName(respName, importBotIds[0]);
-                            if (!existingResponse?._id) {
-                                throw responseErr;
-                            }
-
-                            if (duplicateStrategy === "fail") {
-                                throw new Error(t("Response already exists: {{name}}", { name: respName }));
-                            }
-
-                            const sameContent =
-                                normalizeForCompare(existingResponse.define) === normalizeForCompare(responseDefine);
-                            const labelChanged = Boolean(resolvedLabel) && existingResponse.label !== resolvedLabel;
-                            const missingBots = importBotIds.filter(bid => !existingResponse.botIds?.includes(bid));
-
-                            if (duplicateStrategy === "overwrite" && (!sameContent || labelChanged || missingBots.length > 0)) {
-                                await responseService.updateResponse(existingResponse._id, {
-                                    ...existingResponse,
-                                    name: respName,
-                                    description: existingResponse.description || "",
-                                    define: responseDefine,
-                                    label: resolvedLabel || existingResponse.label,
-                                    botIds: Array.from(new Set([...(existingResponse.botIds || []), ...importBotIds])),
-                                    roles: existingResponse.roles || [],
-                                    deleted: !!existingResponse.deleted,
-                                    createdAt: existingResponse.createdAt,
-                                    updatedAt: existingResponse.updatedAt,
-                                    deletedAt: existingResponse.deletedAt,
-                                } as any);
-                            }
-
-                            createdResponse = existingResponse;
-                        }
-                    }
-
-                    // Create rule linking the created intent and response
-                    if (createdResponse) {
-                        const ruleName = `rule_for_${formattedName}`;
-                        const steps: Array<{ intentId?: string; actionId?: string }> = [{ intentId: createdIntent._id }];
-                        steps.push({ actionId: createdResponse._id });
-
-                        const rulePayload = {
-                            name: ruleName,
-                            description: "",
-                            define: buildRuleDefine(ruleName, steps),
-                            botIds: importBotIds,
-                            intents: [createdIntent._id],
-                            responses: [createdResponse._id],
-                            action: [],
-                            roles: [],
-                        };
-
-                        try {
-                            await ruleService.createRule(rulePayload as any);
-                        } catch (ruleErr: any) {
-                            // Check for 429 Too Many Requests
-                            if (isRateLimitError(ruleErr)) {
-                                setIsImporting(false);
-                                toast.error(t("Rate limit exceeded. Too many requests sent in a short time. Please wait a moment and try again."));
-                                return;
-                            }
-                            
-                            // Rule name can collide on re-import; keep import idempotent.
-                            if (!isDuplicateKeyError(ruleErr)) {
-                                throw ruleErr;
-                            }
-                        }
-                    }
-                } catch (err: any) {
-                    throw err;
-                }
-
-                // Mark as success
-                setRows((prev) => {
-                    const updated = [...prev];
-                    updated[i] = { ...updated[i], status: 'success', error: undefined };
-                    return updated;
+                const result = await intentService.createFull({
+                    name: formattedName,
+                    description: "",
+                    examples: examplesArr,
+                    answer: row.response?.trim() || "",
+                    botIds: importBotIds,
+                    label: resolvedLabel,
+                    source: importMode === 'yaml' ? 'excel' : 'excel',
                 });
-                successCount++;
+
+                if (result.duplicateExamples?.length > 0) {
+                    // Mark as success but note duplicates
+                    setRows((prev) => {
+                        const updated = [...prev];
+                        updated[i] = { ...updated[i], status: 'success', error: undefined };
+                        return updated;
+                    });
+                    successCount++;
+                } else {
+                    setRows((prev) => {
+                        const updated = [...prev];
+                        updated[i] = { ...updated[i], status: 'success', error: undefined };
+                        return updated;
+                    });
+                    successCount++;
+                }
             } catch (err: any) {
                 // Check for 429 Too Many Requests immediately and stop import
                 if (isRateLimitError(err)) {
@@ -834,8 +676,6 @@ export function ImportIntentPage() {
             }
             setProgress((p) => ({ ...p, done: p.done + 1 }));
         }
-
-        setIsImporting(false);
 
         if (failCount === 0) {
             toast.success(t("Imported rows successfully", { count: successCount }));
@@ -1159,320 +999,17 @@ export function ImportIntentPage() {
                     )}
 
                     {rows.length > 0 && (
-                        <div className="surface-card-strong flex h-full flex-col rounded-lg border border-indigo-100 dark:border-white/15">
-                            <div className="flex items-center justify-between px-3 py-3 border-b bg-gradient-to-r from-indigo-50 to-purple-50 flex-shrink-0 dark:border-white/10 dark:from-slate-950 dark:to-black">
-                                <div className="flex items-center gap-2">
-                                    <Database className="h-4 w-4 text-indigo-600" />
-                                    <div>
-                                        <div className="font-semibold text-base text-indigo-900">{t("Data preview")}</div>
-                                        <div className="text-xs text-indigo-600">{t("Question groups count: {{count}}", { count: rows.length })}</div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    {progress.total > 0 && (
-                                        <div className="rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-sm font-medium text-indigo-700 dark:border-indigo-400/40 dark:bg-slate-900 dark:text-indigo-300">
-                                            {t("Progress")}: {progress.done}/{progress.total}
-                                        </div>
-                                    )}
-                                    <Button
-                                        onClick={handleGenerateIntents}
-                                        disabled={isGenerating || rows.length === 0}
-                                        variant="outline"
-                                        size="sm"
-                                        className="gap-2 border-indigo-300 hover:bg-indigo-50"
-                                    >
-                                        <Sparkles className="h-4 w-4" />
-                                        {isGenerating ? t("Generating...") : t("Generate more question groups")}
-                                    </Button>
-                                </div>
-                            </div>
-                            <div className="overflow-auto flex-1 border-t">
-                            <table className="w-full text-left table-fixed">
-                                <thead className="bg-gradient-to-r from-slate-50 to-slate-100 sticky top-0 border-b dark:border-white/10 dark:from-slate-900 dark:to-slate-900">
-                                    <tr>
-                                        <th className="px-4 py-3 w-12 text-xs font-semibold text-slate-600 uppercase">#</th>
-                                        <th className="px-4 py-3 w-16 text-xs font-semibold text-slate-600 uppercase">{t("Select")}</th>
-                                        <th className="px-4 py-3 w-80 text-xs font-semibold text-slate-600 uppercase">{t("Question group name")}</th>
-                                        <th className="px-4 py-3 text-xs font-semibold text-slate-600 uppercase">{t("Answer")}</th>
-                                        <th className="px-4 py-3 w-32 text-xs font-semibold text-slate-600 uppercase">{t("Actions")}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {rows.map((r, i) => {
-                                        const isSuccess = r.status === 'success';
-                                        const isError = r.status === 'error';
-                                        const hasValidationError = !!r.validationError;
-                                        const rowClasses = isSuccess
-                                            ? "opacity-50 bg-slate-100"
-                                            : (isError || hasValidationError)
-                                                ? "bg-red-100"
-                                                : (i % 2 === 0 ? "bg-indigo-100/60 dark:bg-indigo-950/30" : "bg-white dark:bg-slate-900");
-
-                                        return (
-                                            <>
-                                                <tr key={i} className={`${rowClasses} border-b`}>
-                                                    <td className="px-4 py-2 align-top">{i + 1}</td>
-                                                    <td className="px-4 py-2 align-top">
-                                                        <input
-                                                            type="checkbox"
-                                                            className="accent-indigo-600"
-                                                            checked={!!selected[i]}
-                                                            onChange={() => handleToggle(i)}
-                                                            disabled={isSuccess}
-                                                        />
-                                                    </td>
-                                                    {editingRow === i && !isSuccess ? (
-                                                        <>
-                                                            <td className="px-4 py-2 align-top">
-                                                                <div className="space-y-2">
-                                                                    <label className="text-xs text-slate-500">{t("Question group name")}:</label>
-                                                                    <Input
-                                                                        value={editIntentName}
-                                                                        onChange={(e) => setEditIntentName(e.target.value)}
-                                                                        className="w-full font-mono text-sm"
-                                                                        placeholder={t("question_group_name")}
-                                                                    />
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-4 py-2 align-top">
-                                                                <Textarea
-                                                                    value={editAnswer}
-                                                                    onChange={(e) => setEditAnswer(e.target.value)}
-                                                                    className="w-full min-h-[80px]"
-                                                                    placeholder={t("Enter answer...")}
-                                                                />
-                                                            </td>
-                                                            <td className="px-4 py-2 align-top">
-                                                                <div className="flex gap-1">
-                                                                    <Button
-                                                                        size="sm"
-                                                                        onClick={() => handleSaveRow(i)}
-                                                                        className="h-8 w-8 p-0"
-                                                                    >
-                                                                        <Save className="h-4 w-4" />
-                                                                    </Button>
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="ghost"
-                                                                        onClick={handleCancelEdit}
-                                                                        className="h-8 w-8 p-0"
-                                                                    >
-                                                                        <X className="h-4 w-4" />
-                                                                    </Button>
-                                                                </div>
-                                                            </td>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <td className="px-4 py-2 align-top">
-                                                                <div className="flex items-start gap-2">
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="ghost"
-                                                                        onClick={() => toggleExpandRow(i)}
-                                                                        className="h-6 w-6 p-0 flex-shrink-0"
-                                                                        disabled={isSuccess}
-                                                                    >
-                                                                        {expandedRows[i] ? (
-                                                                            <ChevronDown className="h-4 w-4" />
-                                                                        ) : (
-                                                                            <ChevronRight className="h-4 w-4" />
-                                                                        )}
-                                                                    </Button>
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <div className="font-medium text-sm font-mono text-indigo-700 truncate" title={r.name}>{r.name}</div>
-                                                                        <div className="text-xs text-slate-400 mt-1">
-                                                                            {t("Questions count: {{count}}", { count: r.examples.length })}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-4 py-2 align-top">
-                                                                <div className="text-sm text-slate-600 line-clamp-2 break-words" title={r.response}>
-                                                                    {r.response}
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-4 py-2 align-top">
-                                                                <div className="flex gap-1 items-center">
-                                                                    {isSuccess ? (
-                                                                        <span className="text-green-600 text-sm font-medium">{t("Saved")}</span>
-                                                                    ) : (
-                                                                        <>
-                                                                            <Button
-                                                                                size="sm"
-                                                                                variant="ghost"
-                                                                                onClick={() => handleEditRow(i)}
-                                                                                className="h-8 w-8 p-0"
-                                                                                title={t("Edit question group")}
-                                                                            >
-                                                                                <Pencil className="h-3 w-3" />
-                                                                            </Button>
-                                                                            <Button
-                                                                                size="sm"
-                                                                                variant="ghost"
-                                                                                onClick={() => handleGenerateExamplesForRow(i)}
-                                                                                disabled={generatingRowIdx === i}
-                                                                                className="h-8 w-8 p-0"
-                                                                                title={t("Generate more questions")}
-                                                                            >
-                                                                                <Sparkles className="h-3 w-3" />
-                                                                            </Button>
-                                                                            <Button
-                                                                                size="sm"
-                                                                                variant="ghost"
-                                                                                onClick={() => handleDeleteRow(i)}
-                                                                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                                                                                title={t("Delete question group")}
-                                                                            >
-                                                                                <X className="h-3 w-3" />
-                                                                            </Button>
-                                                                        </>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        </>
-                                                    )}
-                                                </tr>
-                                                {expandedRows[i] && !isSuccess && (
-                                                    <tr key={`${i}-examples`} className={rowClasses}>
-                                                        <td colSpan={5} className="px-2 py-2">
-                                                            <div className="ml-8 rounded-lg border border-indigo-200 bg-slate-50/50 p-2 pl-3 dark:border-indigo-400/30 dark:bg-slate-900/70">
-                                                                <div className="font-medium text-sm mb-2 text-indigo-700">
-                                                                    {t("Similar questions")}:
-                                                                </div>
-                                                                <div className="space-y-1">
-                                                                    {r.examples.map((ex, exIdx) => (
-                                                                        <div key={exIdx} className={`group flex items-start gap-2 rounded border border-slate-300 p-2 transition-colors hover:border-indigo-400 dark:border-white/15 ${i % 2 === 0 ? 'bg-indigo-50/50 dark:bg-indigo-950/20' : 'bg-white dark:bg-slate-900'}`}>
-                                                                            <span className="text-xs text-slate-400 mt-0.5 w-6 flex-shrink-0">{exIdx + 1}.</span>
-                                                                            {editingExample?.rowIdx === i && editingExample?.exampleIdx === exIdx ? (
-                                                                                <div className="flex-1 flex gap-2">
-                                                                                    <Input
-                                                                                        value={editExampleText}
-                                                                                        onChange={(e) => setEditExampleText(e.target.value)}
-                                                                                        className="flex-1"
-                                                                                        autoFocus
-                                                                                    />
-                                                                                    <Button
-                                                                                        size="sm"
-                                                                                        onClick={handleSaveExample}
-                                                                                        className="h-8"
-                                                                                    >
-                                                                                        <Save className="h-3 w-3" />
-                                                                                    </Button>
-                                                                                    <Button
-                                                                                        size="sm"
-                                                                                        variant="ghost"
-                                                                                        onClick={handleCancelEditExample}
-                                                                                        className="h-8"
-                                                                                    >
-                                                                                        <X className="h-3 w-3" />
-                                                                                    </Button>
-                                                                                </div>
-                                                                            ) : (
-                                                                                <>
-                                                                                    <span className="flex-1 text-sm">{ex}</span>
-                                                                                    <div className="opacity-0 group-hover:opacity-100 flex gap-1 flex-shrink-0">
-                                                                                        <Button
-                                                                                            size="sm"
-                                                                                            variant="ghost"
-                                                                                            onClick={() => handleEditExample(i, exIdx)}
-                                                                                            className="h-6 w-6 p-0"
-                                                                                        >
-                                                                                            <Pencil className="h-3 w-3" />
-                                                                                        </Button>
-                                                                                        {r.examples.length > 1 && (
-                                                                                            <Button
-                                                                                                size="sm"
-                                                                                                variant="ghost"
-                                                                                                onClick={() => handleDeleteExample(i, exIdx)}
-                                                                                                className="h-6 w-6 p-0 text-red-600"
-                                                                                            >
-                                                                                                <X className="h-3 w-3" />
-                                                                                            </Button>
-                                                                                        )}
-                                                                                    </div>
-                                                                                </>
-                                                                            )}
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                                {isError && r.error && (
-                                                    <tr key={`${i}-error`} className="bg-red-50">
-                                                        <td colSpan={5} className="px-4 py-2">
-                                                            <div className="text-red-600 text-sm">
-                                                                <strong>{t("Error")}:</strong> {r.error}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                                {hasValidationError && r.validationError && (
-                                                    <tr key={`${i}-validation`} className="bg-red-50">
-                                                        <td colSpan={5} className="px-4 py-2">
-                                                            <div className="text-red-600 text-sm flex items-center gap-2">
-                                                                <strong>{t("Validation")}:</strong> {r.validationError}
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    onClick={() => handleGenerateExamplesForRow(i)}
-                                                                    disabled={generatingRowIdx === i}
-                                                                    className="h-6 text-xs"
-                                                                >
-                                                                    <Sparkles className="h-3 w-3 mr-1" />
-                                                                    {t("Generate more questions")}
-                                                                </Button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-
-                            <div className="flex flex-shrink-0 gap-3 border-t bg-gray-50 px-3 py-3 dark:border-white/10 dark:bg-slate-900/70">
-                                <div className="flex items-center gap-2 rounded border bg-white px-3 py-1.5 dark:bg-slate-900">
-                                    <span className="text-sm text-slate-600 dark:text-slate-300">{t("Duplicate handling")}</span>
-                                    <select
-                                        className="text-sm border rounded px-2 py-1 bg-white dark:bg-slate-900"
-                                        value={duplicateStrategy}
-                                        onChange={(e) => setDuplicateStrategy(e.target.value as "skip" | "overwrite" | "fail")}
-                                        disabled={isImporting}
-                                    >
-                                        <option value="overwrite">{t("Overwrite if content differs")}</option>
-                                        <option value="skip">{t("Skip duplicates")}</option>
-                                        <option value="fail">{t("Stop and report duplicates")}</option>
-                                    </select>
-                                </div>
-                                <Button 
-                                    onClick={handleImport} 
-                                    disabled={isImporting} 
-                                    className="bg-indigo-600 text-white hover:bg-indigo-700 gap-2"
-                                >
-                                    <Database className="h-4 w-4" />
-                                    {isImporting ? t("Importing...") : t("Import selected data")}
-                                </Button>
-                                {hasImported && rows.some(r => r.status === 'error') && (
-                                    <Button onClick={handleRetryFailed} variant="outline" disabled={isImporting} className="gap-2">
-                                        <Sparkles className="h-4 w-4" />
-                                        {t("Retry failed rows")}
-                                    </Button>
-                                )}
-                                <Button 
-                                    variant="ghost" 
-                                    onClick={() => { setRows([]); setFile(null); setSelected({}); setHasImported(false); setCommonImportLabel(""); }}
-                                    className="gap-2"
-                                >
-                                    <X className="h-4 w-4" />
-                                    {t("Cancel / Clear all")}
-                                </Button>
-                            </div>
-                        </div>
+                        <UnifiedQAImportTable
+                            rows={rows}
+                            onChange={setRows}
+                            onClear={() => {
+                                setRows([]);
+                                setFile(null);
+                                setNluFile(null);
+                                setDomainFile(null);
+                            }}
+                            botIds={selectedImportBotIds}
+                        />
                     )}
                 </div>
             </div>

@@ -13,8 +13,7 @@ import {
 import { toast } from "sonner";
 import { HelpCircle, X } from "lucide-react";
 import { intentService } from "@/features/intents/api/service";
-import { responseService } from "@/features/reponses/api/service";
-import { ruleService } from "@/features/rules/api/service";
+
 import { useChatbots } from "@/hooks/useChatbots";
 import { useChatbotStore } from "@/store/chatbot";
 import { useAuthStore } from "@/store/auth";
@@ -294,55 +293,21 @@ export function CreateDataPage() {
 
         setIsSubmitting(true);
         try {
-            // create intent
-            const intentPayload = {
-                // store the normalized intent name
+            const result = await intentService.createFull({
                 name: formattedIntent || formatIntentName(intentName.trim()),
                 description: "",
-                define: buildIntentDefine(formattedIntent || formatIntentName(intentName.trim()), examples),
-                label: label.trim() || undefined,
-                entities: [],
+                examples,
+                answer: responseText.trim(),
                 botIds: targetBotIds,
-            };
+                label: label.trim() || undefined,
+                source: 'manual',
+            });
 
-            const createdIntent = await intentService.createIntent(intentPayload as any);
-
-            let createdResponse = null;
-            if (responseText.trim()) {
-                const respName = `utter_${formattedIntent || formatIntentName(intentName.trim())}`;
-                const responsePayload = {
-                    name: respName,
-                    description: "",
-                    define: buildResponseDefine(respName, responseText || intentName.trim()),
-                    label: label.trim() || undefined,
-                    botIds: targetBotIds,
-                };
-                createdResponse = await responseService.createResponse(responsePayload as any);
+            if (result.duplicateExamples?.length > 0) {
+                toast.warning(t("Created with {{count}} duplicate examples", { count: result.duplicateExamples.length }));
+            } else {
+                toast.success(t("Data created successfully"));
             }
-
-            // create rule linking intent and response (if response created)
-            if (createdResponse) {
-                const ruleName = `rule_for_${formattedIntent || formatIntentName(intentName.trim())}`;
-                const steps = [{ intentId: createdIntent._id } as { intentId?: string; actionId?: string }];
-                if (createdResponse) {
-                    steps.push({ actionId: createdResponse._id });
-                }
-
-                const rulePayload = {
-                    name: ruleName,
-                    description: "",
-                    define: buildRuleDefine(ruleName, steps),
-                    intents: [createdIntent._id],
-                    responses: createdResponse ? [createdResponse._id] : [],
-                    botIds: targetBotIds,
-                    action: [],
-                    roles: [],
-                };
-
-                await ruleService.createRule(rulePayload as any);
-            }
-
-            toast.success(t("Data created successfully"));
             // Reset form after successful save
             setIntentName("");
             setInitialExample("");

@@ -2,8 +2,8 @@ export interface IIntent {
   _id: string
   name: string
   description: string
-  define: string // yaml text
-  label?: string // T\u00ean sheet ho\u1eb7c lo\u1ea1i
+  examples: Array<{ _id: string; text: string }>
+  label?: string
   botIds: string[]
   entities: string[]
   roles: string[]

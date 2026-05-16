@@ -68,6 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           { title: t("Add data"), url: "/add-data" },
           { title: t("View details"), url: "/data-info" },
           { title: t("suggested questions"), url: "/suggested-questions" },
+          { title: t("Extract Q&A"), url: "/data-extraction" },
         ]
       },
       {
@@ -82,7 +83,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: "/training",
           },
           {
-            title: t("Intents"),
+            title: "Intents",
             url: "/intents",
           },
           // {
@@ -90,11 +91,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           //   url: "/entities",
           // },
           {
-            title: t("Actions"),
+            title: "Actions",
             url: "/actions",
           },
           {
-            title: t("Responses"),
+            title: "Responses",
             url: "/responses",
           },
           {

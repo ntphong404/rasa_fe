@@ -1010,5 +1010,7 @@
   "Enter phone number": "Nhập số điện thoại",
   "Email": "Email",
   "Full Name": "Họ và tên",
-  "api-docs": "Tài liệu API"
+  "Api docs": "Tài liệu API",
+  "Message Feedback": "Tin nhắn phản hồi",
+  "UQuestion": "Câu hỏi người dùng"
 }

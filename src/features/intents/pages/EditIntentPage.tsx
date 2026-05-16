@@ -107,14 +107,12 @@ export function EditIntentPage() {
 
     setName(intentData.name || "");
     setDescription(intentData.description || "");
-    setYamlDefine(intentData.define || "");
     setLabel(intentData.label || null);
     setSelectedEntities(intentData.entities || []);
-    
-    // Parse examples from YAML for normal mode
-    if (intentData.define) {
-      const parsedExamples = parseYAMLExamples(intentData.define);
-      setExamples(parsedExamples);
+
+    // Load examples from populated examples array
+    if (intentData.examples && Array.isArray(intentData.examples)) {
+      setExamples(intentData.examples.map((e: any) => e.text || ""));
     }
   }, [intentData, navigate, t]);
 
@@ -323,15 +321,11 @@ ${exampleLines || "    - example1"}`;
       return;
     }
 
-    // Generate YAML from normal mode if needed
-    let finalYaml = yamlDefine;
-    if (!isExpertMode) {
-      finalYaml = generateYAMLFromNormalMode();
-      setYamlDefine(finalYaml);
-    }
+    // Collect examples from normal mode
+    const allExamples = examples.filter(ex => ex.trim());
 
-    if (!validateYAML()) {
-      toast.error(t("Please fix YAML errors"));
+    if (allExamples.length === 0) {
+      toast.error(t("At least one example is required"));
       return;
     }
 
@@ -343,12 +337,9 @@ ${exampleLines || "    - example1"}`;
         botIds: intentData.botIds || (selectedBotId ? [selectedBotId] : ["global"]),
         label: label || undefined,
         description: description.trim(),
-        define: finalYaml,
+        examples: allExamples,
         entities: selectedEntities.map((e) => e._id),
         roles: intentData.roles || [],
-        deleted: !!intentData.deleted,
-        createdAt: intentData.createdAt,
-        updatedAt: intentData.updatedAt,
       });
 
       toast.success(t("Intent updated successfully"));

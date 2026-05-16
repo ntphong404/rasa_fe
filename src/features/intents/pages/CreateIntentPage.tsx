@@ -360,16 +360,11 @@ ${exampleLines || "    - example1"}`;
       return;
     }
 
-    // Generate YAML from normal mode if needed
-    let finalYaml = yamlDefine;
-    if (!isExpertMode) {
-      finalYaml = generateYAMLFromNormalMode();
-      setYamlDefine(finalYaml);
-    }
+    // Collect examples from normal mode
+    const allExamples = examples.filter(ex => ex.trim());
 
-    // Validate the final YAML
-    if (!validateYAML(finalYaml)) {
-      toast.error(t("Please fix YAML errors"));
+    if (allExamples.length === 0) {
+      toast.error(t("At least one example is required"));
       return;
     }
 
@@ -393,7 +388,7 @@ ${exampleLines || "    - example1"}`;
         botIds: targetBotIds,
         label: label || undefined,
         description: description.trim(),
-        define: finalYaml,
+        examples: allExamples,
         entities: selectedEntities.map((e) => e._id),
       });
 

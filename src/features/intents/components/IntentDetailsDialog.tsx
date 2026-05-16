@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, FileText, Tag, Users, Code, Calendar, AlertCircle } from "lucide-react";
+import { Loader2, FileText, Tag, Users, Calendar, AlertCircle, MessageSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { intentService } from "../api/service";
 import { IntentDetailResponse } from "../api/dto/IntentResponse";
@@ -53,84 +53,8 @@ export default function IntentDetailsDialog({
   };
 
   const processDefine = (defineText: string, entities: IntentDetailResponse["entities"]) => {
-    if (!defineText || !entities || entities.length === 0) {
-      return defineText;
-    }
-
-    // Create a map of entity ID to entity name
-    const entityMap = new Map<string, string>();
-    entities.forEach((entity) => {
-      entityMap.set(entity._id, entity.name);
-    });
-
-    // Replace [text]([entity_id]) with [text](entity_name) and highlight
-    const pattern = /\[([^\]]+)\]\(\[([^\]]+)\]\)/g;
-    
-    const parts: Array<{ text: string; isHighlighted: boolean }> = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = pattern.exec(defineText)) !== null) {
-      // Add text before match
-      if (match.index > lastIndex) {
-        parts.push({
-          text: defineText.substring(lastIndex, match.index),
-          isHighlighted: false,
-        });
-      }
-
-      // Get entity name or keep original ID
-      const displayText = match[1];
-      const entityId = match[2];
-      const entityName = entityMap.get(entityId) || entityId;
-
-      // Add highlighted match
-      parts.push({
-        text: `[${displayText}](${entityName})`,
-        isHighlighted: true,
-      });
-
-      lastIndex = pattern.lastIndex;
-    }
-
-    // Add remaining text
-    if (lastIndex < defineText.length) {
-      parts.push({
-        text: defineText.substring(lastIndex),
-        isHighlighted: false,
-      });
-    }
-
-    return parts;
-  };
-
-  const renderDefine = () => {
-    if (!intent?.define) {
-      return <span className="text-muted-foreground">{t("No definition")}</span>;
-    }
-
-    const processed = processDefine(intent.define, intent.entities);
-
-    if (typeof processed === "string") {
-      return <pre className="text-sm whitespace-pre-wrap text-slate-100">{processed}</pre>;
-    }
-
-    return (
-      <pre className="text-sm whitespace-pre-wrap text-slate-100">
-        {processed.map((part, index) =>
-          part.isHighlighted ? (
-            <span
-              key={index}
-              className="bg-yellow-400 text-slate-900 px-1.5 py-0.5 rounded font-semibold"
-            >
-              {part.text}
-            </span>
-          ) : (
-            <span key={index}>{part.text}</span>
-          )
-        )}
-      </pre>
-    );
+    // Kept for potential entity reference display but no longer primary view
+    return defineText;
   };
 
   return (
@@ -253,15 +177,27 @@ export default function IntentDetailsDialog({
                 )}
               </div>
 
-              {/* Define (YAML) */}
+              {/* Examples */}
               <div className="surface-card-strong p-5">
                 <h3 className="flex items-center gap-2 text-sm font-bold text-foreground mb-3">
-                  <Code className="h-4 w-4 text-purple-600" />
-                  {t("Definition (YAML)")}
+                  <MessageSquare className="h-4 w-4 text-purple-600" />
+                  {t("Examples")}
+                  <Badge className="ml-auto bg-purple-100 text-purple-700 hover:bg-purple-200 text-xs">
+                    {intent.examples?.length || 0}
+                  </Badge>
                 </h3>
-                <div className="bg-slate-900 text-slate-100 p-5 rounded-lg overflow-x-auto font-mono text-sm shadow-inner">
-                  {renderDefine()}
-                </div>
+                {intent.examples && intent.examples.length > 0 ? (
+                  <div className="space-y-2">
+                    {intent.examples.map((example, index) => (
+                      <div key={example._id || index} className="flex items-start gap-2 p-2 bg-slate-50 dark:bg-slate-800 rounded border">
+                        <span className="text-xs text-slate-400 mt-0.5 w-6 flex-shrink-0">{index + 1}.</span>
+                        <span className="text-sm">{example.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted-foreground italic">{t("No examples")}</span>
+                )}
               </div>
 
               {/* Timestamps */}

@@ -66,6 +66,7 @@ export default {
     GET_ALL_PAGINATED: "/api/v1/intent",
     GET_BY_ID: (id: string) => `/api/v1/intent/${id}`,
     CREATE: "/api/v1/intent",
+    CREATE_FULL: "/api/v1/intent/create-full",
     UPDATE: (id: string) => `/api/v1/intent/${id}`,
     HARD_DELETE: (id: string) => `/api/v1/intent/${id}/hard`,
     SOFT_DELETE: (id: string) => `/api/v1/intent/${id}/soft`,
