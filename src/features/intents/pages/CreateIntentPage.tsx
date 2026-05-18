@@ -596,7 +596,7 @@ ${exampleLines || "    - example1"}`;
           </Button>
         )}
 
-        <div className="hidden">
+        <div>
           <Popover open={entitySearchOpen} onOpenChange={setEntitySearchOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" className="gap-2">

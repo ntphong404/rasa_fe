@@ -67,6 +67,7 @@ export interface NLPStatistics {
   totalActions: number;
   totalStories: number;
   totalResponses: number;
+  totalExamples: number;
   nlpComponents: {
     intents: {
       total: number;
@@ -93,6 +94,9 @@ export interface NLPStatistics {
       }>;
     };
     responses: {
+      total: number;
+    };
+    examples: {
       total: number;
     };
   };

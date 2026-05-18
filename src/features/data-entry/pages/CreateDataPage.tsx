@@ -13,7 +13,6 @@ import {
 import { toast } from "sonner";
 import { HelpCircle, X } from "lucide-react";
 import { intentService } from "@/features/intents/api/service";
-
 import { useChatbots } from "@/hooks/useChatbots";
 import { useChatbotStore } from "@/store/chatbot";
 import { useAuthStore } from "@/store/auth";
@@ -90,7 +89,6 @@ export function CreateDataPage() {
 
     const handleCancel = () => navigate("/");
 
-    // normalize intent name to lowercase_with_underscores
     function formatIntentName(input?: string) {
         if (!input) return "";
         const cleaned = input
@@ -101,47 +99,6 @@ export function CreateDataPage() {
             .replace(/_+/g, "_")
             .toLowerCase();
         return cleaned;
-    }
-
-    function buildRuleDefine(ruleName: string, steps: Array<{ intentId?: string; actionId?: string }>) {
-        const lines: string[] = [];
-        lines.push(`- rule: ${ruleName}`);
-        lines.push(`  steps:`);
-        steps.forEach((s) => {
-            if (s.intentId) {
-                lines.push(`  - intent: [${s.intentId}]`);
-            }
-            if (s.actionId) {
-                lines.push(`  - action: [${s.actionId}]`);
-            }
-        });
-        return lines.join("\n");
-    }
-
-    function buildIntentDefine(intentName: string, examplesArr: string[]) {
-        const examplesBlock = examplesArr.length
-            ? examplesArr.map((s) => `- ${s.trim()}`).join("\n")
-            : "";
-        const lines: string[] = [];
-        lines.push(`- intent: ${intentName}`);
-        lines.push(`  examples: |`);
-        if (examplesBlock) {
-            examplesBlock.split('\n').forEach((ln) => lines.push(`    ${ln}`));
-        }
-        return lines.join("\n");
-    }
-
-    function buildResponseDefine(responseName: string, responseText: string) {
-        // Convert escaped \n back to actual newlines for formatting
-        const unescapedText = responseText ? responseText.replace(/\\n/g, '\n') : "";
-        const textBlock = unescapedText ? unescapedText.trim().split('\n').map((ln) => `      ${ln}`).join('\n') : "";
-        const lines: string[] = [];
-        lines.push(`${responseName}:`);
-        lines.push(`  - text: |`);
-        if (textBlock) {
-            lines.push(textBlock);
-        }
-        return lines.join("\n");
     }
 
     const formattedIntent = useMemo(() => formatIntentName(intentName), [intentName]);
@@ -293,21 +250,19 @@ export function CreateDataPage() {
 
         setIsSubmitting(true);
         try {
+            // Use createFull API to create intent, response, and rule in one call
             const result = await intentService.createFull({
                 name: formattedIntent || formatIntentName(intentName.trim()),
                 description: "",
-                examples,
-                answer: responseText.trim(),
-                botIds: targetBotIds,
+                examples: examples,
+                answer: responseText.trim() || "",
                 label: label.trim() || undefined,
+                botIds: targetBotIds,
+                entities: [],
                 source: 'manual',
             });
 
-            if (result.duplicateExamples?.length > 0) {
-                toast.warning(t("Created with {{count}} duplicate examples", { count: result.duplicateExamples.length }));
-            } else {
-                toast.success(t("Data created successfully"));
-            }
+            toast.success(t("Data created successfully"));
             // Reset form after successful save
             setIntentName("");
             setInitialExample("");

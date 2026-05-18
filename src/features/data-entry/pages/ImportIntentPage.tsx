@@ -18,8 +18,6 @@ import { useChatbots } from "@/hooks/useChatbots";
 import { useAuthStore } from "@/store/auth";
 import { parseFile, formatIntentName, type ParsedRow, parseYAML, parseResponseYAML, mergeNLUWithResponses, type ResponseMap } from "../utils/fileParser";
 import { generateTemplate } from "../utils/templateGenerator";
-import { UnifiedQAImportTable, type UnifiedQARow } from "../components/UnifiedQAImportTable";
-import { useUnifiedQAConverter } from "../hooks/useUnifiedQAConverter";
 
 type Row = ParsedRow;
 
@@ -43,8 +41,23 @@ export function ImportIntentPage() {
     const [nluFile, setNluFile] = useState<File | null>(null); // For YAML mode
     const [domainFile, setDomainFile] = useState<File | null>(null); // For YAML mode
     const [isParsing, setIsParsing] = useState(false);
-    const [rows, setRows] = useState<UnifiedQARow[]>([]);
-    const { convertFromExcel } = useUnifiedQAConverter();
+    const [isImporting, setIsImporting] = useState(false);
+    const [rows, setRows] = useState<Row[]>([]);
+    const [selected, setSelected] = useState<Record<number, boolean>>({});
+    const [progress, setProgress] = useState({ done: 0, total: 0 });
+    const [editingRow, setEditingRow] = useState<number | null>(null);
+    const [editIntentName, setEditIntentName] = useState("");
+    const [editLabel, setEditLabel] = useState("");
+    const [editAnswer, setEditAnswer] = useState("");
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
+    const [editingExample, setEditingExample] = useState<{ rowIdx: number; exampleIdx: number } | null>(null);
+    const [editExampleText, setEditExampleText] = useState("");
+    const [generatingRowIdx, setGeneratingRowIdx] = useState<number | null>(null);
+    const [hasImported, setHasImported] = useState(false);
+    const [duplicateStrategy, setDuplicateStrategy] = useState<"skip" | "overwrite" | "fail">("overwrite");
+    const [commonImportLabel, setCommonImportLabel] = useState("");
+    const [labelPrefix, setLabelPrefix] = useState("");
     const inputRef = useRef<HTMLInputElement | null>(null);
     const nluInputRef = useRef<HTMLInputElement | null>(null);
     const domainInputRef = useRef<HTMLInputElement | null>(null);
@@ -109,16 +122,19 @@ export function ImportIntentPage() {
             // Merge NLU with responses
             const merged = mergeNLUWithResponses(parsedNLU, parsedResponses);
 
-            // Convert to UnifiedQARow format
-            const converted = merged.map((m: any, idx: number) => ({
-                id: `yaml_${idx}`,
-                question: m.intentName || "",
-                answer: m.responseContent || (m.response || ""),
-                examples: m.examples || [],
+            // Update response field from responseContent
+            const merged2 = merged.map(m => ({
+                ...m,
+                response: m.responseContent || (m.response || ""),
             }));
 
-            setRows(converted);
-            toast.success(t("Read intents successfully from files", { count: converted.length, nluName: nlu.name, domainName: domain.name }));
+            setRows(merged2);
+            // mark all selected by default
+            const sel: Record<number, boolean> = {};
+            merged2.forEach((_, i) => (sel[i] = true));
+            setSelected(sel);
+            setHasImported(false);
+            toast.success(t("Read intents successfully from files", { count: merged2.length, nluName: nlu.name, domainName: domain.name }));
         } catch (err) {
             console.error(err);
             const errorMessage = err instanceof Error ? err.message : t("Unable to read file");
@@ -130,27 +146,21 @@ export function ImportIntentPage() {
         }
     };
 
-    function buildRuleDefine(ruleName: string, steps: Array<{ intentId?: string; actionId?: string }>) {
-        const lines: string[] = [];
-        lines.push(`- rule: ${ruleName}`);
-        lines.push(`  steps:`);
-        steps.forEach((s) => {
-            if (s.intentId) lines.push(`  - intent: [${s.intentId}]`);
-            if (s.actionId) lines.push(`  - action: [${s.actionId}]`);
-        });
-        return lines.join("\n");
-    }
-
     const handleParseFile = async (f: File) => {
         setFile(f);
         setIsParsing(true);
         try {
             const parsed = await parseFile(f);
-            const converted = convertFromExcel(parsed);
 
-            setRows(converted);
+            setRows(parsed);
+            // mark all selected by default
+            const sel: Record<number, boolean> = {};
+            parsed.forEach((_, i) => (sel[i] = true));
+            setSelected(sel);
+            setHasImported(false);
+            // Hide file upload area after successful parse
             setFile(null);
-            toast.success(t("Read rows successfully from file", { count: converted.length, fileName: f.name }));
+            toast.success(t("Read rows successfully from file", { count: parsed.length, fileName: f.name }));
         } catch (err) {
             console.error(err);
             const errorMessage = err instanceof Error ? err.message : t("Unable to read file");
@@ -211,10 +221,37 @@ export function ImportIntentPage() {
         setExpandedRows((prev) => ({ ...prev, [index]: !prev[index] }));
     };
 
+    const generateNameFromLabel = (label: string): string => {
+        return formatIntentName(label);
+    };
+
+    const applyLabelPrefixToAllRows = (prefix: string) => {
+        if (!prefix.trim()) {
+            return toast.error(t("Please enter a label prefix"));
+        }
+        
+        const formattedPrefix = formatIntentName(prefix);
+        if (!formattedPrefix) {
+            return toast.error(t("Could not generate name from label. Try another label."));
+        }
+
+        setRows((prev) => {
+            const updated = prev.map((row, index) => ({
+                ...row,
+                name: `${formattedPrefix}_${index + 1}`,
+                label: prefix.trim(),
+            }));
+            return updated;
+        });
+
+        toast.success(t("Applied label prefix to all intents: {{prefix}}", { prefix: formattedPrefix }));
+    };
+
     const handleEditRow = (index: number) => {
         const row = rows[index];
         setEditingRow(index);
         setEditIntentName(row.name || "");
+        setEditLabel(row.label || "");
         setEditAnswer(row.response || "");
     };
 
@@ -233,6 +270,7 @@ export function ImportIntentPage() {
             updated[index] = {
                 ...updated[index],
                 name: newName,
+                label: editLabel.trim(),
                 response: editAnswer.trim(),
             };
             return updated;
@@ -241,8 +279,23 @@ export function ImportIntentPage() {
         toast.success(t("Updated successfully"));
     };
 
+    const handleGenerateNameFromLabel = () => {
+        if (!editLabel.trim()) {
+            return toast.error(t("Please enter a label first"));
+        }
+        const generatedName = generateNameFromLabel(editLabel);
+        if (!generatedName) {
+            return toast.error(t("Could not generate name from label. Try another label."));
+        }
+        setEditIntentName(generatedName);
+        toast.success(t("Generated name from label: {{name}}", { name: generatedName }));
+    };
+
     const handleCancelEdit = () => {
         setEditingRow(null);
+        setEditIntentName("");
+        setEditLabel("");
+        setEditAnswer("");
     };
 
     const handleDeleteRow = (index: number) => {
@@ -415,42 +468,10 @@ export function ImportIntentPage() {
         }
     };
 
-    function buildIntentDefine(intentName: string, examplesArr: string[]) {
-        const examplesBlock = examplesArr.length
-            ? examplesArr.map((s) => `- ${s.trim()}`).join("\n")
-            : "";
-        const lines: string[] = [];
-        lines.push(`- intent: ${intentName}`);
-        lines.push(`  examples: |`);
-        if (examplesBlock) {
-            examplesBlock.split('\n').forEach((ln) => lines.push(`    ${ln}`));
-        }
-        return lines.join("\n");
-    }
-
-    function buildResponseDefine(responseName: string, responseText: string) {
-        // Convert escaped \n back to actual newlines for formatting
-        const unescapedText = responseText ? responseText.replace(/\\n/g, '\n') : "";
-        const textBlock = unescapedText ? unescapedText.trim().split('\n').map((ln) => `      ${ln}`).join('\n') : "";
-        const lines: string[] = [];
-        lines.push(`${responseName}:`);
-        lines.push(`  - text: |`);
-        if (textBlock) {
-            lines.push(textBlock);
-        }
-        return lines.join("\n");
-    }
-
     const isDuplicateKeyError = (err: any) => {
         const msg = err?.response?.data?.message || err?.message || "";
         return /E11000\s+duplicate key error/i.test(String(msg));
     };
-
-    const normalizeForCompare = (input?: string) =>
-        String(input || "")
-            .replace(/\r\n/g, "\n")
-            .replace(/[ \t]+/g, " ")
-            .trim();
 
     const formatImportError = (err: any, row: Row) => {
         const raw = String(err?.response?.data?.message || err?.message || t("Unknown error"));
@@ -502,40 +523,6 @@ export function ImportIntentPage() {
         return t("Cannot import this row. Please check data and try again.");
     };
 
-    const findExistingIntentByName = async (name: string, botId: string) => {
-        const limit = 100;
-        let page = 1;
-        let totalPages = 1;
-
-        while (page <= totalPages && page <= 20) {
-            const res = await intentService.fetchIntents({ page, limit, search: name, botId });
-            const found = (res.data || []).find((it: any) => it?.name === name);
-            if (found) return found;
-
-            totalPages = res.meta?.totalPages || 1;
-            page += 1;
-        }
-
-        return null;
-    };
-
-    const findExistingResponseByName = async (name: string, botId: string) => {
-        const limit = 100;
-        let page = 1;
-        let totalPages = 1;
-
-        while (page <= totalPages && page <= 20) {
-            const query = `page=${page}&limit=${limit}&search=${encodeURIComponent(name)}&botId=${encodeURIComponent(botId)}`;
-            const res = await responseService.fetchResponses(query);
-            const found = (res.data || []).find((it: any) => it?.name === name);
-            if (found) return found;
-
-            totalPages = res.meta?.totalPages || 1;
-            page += 1;
-        }
-
-        return null;
-    };
 
     const handleImport = async () => {
         const importBotIds = isManager
@@ -622,13 +609,16 @@ export function ImportIntentPage() {
             }
 
             const row = rows[i];
-            const formattedName = row.name;
-            const resolvedLabel = importMode === "yaml"
-                ? (sharedLabel || undefined)
-                : (row.label?.trim() || undefined);
-            const examplesArr: string[] = row.examples.filter(ex => ex.trim());
-
             try {
+                const formattedName = row.name;
+                const resolvedLabel = importMode === "yaml"
+                    ? (sharedLabel || undefined)
+                    : (row.label?.trim() || undefined);
+                // Use all examples from the row
+                const examplesArr: string[] = row.examples.filter(ex => ex.trim());
+
+                // Create using the new createFull API
+                // This API creates intent, response, rule, and examples all at once
                 const result = await intentService.createFull({
                     name: formattedName,
                     description: "",
@@ -636,25 +626,17 @@ export function ImportIntentPage() {
                     answer: row.response?.trim() || "",
                     botIds: importBotIds,
                     label: resolvedLabel,
-                    source: importMode === 'yaml' ? 'excel' : 'excel',
+                    entities: [],
+                    source: importMode === 'excel' ? 'excel' : 'manual',
                 });
 
-                if (result.duplicateExamples?.length > 0) {
-                    // Mark as success but note duplicates
-                    setRows((prev) => {
-                        const updated = [...prev];
-                        updated[i] = { ...updated[i], status: 'success', error: undefined };
-                        return updated;
-                    });
-                    successCount++;
-                } else {
-                    setRows((prev) => {
-                        const updated = [...prev];
-                        updated[i] = { ...updated[i], status: 'success', error: undefined };
-                        return updated;
-                    });
-                    successCount++;
-                }
+                // Mark as success
+                setRows((prev) => {
+                    const updated = [...prev];
+                    updated[i] = { ...updated[i], status: 'success', error: undefined };
+                    return updated;
+                });
+                successCount++;
             } catch (err: any) {
                 // Check for 429 Too Many Requests immediately and stop import
                 if (isRateLimitError(err)) {
@@ -677,6 +659,8 @@ export function ImportIntentPage() {
             setProgress((p) => ({ ...p, done: p.done + 1 }));
         }
 
+        setIsImporting(false);
+
         if (failCount === 0) {
             toast.success(t("Imported rows successfully", { count: successCount }));
             // Stay on current import mode and reset form for next import batch.
@@ -691,6 +675,7 @@ export function ImportIntentPage() {
             setNluFile(null);
             setDomainFile(null);
             setCommonImportLabel("");
+            setLabelPrefix("");
         } else {
             toast.error(t("Import result: {{success}} succeeded, {{failed}} failed. Please check errors below.", { success: successCount, failed: failCount }));
         }
@@ -999,17 +984,384 @@ export function ImportIntentPage() {
                     )}
 
                     {rows.length > 0 && (
-                        <UnifiedQAImportTable
-                            rows={rows}
-                            onChange={setRows}
-                            onClear={() => {
-                                setRows([]);
-                                setFile(null);
-                                setNluFile(null);
-                                setDomainFile(null);
-                            }}
-                            botIds={selectedImportBotIds}
-                        />
+                        <div className="surface-card-strong flex h-full flex-col rounded-lg border border-indigo-100 dark:border-white/15">
+                            <div className="flex items-center justify-between px-3 py-3 border-b bg-gradient-to-r from-indigo-50 to-purple-50 flex-shrink-0 dark:border-white/10 dark:from-slate-950 dark:to-black">
+                                <div className="flex items-center gap-2">
+                                    <Database className="h-4 w-4 text-indigo-600" />
+                                    <div>
+                                        <div className="font-semibold text-base text-indigo-900">{t("Data preview")}</div>
+                                        <div className="text-xs text-indigo-600">{t("Question groups count: {{count}}", { count: rows.length })}</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    {progress.total > 0 && (
+                                        <div className="rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-sm font-medium text-indigo-700 dark:border-indigo-400/40 dark:bg-slate-900 dark:text-indigo-300">
+                                            {t("Progress")}: {progress.done}/{progress.total}
+                                        </div>
+                                    )}
+                                    <Button
+                                        onClick={handleGenerateIntents}
+                                        disabled={isGenerating || rows.length === 0}
+                                        variant="outline"
+                                        size="sm"
+                                        className="gap-2 border-indigo-300 hover:bg-indigo-50"
+                                    >
+                                        <Sparkles className="h-4 w-4" />
+                                        {isGenerating ? t("Generating...") : t("Generate more question groups")}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Label Prefix Section */}
+                            {rows.length > 0 && (
+                                <div className="border-b bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-900 px-4 py-3">
+                                    <div className="space-y-2">
+                                        <div className="flex gap-3 items-end">
+                                            <label className="text-sm font-medium text-slate-700 dark:text-slate-200 w-40 flex-shrink-0">
+                                                {t("label_prefix")}
+                                            </label>
+                                            <div className="w-64">
+                                                <Input
+                                                    value={labelPrefix}
+                                                    onChange={(e) => setLabelPrefix(e.target.value)}
+                                                    placeholder={t("label_prefix_placeholder")}
+                                                    className="text-sm h-9"
+                                                />
+                                            </div>
+                                            <Button
+                                                size="sm"
+                                                onClick={() => applyLabelPrefixToAllRows(labelPrefix)}
+                                                disabled={!labelPrefix.trim()}
+                                                className="gap-2 h-9"
+                                            >
+                                                <Sparkles className="h-4 w-4" />
+                                                {t("apply_label")}
+                                            </Button>
+                                            <p className="text-xs text-slate-500 ml-auto">
+                                                {t("label_preview_text", {
+                                                    prefix: labelPrefix || "label",
+                                                    count: rows.length,
+                                                })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="overflow-auto flex-1 border-t">
+                            <table className="w-full text-left table-fixed">
+                                <thead className="bg-gradient-to-r from-slate-50 to-slate-100 sticky top-0 border-b dark:border-white/10 dark:from-slate-900 dark:to-slate-900">
+                                    <tr>
+                                        <th className="px-4 py-3 w-12 text-xs font-semibold text-slate-600 uppercase">#</th>
+                                        <th className="px-4 py-3 w-16 text-xs font-semibold text-slate-600 uppercase">{t("Select")}</th>
+                                        <th className="px-4 py-3 w-80 text-xs font-semibold text-slate-600 uppercase">{t("Question group name")}</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-slate-600 uppercase">{t("Answer")}</th>
+                                        <th className="px-4 py-3 w-32 text-xs font-semibold text-slate-600 uppercase">{t("Actions")}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {rows.map((r, i) => {
+                                        const isSuccess = r.status === 'success';
+                                        const isError = r.status === 'error';
+                                        const hasValidationError = !!r.validationError;
+                                        const rowClasses = isSuccess
+                                            ? "opacity-50 bg-slate-100"
+                                            : (isError || hasValidationError)
+                                                ? "bg-red-100"
+                                                : (i % 2 === 0 ? "bg-indigo-100/60 dark:bg-indigo-950/30" : "bg-white dark:bg-slate-900");
+
+                                        return (
+                                            <>
+                                                <tr key={i} className={`${rowClasses} border-b`}>
+                                                    <td className="px-4 py-2 align-top">{i + 1}</td>
+                                                    <td className="px-4 py-2 align-top">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="accent-indigo-600"
+                                                            checked={!!selected[i]}
+                                                            onChange={() => handleToggle(i)}
+                                                            disabled={isSuccess}
+                                                        />
+                                                    </td>
+                                                    {editingRow === i && !isSuccess ? (
+                                                        <>
+                                                            <td className="px-4 py-2 align-top">
+                                                                <div className="space-y-3">
+                                                                    <div>
+                                                                        <label className="text-xs text-slate-500 block mb-1">{t("Label (for auto-generating name)")}:</label>
+                                                                        <div className="flex gap-2">
+                                                                            <Input
+                                                                                value={editLabel}
+                                                                                onChange={(e) => setEditLabel(e.target.value)}
+                                                                                className="w-full text-sm"
+                                                                                placeholder={t("e.g., tuyen_sinh_2024")}
+                                                                            />
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="outline"
+                                                                                onClick={handleGenerateNameFromLabel}
+                                                                                className="whitespace-nowrap text-xs"
+                                                                                title={t("Auto-generate name from label")}
+                                                                            >
+                                                                                {t("Generate")}
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="text-xs text-slate-500 block mb-1">{t("Question group name")}:</label>
+                                                                        <Input
+                                                                            value={editIntentName}
+                                                                            onChange={(e) => setEditIntentName(e.target.value)}
+                                                                            className="w-full font-mono text-sm"
+                                                                            placeholder={t("question_group_name")}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-2 align-top">
+                                                                <Textarea
+                                                                    value={editAnswer}
+                                                                    onChange={(e) => setEditAnswer(e.target.value)}
+                                                                    className="w-full min-h-[80px]"
+                                                                    placeholder={t("Enter answer...")}
+                                                                />
+                                                            </td>
+                                                            <td className="px-4 py-2 align-top">
+                                                                <div className="flex gap-1">
+                                                                    <Button
+                                                                        size="sm"
+                                                                        onClick={() => handleSaveRow(i)}
+                                                                        className="h-8 w-8 p-0"
+                                                                    >
+                                                                        <Save className="h-4 w-4" />
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        onClick={handleCancelEdit}
+                                                                        className="h-8 w-8 p-0"
+                                                                    >
+                                                                        <X className="h-4 w-4" />
+                                                                    </Button>
+                                                                </div>
+                                                            </td>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <td className="px-4 py-2 align-top">
+                                                                <div className="flex items-start gap-2">
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        onClick={() => toggleExpandRow(i)}
+                                                                        className="h-6 w-6 p-0 flex-shrink-0"
+                                                                        disabled={isSuccess}
+                                                                    >
+                                                                        {expandedRows[i] ? (
+                                                                            <ChevronDown className="h-4 w-4" />
+                                                                        ) : (
+                                                                            <ChevronRight className="h-4 w-4" />
+                                                                        )}
+                                                                    </Button>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="font-medium text-sm font-mono text-indigo-700 truncate" title={r.name}>{r.name}</div>
+                                                                        {r.label && (
+                                                                            <div className="text-xs text-blue-600 dark:text-blue-400 mt-0.5 truncate" title={r.label}>
+                                                                                {t("Label")}: {r.label}
+                                                                            </div>
+                                                                        )}
+                                                                        <div className="text-xs text-slate-400 mt-1">
+                                                                            {t("Questions count: {{count}}", { count: r.examples.length })}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-2 align-top">
+                                                                <div className="text-sm text-slate-600 line-clamp-2 break-words" title={r.response}>
+                                                                    {r.response}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-2 align-top">
+                                                                <div className="flex gap-1 items-center">
+                                                                    {isSuccess ? (
+                                                                        <span className="text-green-600 text-sm font-medium">{t("Saved")}</span>
+                                                                    ) : (
+                                                                        <>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="ghost"
+                                                                                onClick={() => handleEditRow(i)}
+                                                                                className="h-8 w-8 p-0"
+                                                                                title={t("Edit question group")}
+                                                                            >
+                                                                                <Pencil className="h-3 w-3" />
+                                                                            </Button>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="ghost"
+                                                                                onClick={() => handleGenerateExamplesForRow(i)}
+                                                                                disabled={generatingRowIdx === i}
+                                                                                className="h-8 w-8 p-0"
+                                                                                title={t("Generate more questions")}
+                                                                            >
+                                                                                <Sparkles className="h-3 w-3" />
+                                                                            </Button>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="ghost"
+                                                                                onClick={() => handleDeleteRow(i)}
+                                                                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                                                                title={t("Delete question group")}
+                                                                            >
+                                                                                <X className="h-3 w-3" />
+                                                                            </Button>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </>
+                                                    )}
+                                                </tr>
+                                                {expandedRows[i] && !isSuccess && (
+                                                    <tr key={`${i}-examples`} className={rowClasses}>
+                                                        <td colSpan={5} className="px-2 py-2">
+                                                            <div className="ml-8 rounded-lg border border-indigo-200 bg-slate-50/50 p-2 pl-3 dark:border-indigo-400/30 dark:bg-slate-900/70">
+                                                                <div className="font-medium text-sm mb-2 text-indigo-700">
+                                                                    {t("Similar questions")}:
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    {r.examples.map((ex, exIdx) => (
+                                                                        <div key={exIdx} className={`group flex items-start gap-2 rounded border border-slate-300 p-2 transition-colors hover:border-indigo-400 dark:border-white/15 ${i % 2 === 0 ? 'bg-indigo-50/50 dark:bg-indigo-950/20' : 'bg-white dark:bg-slate-900'}`}>
+                                                                            <span className="text-xs text-slate-400 mt-0.5 w-6 flex-shrink-0">{exIdx + 1}.</span>
+                                                                            {editingExample?.rowIdx === i && editingExample?.exampleIdx === exIdx ? (
+                                                                                <div className="flex-1 flex gap-2">
+                                                                                    <Input
+                                                                                        value={editExampleText}
+                                                                                        onChange={(e) => setEditExampleText(e.target.value)}
+                                                                                        className="flex-1"
+                                                                                        autoFocus
+                                                                                    />
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        onClick={handleSaveExample}
+                                                                                        className="h-8"
+                                                                                    >
+                                                                                        <Save className="h-3 w-3" />
+                                                                                    </Button>
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="ghost"
+                                                                                        onClick={handleCancelEditExample}
+                                                                                        className="h-8"
+                                                                                    >
+                                                                                        <X className="h-3 w-3" />
+                                                                                    </Button>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <span className="flex-1 text-sm">{ex}</span>
+                                                                                    <div className="opacity-0 group-hover:opacity-100 flex gap-1 flex-shrink-0">
+                                                                                        <Button
+                                                                                            size="sm"
+                                                                                            variant="ghost"
+                                                                                            onClick={() => handleEditExample(i, exIdx)}
+                                                                                            className="h-6 w-6 p-0"
+                                                                                        >
+                                                                                            <Pencil className="h-3 w-3" />
+                                                                                        </Button>
+                                                                                        {r.examples.length > 1 && (
+                                                                                            <Button
+                                                                                                size="sm"
+                                                                                                variant="ghost"
+                                                                                                onClick={() => handleDeleteExample(i, exIdx)}
+                                                                                                className="h-6 w-6 p-0 text-red-600"
+                                                                                            >
+                                                                                                <X className="h-3 w-3" />
+                                                                                            </Button>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                                {isError && r.error && (
+                                                    <tr key={`${i}-error`} className="bg-red-50">
+                                                        <td colSpan={5} className="px-4 py-2">
+                                                            <div className="text-red-600 text-sm">
+                                                                <strong>{t("Error")}:</strong> {r.error}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                                {hasValidationError && r.validationError && (
+                                                    <tr key={`${i}-validation`} className="bg-red-50">
+                                                        <td colSpan={5} className="px-4 py-2">
+                                                            <div className="text-red-600 text-sm flex items-center gap-2">
+                                                                <strong>{t("Validation")}:</strong> {r.validationError}
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => handleGenerateExamplesForRow(i)}
+                                                                    disabled={generatingRowIdx === i}
+                                                                    className="h-6 text-xs"
+                                                                >
+                                                                    <Sparkles className="h-3 w-3 mr-1" />
+                                                                    {t("Generate more questions")}
+                                                                </Button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                            <div className="flex flex-shrink-0 gap-3 border-t bg-gray-50 px-3 py-3 dark:border-white/10 dark:bg-slate-900/70">
+                                <div className="flex items-center gap-2 rounded border bg-white px-3 py-1.5 dark:bg-slate-900">
+                                    <span className="text-sm text-slate-600 dark:text-slate-300">{t("Duplicate handling")}</span>
+                                    <select
+                                        className="text-sm border rounded px-2 py-1 bg-white dark:bg-slate-900"
+                                        value={duplicateStrategy}
+                                        onChange={(e) => setDuplicateStrategy(e.target.value as "skip" | "overwrite" | "fail")}
+                                        disabled={isImporting}
+                                    >
+                                        <option value="overwrite">{t("Overwrite if content differs")}</option>
+                                        <option value="skip">{t("Skip duplicates")}</option>
+                                        <option value="fail">{t("Stop and report duplicates")}</option>
+                                    </select>
+                                </div>
+                                <Button 
+                                    onClick={handleImport} 
+                                    disabled={isImporting} 
+                                    className="bg-indigo-600 text-white hover:bg-indigo-700 gap-2"
+                                >
+                                    <Database className="h-4 w-4" />
+                                    {isImporting ? t("Importing...") : t("Import selected data")}
+                                </Button>
+                                {hasImported && rows.some(r => r.status === 'error') && (
+                                    <Button onClick={handleRetryFailed} variant="outline" disabled={isImporting} className="gap-2">
+                                        <Sparkles className="h-4 w-4" />
+                                        {t("Retry failed rows")}
+                                    </Button>
+                                )}
+                                <Button 
+                                    variant="ghost" 
+                                    onClick={() => { setRows([]); setFile(null); setSelected({}); setHasImported(false); setCommonImportLabel(""); setLabelPrefix(""); }}
+                                    className="gap-2"
+                                >
+                                    <X className="h-4 w-4" />
+                                    {t("Cancel / Clear all")}
+                                </Button>
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>

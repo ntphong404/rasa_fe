@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
@@ -39,26 +40,49 @@ const toSnakeCase = (value: string) =>
     .replace(/_+/g, "_")
     .replace(/^_+|_+$/g, "");
 
-const buildSlotDefine = (name: string, entityId: string, intentId: string, actionId: string) => {
-  const slotName = toSnakeCase(name) || "slot_name";
-  const lines = [`- slot: ${slotName}`];
+const SLOT_TYPES = ["text", "bool", "categorical", "float", "list", "any"] as const;
 
-  if (entityId || intentId || actionId) {
-    lines.push("  mappings:");
-    if (entityId) {
-      lines.push("    - type: from_entity");
-      lines.push(`      entity: [${entityId}]`);
+const buildSlotDefine = (
+  name: string,
+  slotType: string,
+  influenceConversation: boolean,
+  entityId: string,
+  intentId: string,
+  intentValue: string,
+  actionId: string,
+  categoricalValues: string,
+) => {
+  const slotName = toSnakeCase(name) || "slot_name";
+  const lines = [`  ${slotName}:`];
+  lines.push(`    type: ${slotType}`);
+
+  if (slotType === "categorical" && categoricalValues.trim()) {
+    const vals = categoricalValues.split(",").map((v) => v.trim()).filter(Boolean);
+    if (vals.length > 0) {
+      lines.push(`    values:`);
+      vals.forEach((v) => lines.push(`      - ${v}`));
     }
-    if (intentId) {
-      lines.push("    - type: from_intent");
-      lines.push(`      intent: [${intentId}]`);
-    }
-    if (actionId) {
-      lines.push("    - type: from_action");
-      lines.push(`      action: [${actionId}]`);
-    }
+  }
+
+  lines.push(`    influence_conversation: ${influenceConversation}`);
+
+  const mappings: string[] = [];
+  if (entityId) {
+    mappings.push(`      - type: from_entity\n        entity: [${entityId}]`);
+  }
+  if (intentId) {
+    const valPart = intentValue.trim() ? `\n        value: "${intentValue.trim()}"` : "";
+    mappings.push(`      - type: from_intent\n        intent: [${intentId}]${valPart}`);
+  }
+  if (actionId) {
+    mappings.push(`      - type: custom`);
+  }
+
+  if (mappings.length > 0) {
+    lines.push(`    mappings:`);
+    lines.push(mappings.join("\n"));
   } else {
-    lines.push("  mappings: []");
+    lines.push(`    mappings: []`);
   }
 
   return lines.join("\n");
@@ -77,6 +101,10 @@ export function EditSlotPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [define, setDefine] = useState("");
+  const [slotType, setSlotType] = useState<string>("text");
+  const [influenceConversation, setInfluenceConversation] = useState(true);
+  const [intentValue, setIntentValue] = useState("");
+  const [categoricalValues, setCategoricalValues] = useState("");
   const [botIds, setBotIds] = useState<string[]>([]);
   const [entityId, setEntityId] = useState("");
   const [intentId, setIntentId] = useState("");
@@ -120,6 +148,26 @@ export function EditSlotPage() {
     setIntentId(slotData.intent || "");
     setActionId(slotData.action || "");
     setRolesText((slotData.roles || []).join(", "));
+
+    // Parse slot type and influence_conversation from existing define
+    const existingDefine = slotData.define || "";
+    const typeMatch = existingDefine.match(/type:\s*(\w+)/);
+    if (typeMatch) {
+      setSlotType(typeMatch[1]);
+    }
+    const influenceMatch = existingDefine.match(/influence_conversation:\s*(true|false)/);
+    if (influenceMatch) {
+      setInfluenceConversation(influenceMatch[1] === "true");
+    }
+    const valueMatch = existingDefine.match(/value:\s*"([^"]*)"/);
+    if (valueMatch) {
+      setIntentValue(valueMatch[1]);
+    }
+    const catMatch = existingDefine.match(/values:\s*\n((?:\s+- .+\n?)+)/);
+    if (catMatch && typeMatch?.[1] === "categorical") {
+      const vals = catMatch[1].split("\n").map((l: string) => l.replace(/^\s+-\s*/, "").trim()).filter(Boolean);
+      setCategoricalValues(vals.join(", "));
+    }
   }, [navigate, slotData, t]);
 
   useEffect(() => {
@@ -219,8 +267,8 @@ export function EditSlotPage() {
   }, [actionSearch]);
 
   useEffect(() => {
-    setDefine(buildSlotDefine(name, entityId, intentId, actionId));
-  }, [name, entityId, intentId, actionId]);
+    setDefine(buildSlotDefine(name, slotType, influenceConversation, entityId, intentId, intentValue, actionId, categoricalValues));
+  }, [name, slotType, influenceConversation, entityId, intentId, intentValue, actionId, categoricalValues]);
 
   useEffect(() => {
     if (!slotData || slotData.botIds?.length) return;
@@ -351,9 +399,46 @@ export function EditSlotPage() {
           <Textarea id="slot-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder={t("slotpage-description-placeholder")} />
         </div>
 
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label>{t("Slot Type")} *</Label>
+            <Select value={slotType} onValueChange={setSlotType}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("Select slot type")} />
+              </SelectTrigger>
+              <SelectContent>
+                {SLOT_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2 flex items-center gap-3 pt-6">
+            <Checkbox
+              id="influence-conversation"
+              checked={influenceConversation}
+              onCheckedChange={(checked) => setInfluenceConversation(checked === true)}
+            />
+            <Label htmlFor="influence-conversation">{t("Influence conversation")}</Label>
+          </div>
+        </div>
+
+        {slotType === "categorical" && (
+          <div className="space-y-2">
+            <Label>{t("Categorical Values")}</Label>
+            <Input
+              value={categoricalValues}
+              onChange={(e) => setCategoricalValues(e.target.value)}
+              placeholder={t("e.g. high, medium, low")}
+            />
+            <p className="text-xs text-muted-foreground">{t("Comma-separated values")}</p>
+          </div>
+        )}
+
         <div className="space-y-2">
           <Label htmlFor="slot-define">{t("slotpage-define-label")} *</Label>
-          <Textarea id="slot-define" value={define} readOnly rows={8} className="font-mono text-sm bg-muted/30" placeholder={t("slotpage-define-placeholder")} />
+          <Textarea id="slot-define" value={define} onChange={(e) => setDefine(e.target.value)} rows={10} className="font-mono text-sm" placeholder={t("slotpage-define-placeholder")} />
+          <p className="text-xs text-muted-foreground">{t("Auto-generated. Edit manually if needed.")}</p>
         </div>
 
         <div className="space-y-3 rounded-lg border p-4">
@@ -447,6 +532,17 @@ export function EditSlotPage() {
               </PopoverContent>
             </Popover>
           </div>
+          {intentId && (
+            <div className="space-y-2">
+              <Label>{t("Intent Value")}</Label>
+              <Input
+                value={intentValue}
+                onChange={(e) => setIntentValue(e.target.value)}
+                placeholder={t("Value to set when intent matched")}
+              />
+              <p className="text-xs text-muted-foreground">{t("Required for from_intent mapping")}</p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label>{t("slotpage-action-id-label")}</Label>
             <Popover open={actionOpen} onOpenChange={setActionOpen}>

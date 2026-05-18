@@ -64,4 +64,6 @@ export interface ExtractionRow {
   parsedIntent?: string | null;
   isFallback?: boolean;
   existingIntentId?: string | null;
+  label?: string;
+  generatedExamples?: string[];
 }

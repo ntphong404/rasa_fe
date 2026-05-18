@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/popover";
 import { ArrowLeft, FileCode, Search, X, AlertCircle, Eye, Plus, Code2, FormInput } from "lucide-react";
 import { intentService } from "../api/service";
+import { entityService } from "@/features/entity/api/service";
 import { IEntity } from "@/interfaces/entity.interface";
 import { useChatbotStore } from "@/store/chatbot";
 import { toast } from "sonner";
@@ -57,6 +58,10 @@ export function EditIntentPage() {
   
   // Normal mode examples
   const [examples, setExamples] = useState<string[]>(["", ""]);
+
+  // Track focused input in Normal Mode
+  const [focusedExampleIndex, setFocusedExampleIndex] = useState<number | null>(null);
+  const exampleInputRefs = useRef<(HTMLInputElement | undefined)[]>([]);
 
   // Helper function to convert to snake_case
   const toSnakeCase = (str: string): string => {
@@ -108,11 +113,23 @@ export function EditIntentPage() {
     setName(intentData.name || "");
     setDescription(intentData.description || "");
     setLabel(intentData.label || null);
-    setSelectedEntities(intentData.entities || []);
 
     // Load examples from populated examples array
     if (intentData.examples && Array.isArray(intentData.examples)) {
       setExamples(intentData.examples.map((e: any) => e.text || ""));
+    }
+
+    // Fetch full entity details from ObjectId strings
+    const entityIds: string[] = intentData.entities || [];
+    if (entityIds.length > 0) {
+      Promise.all(
+        entityIds.map((id: string) =>
+          entityService.getEntityById(id).catch(() => null)
+        )
+      ).then((results) => {
+        const validEntities = results.filter((e): e is IEntity => e !== null);
+        setSelectedEntities(validEntities);
+      });
     }
   }, [intentData, navigate, t]);
 
@@ -189,8 +206,8 @@ ${exampleLines || "    - example1"}`;
     setIsExpertMode(toExpertMode);
   };
 
-  // Insert entity pattern at cursor position
-  const insertEntityPattern = (entity: IEntity) => {
+  // Insert entity pattern at cursor position (Expert Mode)
+  const insertEntityPatternExpert = (entity: IEntity) => {
     if (textareaRef.current) {
       const textarea = textareaRef.current;
       const cursorPos = textarea.selectionStart;
@@ -200,7 +217,6 @@ ${exampleLines || "    - example1"}`;
 
       setYamlDefine(textBefore + pattern + textAfter);
 
-      // Set cursor after inserted text
       setTimeout(() => {
         textarea.focus();
         textarea.setSelectionRange(
@@ -211,16 +227,53 @@ ${exampleLines || "    - example1"}`;
     }
   };
 
+  // Insert entity pattern into focused input (Normal Mode)
+  const insertEntityPatternNormal = (entity: IEntity) => {
+    let targetIndex = focusedExampleIndex;
+
+    if (targetIndex === null) {
+      for (let i = examples.length - 1; i >= 0; i--) {
+        if (examples[i].trim()) {
+          targetIndex = i;
+          break;
+        }
+      }
+      targetIndex = targetIndex ?? examples.length - 1;
+    }
+
+    const input = exampleInputRefs.current[targetIndex];
+    if (!input) return;
+
+    const pattern = `[enter_value]([${entity._id}])`;
+    const cursorPos = input.selectionStart || 0;
+    const textBefore = examples[targetIndex]?.substring(0, cursorPos) || "";
+    const textAfter = examples[targetIndex]?.substring(cursorPos) || "";
+
+    handleUpdateExample(targetIndex, textBefore + pattern + textAfter);
+
+    setTimeout(() => {
+      input.focus();
+      input.setSelectionRange(
+        cursorPos + pattern.length,
+        cursorPos + pattern.length
+      );
+    }, 0);
+  };
+
   // Add entity
   const handleAddEntity = (entity: IEntity) => {
-    // Check if already selected
     if (selectedEntities.find((e) => e._id === entity._id)) {
       toast.warning(t("Entity already selected"));
       return;
     }
 
     setSelectedEntities([...selectedEntities, entity]);
-    insertEntityPattern(entity);
+
+    if (isExpertMode) {
+      insertEntityPatternExpert(entity);
+    } else {
+      insertEntityPatternNormal(entity);
+    }
 
     setEntitySearchOpen(false);
     setEntitySearchQuery("");
@@ -228,7 +281,11 @@ ${exampleLines || "    - example1"}`;
 
   // Click on selected entity to insert pattern again
   const handleEntityClick = (entity: IEntity) => {
-    insertEntityPattern(entity);
+    if (isExpertMode) {
+      insertEntityPatternExpert(entity);
+    } else {
+      insertEntityPatternNormal(entity);
+    }
   };
 
   // Remove entity
@@ -338,7 +395,9 @@ ${exampleLines || "    - example1"}`;
         label: label || undefined,
         description: description.trim(),
         examples: allExamples,
-        entities: selectedEntities.map((e) => e._id),
+        entities: selectedEntities.map((e) =>
+          typeof e === "string" ? e : e._id
+        ),
         roles: intentData.roles || [],
       });
 
@@ -549,8 +608,13 @@ ${exampleLines || "    - example1"}`;
               {examples.map((example, index) => (
                 <div key={index} className="flex gap-2">
                   <Input
+                    ref={(el) => {
+                      if (el) exampleInputRefs.current[index] = el;
+                    }}
                     value={example}
                     onChange={(e) => handleUpdateExample(index, e.target.value)}
+                    onFocus={() => setFocusedExampleIndex(index)}
+                    onBlur={() => setFocusedExampleIndex(null)}
                     placeholder={t("Enter example phrase")}
                     className="flex-1"
                   />

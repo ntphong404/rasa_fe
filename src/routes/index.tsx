@@ -17,7 +17,7 @@ const ForgotPasswordPage = lazy(() => import("@/features/auth/pages/ForgotPasswo
 const ResetPasswordPage = lazy(() => import("@/features/auth/pages/ResetPasswordPage").then((module) => ({ default: module.ResetPasswordPage })));
 
 const RoleManagement = lazy(() => import("@/features/roles").then((module) => ({ default: module.RoleManagement })));
-// const EntityManagement = lazy(() => import("@/features/entity").then((module) => ({ default: module.EntityManagement })));
+const EntityManagement = lazy(() => import("@/features/entity").then((module) => ({ default: module.EntityManagement })));
 const IntentManagementPage = lazy(() => import("@/features/intents").then((module) => ({ default: module.IntentManagementPage })));
 const CreateIntentPage = lazy(() => import("@/features/intents").then((module) => ({ default: module.CreateIntentPage })));
 const EditIntentPage = lazy(() => import("@/features/intents").then((module) => ({ default: module.EditIntentPage })));
@@ -106,7 +106,7 @@ const router = createBrowserRouter([
       { path: "profile", element: withSuspense(<UserProfilePage />) },
       { path: "roles", element: withSuspense(<RoleManagement />) },
       { path: "permissions", element: withSuspense(<PermissionManagement />) },
-      // { path: "entities", element: withSuspense(<EntityManagement />) },
+      { path: "entities", element: withSuspense(<EntityManagement />) },
       {
         path: "intents",
         children: [

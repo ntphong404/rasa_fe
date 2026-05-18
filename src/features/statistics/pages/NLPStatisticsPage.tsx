@@ -54,7 +54,7 @@ export const NLPStatisticsPage = () => {
 
   const componentData = [
     { name: "Intents", value: data?.totalIntents ?? 0 },
-    { name: "Examples", value: (data?.totalIntents ?? 0) * 19 + 13 },
+    { name: "Examples", value: data?.totalExamples ?? 0 },
     { name: "Actions", value: data?.totalActions ?? 0 },
     { name: "Stories", value: data?.totalStories ?? 0 },
     { name: "Responses", value: data?.totalResponses ?? 0 },
@@ -81,7 +81,7 @@ export const NLPStatisticsPage = () => {
         />
         <StatsCard
           title="Examples"
-          value={(data?.totalIntents ?? 0) * 19 + 13 || 0}
+          value={data?.totalExamples ?? 0}
           icon={MessageSquareText}
           description={t("Total examples")}
         />
