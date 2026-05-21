@@ -74,7 +74,7 @@ export function GmailTab({ onExtracted }: Props) {
         conversation: p.conversation,
         status: "pending",
       }));
-      toast.success(t("Trích xuất {{count}} cặp Q&A từ Gmail", { count: result.total }));
+      toast.success(t("Trích xuất {{count}} dữ liệu từ Gmail", { count: result.total }));
       onExtracted(rows);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || t("Lỗi khi trích xuất Gmail"));
@@ -98,7 +98,7 @@ export function GmailTab({ onExtracted }: Props) {
               </div>
               {status?.connected && (
                 <div className="text-xs text-muted-foreground">
-                  {t("Sẵn sàng trích xuất Q&A từ email")}
+                  {t("Sẵn sàng trích xuất dữ liệu từ email")}
                 </div>
               )}
             </div>

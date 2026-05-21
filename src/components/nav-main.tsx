@@ -29,6 +29,7 @@ export function NavMain({
       title: string;
       url: string;
       external?: boolean;
+      onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
     }[];
   }[];
 }) {
@@ -68,6 +69,7 @@ export function NavMain({
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="transition-all line-clamp-1 duration-200 transform hover:translate-x-1"
+                                onClick={subItem.onClick}
                               >
                                 <span className="inline-block whitespace-nowrap">
                                   {subItem.title}

@@ -378,8 +378,14 @@ ${exampleLines || "    - example1"}`;
       return;
     }
 
-    // Collect examples from normal mode
-    const allExamples = examples.filter(ex => ex.trim());
+    // Collect examples based on current mode
+    let allExamples: string[] = [];
+    if (isExpertMode) {
+      if (!validateYAML()) return;
+      allExamples = parseYAMLExamples(yamlDefine).filter((ex) => ex.trim());
+    } else {
+      allExamples = examples.filter((ex) => ex.trim());
+    }
 
     if (allExamples.length === 0) {
       toast.error(t("At least one example is required"));

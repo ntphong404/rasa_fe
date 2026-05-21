@@ -64,7 +64,7 @@ export function FacebookTab({ onExtracted }: Props) {
         conversation: p.conversation,
         status: "pending",
       }));
-      toast.success(t("Trích xuất {{count}} cặp Q&A từ Facebook", { count: result.total }));
+      toast.success(t("Trích xuất {{count}} dữ liệu từ Facebook", { count: result.total }));
       onExtracted(rows);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || t("Lỗi khi trích xuất"));
@@ -184,7 +184,7 @@ export function FacebookTab({ onExtracted }: Props) {
                   />
                   <span>{c.name}</span>
                   <span className="text-xs text-muted-foreground ml-auto">
-                    {c.message_count} tin nhắn
+                    {c.message_count} {t("tin nhắn")}
                   </span>
                 </label>
               ))}
@@ -202,7 +202,7 @@ export function FacebookTab({ onExtracted }: Props) {
             ) : (
               <Search className="h-4 w-4" />
             )}
-            {extracting ? t("Đang trích xuất...") : t("Trích xuất Q&A")}
+            {extracting ? t("Đang trích xuất...") : t("Trích xuất dữ liệu")}
           </Button>
         </div>
       )}

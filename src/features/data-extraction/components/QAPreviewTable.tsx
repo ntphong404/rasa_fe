@@ -474,7 +474,7 @@ export function QAPreviewTable({ rows, onChange, onClear }: Props) {
   const generatedCount = rows.filter((r) => r.generatedExamples && r.generatedExamples.length > 0).length;
 
   return (
-    <div className="flex flex-col border rounded-lg bg-card" style={{ maxHeight: "calc(100vh - 280px)" }}>
+    <div className="flex flex-col border rounded-lg bg-card w-full h-full" style={{ maxHeight: "calc(100vh - 200px)" }}>
       {/* Toolbar */}
       <div className="flex items-center justify-between px-3 py-3 border-b bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-slate-950 dark:to-black flex-shrink-0">
         <div className="flex items-center gap-3">

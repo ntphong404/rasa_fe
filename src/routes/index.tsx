@@ -64,6 +64,9 @@ const SuggestedQuestionsManagementPage = lazy(() =>
 const DataExtractionPage = lazy(() =>
   import("@/features/data-extraction").then((module) => ({ default: module.DataExtractionPage }))
 );
+const PhobertConfigPage = lazy(() =>
+  import("@/features/phobert-config").then((module) => ({ default: module.PhobertConfigPage }))
+);
 
 function RouteLoader() {
   return (
@@ -153,6 +156,14 @@ const router = createBrowserRouter([
       { path: "message-feedback", element: withSuspense(<MessageFeedbackManagementPage />) },
       { path: "suggested-questions", element: withSuspense(<SuggestedQuestionsManagementPage />) },
       { path: "data-extraction", element: withSuspense(<DataExtractionPage />) },
+      {
+        path: "phobert-config",
+        element: withSuspense(
+          <AdminOnlyRoute>
+            <PhobertConfigPage />
+          </AdminOnlyRoute>
+        ),
+      },
       {
         path: "stories",
         children: [

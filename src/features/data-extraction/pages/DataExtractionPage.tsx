@@ -23,8 +23,8 @@ export function DataExtractionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <div className="max-w-full mx-auto">
+    <div className="min-h-[calc(100vh-4rem)] w-full bg-slate-50 dark:bg-slate-950">
+      <div className="w-full">
         {/* Header */}
         <div className="border-b bg-gradient-to-r from-indigo-50 to-purple-50 shadow-sm dark:border-white/10 dark:from-slate-950 dark:to-black">
           <div className="px-3 py-4">
@@ -36,10 +36,10 @@ export function DataExtractionPage() {
                 <Database className="h-6 w-6 text-indigo-600 dark:text-indigo-300" />
                 <div>
                   <h1 className="text-xl font-bold text-indigo-900 dark:text-indigo-200">
-                    {t("Trích xuất Q&A từ Gmail / Facebook")}
+                    {t("Trích xuất dữ liệu từ Gmail / Facebook")}
                   </h1>
                   <p className="text-xs text-indigo-600 dark:text-indigo-300">
-                    {t("Lấy câu hỏi-trả lời, phân tích intent qua Rasa, nhập vào chatbot")}
+                    {t("Lấy dữ liệu, phân tích intent qua Rasa, nhập vào chatbot")}
                   </p>
                 </div>
               </div>
@@ -87,7 +87,7 @@ export function DataExtractionPage() {
                   <ol className="list-decimal ml-4 space-y-1">
                     <li>{t("Kết nối tài khoản Gmail (cần OAuth credentials)")}</li>
                     <li>{t("Nhập từ khóa tìm kiếm hoặc để trống để lấy tất cả email")}</li>
-                    <li>{t("Nhấn Trích xuất để lấy cặp hỏi-đáp")}</li>
+                    <li>{t("Nhấn Trích xuất để lấy dữ liệu")}</li>
                   </ol>
                 ) : (
                   <ol className="list-decimal ml-4 space-y-1">

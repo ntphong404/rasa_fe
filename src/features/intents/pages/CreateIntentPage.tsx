@@ -90,6 +90,35 @@ export function CreateIntentPage() {
       .replace(/^_+|_+$/g, "");
   };
 
+  // Parse YAML to extract examples
+  const parseYAMLExamples = (yaml: string): string[] => {
+    try {
+      const lines = yaml.split("\n");
+      const exampleLines: string[] = [];
+      let inExamples = false;
+
+      for (const line of lines) {
+        if (line.includes("examples:")) {
+          inExamples = true;
+          continue;
+        }
+        if (inExamples && line.trim().startsWith("-")) {
+          const example = line.trim().substring(1).trim();
+          if (example) {
+            exampleLines.push(example);
+          }
+        } else if (inExamples && !line.startsWith(" ") && line.trim()) {
+          break;
+        }
+      }
+
+      return exampleLines.length > 0 ? exampleLines : ["", ""];
+    } catch (error) {
+      console.error("Error parsing YAML examples:", error);
+      return ["", ""];
+    }
+  };
+
   // Search entities
   useEffect(() => {
     if (entitySearchQuery.length > 0) {
@@ -360,8 +389,14 @@ ${exampleLines || "    - example1"}`;
       return;
     }
 
-    // Collect examples from normal mode
-    const allExamples = examples.filter(ex => ex.trim());
+    // Collect examples based on current mode
+    let allExamples: string[] = [];
+    if (isExpertMode) {
+      if (!validateYAML()) return;
+      allExamples = parseYAMLExamples(yamlDefine).filter((ex) => ex.trim());
+    } else {
+      allExamples = examples.filter((ex) => ex.trim());
+    }
 
     if (allExamples.length === 0) {
       toast.error(t("At least one example is required"));

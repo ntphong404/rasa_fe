@@ -116,6 +116,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 title: t("Chat Bot"),
                 url: "/chat_bot",
               },
+              {
+                title: t("PhoBERT Config"),
+                url: "/phobert-config",
+              },
             ]
             : []),
           {
