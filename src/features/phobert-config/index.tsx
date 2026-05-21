@@ -150,6 +150,35 @@ export function PhobertConfigPage() {
     return apiBaseUrl ? `${apiBaseUrl}${path}` : path
   }, [apiBaseUrl])
 
+  async function resetConfig() {
+    if (!window.confirm(t('app.confirmReset', 'Are you sure you want to reset all configurations to defaults?'))) return
+    setSaving('reset')
+    try {
+      const resp = await axiosInstance.post(`${apiUrl}/reset`, {}, {
+        headers: { Accept: 'application/json' }
+      })
+      const data = resp.data
+      if (!data || data.code >= 400) {
+        throw new Error(data?.message || `Reset failed (${resp.status})`)
+      }
+
+      const cfg = data?.result?.config
+      if (!isPlainObject(cfg)) {
+        throw new Error('Invalid config returned by API after resetting')
+      }
+
+      const serverConfig = cfg as PhobertConfig
+      setOriginalConfig(serverConfig)
+      setDraftConfig(serverConfig)
+      setFieldErrors({})
+      toast.success(t('app.resetSuccess', 'Config reset to defaults successfully'))
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || e.message || 'Failed to reset config')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function loadConfig() {
     setLoading(true)
     const currentToken = window.localStorage.getItem('authToken')
@@ -479,9 +508,14 @@ export function PhobertConfigPage() {
                     {t('app.source')}: <code>{configPath}</code>
                   </span>
                 ) : null}
-                <button type="button" className="button" onClick={() => void loadConfig()} disabled={!!saving}>
-                  {t('app.reload')}
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button type="button" className="button" onClick={() => void loadConfig()} disabled={!!saving}>
+                    {t('app.reload')}
+                  </button>
+                  <button type="button" className="button buttonDanger" onClick={() => void resetConfig()} disabled={!!saving}>
+                    {t('app.reset', 'Reset to Defaults')}
+                  </button>
+                </div>
               </div>
             </>
           )}

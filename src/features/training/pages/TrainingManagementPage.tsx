@@ -63,6 +63,8 @@ const filterSchema = z.object({
 export function TrainingManagementPage() {
   const { t } = useTranslation();
   const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const effectiveBotId = selectedBotId && selectedBotId !== "global" ? selectedBotId : undefined;
   const [rowSelection, setRowSelection] = useState({});
   const [modelsData, setModelsData] = useState<IModel[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -121,13 +123,15 @@ export function TrainingManagementPage() {
       page: 1,
       limit: 10,
       sort: "DESC",
+      botId: effectiveBotId,
     });
-  }, [refreshTrigger]);
+  }, [refreshTrigger, selectedBotId]);
 
   const onSubmit = (values: z.infer<typeof filterSchema>) => {
     fetchModelsData({
       ...values,
       page: 1,
+      botId: effectiveBotId,
     });
   };
 
@@ -136,6 +140,7 @@ export function TrainingManagementPage() {
     fetchModelsData({
       ...currentValues,
       page,
+      botId: effectiveBotId,
     });
   };
 
@@ -148,6 +153,7 @@ export function TrainingManagementPage() {
     fetchModelsData({
       ...currentValues,
       page: pagination.page,
+      botId: effectiveBotId,
     });
   };
 
@@ -157,6 +163,7 @@ export function TrainingManagementPage() {
       page: 1,
       limit: pagination.limit,
       sort: "DESC",
+      botId: effectiveBotId,
     });
   };
 
@@ -194,7 +201,7 @@ export function TrainingManagementPage() {
       setDeletingModelId(modelToDelete._id);
       await myModelService.deleteModel(modelToDelete._id);
       const currentValues = form.getValues();
-      await fetchModelsData({ ...currentValues, page: pagination.page });
+      await fetchModelsData({ ...currentValues, page: pagination.page, botId: effectiveBotId });
       setModelToDelete(null);
     } catch (err: any) {
       throw new Error(
@@ -352,7 +359,7 @@ export function TrainingManagementPage() {
         <div className="p-8 text-center">
           <p className="text-red-500">{error}</p>
           <Button
-            onClick={() => fetchModelsData({ page: 1, limit: 10, sort: "DESC" })}
+            onClick={() => fetchModelsData({ page: 1, limit: 10, sort: "DESC", botId: effectiveBotId })}
             className="mt-4"
           >
             {t("Retry")}

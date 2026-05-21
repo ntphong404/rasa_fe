@@ -89,6 +89,7 @@ export const trainingService = {
 
 // ── My Model (MinIO push) ──────────────────────────────────────────────────
 export interface IPresignRequest {
+  botIds: string[];
   originalFileName: string;
   fileSize: number;
 }
@@ -145,10 +146,10 @@ export const myModelService = {
   },
 
   /** Bước 2b: Lưu metadata sau khi upload xong */
-  pushModel: async (objectName: string, description?: string): Promise<IPushModelResponse> => {
+  pushModel: async (objectName: string, botIds: string[], description?: string): Promise<IPushModelResponse> => {
     const response = await axiosInstance.post(
       ENDPOINTS.MY_MODEL_ENDPOINTS.PUSH,
-      { objectName, description }
+      { objectName, botIds, description }
     );
     return response.data;
   },

@@ -13,7 +13,9 @@ export interface CreateFullRequest {
   name: string
   description?: string
   examples: string[]
-  answer: string
+  answer?: string
+  define?: string
+  actionName?: string
   botIds: string[]
   label?: string
   entities?: string[]

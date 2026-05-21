@@ -11,8 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "react-i18next";
-import { FileCode, FileText, Edit, Eye, EyeOff } from "lucide-react";
+import { FileCode, FileText, Edit, Eye, EyeOff, Plus, X } from "lucide-react";
 import { responseService } from "../api/service";
 import { IMyResponse } from "@/interfaces/response.interface";
 import { ModuleHelpPopover } from "@/components/module-help-popover";
@@ -42,7 +43,6 @@ export default function EditResponseDialog({
   
   // Validation errors
   const [nameError, setNameError] = useState("");
-  const [responseTextError, setResponseTextError] = useState("");
   
   // Helper function to convert to utter_ format
   const toUtterFormat = (str: string): string => {
@@ -66,8 +66,55 @@ export default function EditResponseDialog({
   const [yamlError, setYamlError] = useState("");
   
   // Normal mode
-  const [responseText, setResponseText] = useState("");
-  
+  interface TextVariant {
+    id: string;
+    text: string;
+    hasCondition: boolean;
+    conditionSlotName: string;
+    conditionValue: string;
+  }
+
+  const makeVariant = (): TextVariant => ({
+    id: Math.random().toString(36).slice(2),
+    text: "",
+    hasCondition: false,
+    conditionSlotName: "",
+    conditionValue: "",
+  });
+
+  const parseDefineToVariants = (define: string): TextVariant[] => {
+    const variants: TextVariant[] = [];
+    const lines = define.split("\n");
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line === "- condition:") {
+        const v = makeVariant();
+        v.hasCondition = true;
+        i++;
+        while (i < lines.length && !lines[i].trim().startsWith("- ")) {
+          const inner = lines[i].trim();
+          if (inner.startsWith("name:")) v.conditionSlotName = inner.replace("name:", "").trim();
+          if (inner.startsWith("value:")) v.conditionValue = inner.replace("value:", "").replace(/"/g, "").trim();
+          if (inner.startsWith("text:")) v.text = inner.replace("text:", "").replace(/"/g, "").trim();
+          i++;
+        }
+        variants.push(v);
+      } else if (line.startsWith("- text:")) {
+        const v = makeVariant();
+        v.text = line.replace("- text:", "").replace(/"/g, "").trim();
+        variants.push(v);
+        i++;
+      } else {
+        i++;
+      }
+    }
+    return variants;
+  };
+
+  const [textVariants, setTextVariants] = useState<TextVariant[]>([makeVariant()]);
+  const [variantErrors, setVariantErrors] = useState<string[]>([]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load response data when dialog opens
@@ -80,18 +127,17 @@ export default function EditResponseDialog({
       
       // Try to extract text from YAML for normal mode
       if (response.define) {
-        const textMatch = response.define.match(/- text:\s*"([^"]*)"/);
-        if (textMatch) {
-          setResponseText(textMatch[1]);
+        const parsed = parseDefineToVariants(response.define);
+        if (parsed.length > 0) {
+          setTextVariants(parsed);
         } else {
-          // If can't extract, switch to expert mode
           setExpertMode(true);
         }
       }
-      
+
       // Reset errors
       setNameError("");
-      setResponseTextError("");
+      setVariantErrors([]);
       setYamlError("");
     }
   }, [response, open]);
@@ -117,24 +163,19 @@ export default function EditResponseDialog({
     return true;
   };
 
-  const validateResponseText = (value: string): boolean => {
-    if (!value.trim()) {
-      setResponseTextError(t("Response text is required"));
-      return false;
-    }
-    
-    if (value.trim().length < 3) {
-      setResponseTextError(t("Response text is too short (minimum 3 characters)"));
-      return false;
-    }
-    
-    setResponseTextError("");
-    return true;
+  const validateVariants = (): boolean => {
+    const errs: string[] = [];
+    textVariants.forEach((v, i) => {
+      if (!v.text.trim()) errs.push(`Variant ${i + 1}: text is required`);
+      if (v.hasCondition && !v.conditionSlotName.trim()) errs.push(`Variant ${i + 1}: slot name required when condition is set`);
+    });
+    setVariantErrors(errs);
+    return errs.length === 0;
   };
 
   const generateTemplate = () => {
     const utterName = name ? toUtterFormat(name) : "utter_default";
-    const template = `  ${utterName}:\n    - text: "Nhập phản hồi của bạn ở đây"`;
+    const template = `${utterName}:\n- text: "Nhập phản hồi của bạn ở đây"`;
     setYamlDefine(template);
     setYamlError("");
   };
@@ -173,9 +214,22 @@ export default function EditResponseDialog({
 
   const generateYAMLFromForm = (): string => {
     const utterName = name ? toUtterFormat(name) : "utter_default";
-    const text = responseText.trim() || "Nhập phản hồi của bạn ở đây";
-    
-    return `  ${utterName}:\n    - text: "${text}"`;
+    const lines: string[] = [`${utterName}:`];
+    textVariants.forEach((v) => {
+      const text = v.text.trim() || "...";
+      if (v.hasCondition && v.conditionSlotName.trim()) {
+        lines.push(`- condition:`);
+        lines.push(`  - type: slot`);
+        lines.push(`    name: ${v.conditionSlotName.trim()}`);
+        if (v.conditionValue.trim()) {
+          lines.push(`    value: "${v.conditionValue.trim()}"`);
+        }
+        lines.push(`  text: "${text}"`);
+      } else {
+        lines.push(`- text: "${text}"`);
+      }
+    });
+    return lines.join("\n");
   };
 
   const handleSubmit = async () => {
@@ -197,7 +251,7 @@ export default function EditResponseDialog({
       finalDefine = yamlDefine;
     } else {
       // Validate response text in normal mode
-      if (!validateResponseText(responseText)) {
+      if (!validateVariants()) {
         return;
       }
       finalDefine = generateYAMLFromForm();
@@ -360,54 +414,121 @@ export default function EditResponseDialog({
           {/* Normal Mode */}
           {!expertMode && (
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="response-text">{t("Response Text")} *</Label>
-                <Textarea
-                  id="response-text"
-                  value={responseText}
-                  onChange={(e) => {
-                    setResponseText(e.target.value);
-                    if (responseTextError) validateResponseText(e.target.value);
-                  }}
-                  onBlur={(e) => validateResponseText(e.target.value)}
-                  placeholder={t("Enter the response message that bot will send")}
-                  rows={6}
-                  className={responseTextError ? "border-destructive" : ""}
-                />
-                {responseTextError ? (
-                  <p className="text-sm text-destructive">{responseTextError}</p>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    {t("This is the message that will be sent to users")}
-                  </p>
-                )}
+              <div className="flex items-center justify-between">
+                <Label>{t("Response Texts")} *</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTextVariants((prev) => [...prev, makeVariant()])}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {t("Add Variant")}
+                </Button>
               </div>
-
-              {/* Preview */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>{t("Preview")}</Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowPreview(!showPreview)}
-                  >
-                    {showPreview ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
+              <p className="text-xs text-muted-foreground">
+                {t("Rasa will randomly pick one variant to reply. Add a condition to reply based on slot value.")}
+              </p>
+              <div className="space-y-3">
+                {textVariants.map((variant, idx) => (
+                  <div key={variant.id} className="rounded-lg border p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {t("Variant")} {idx + 1}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer">
+                          <Checkbox
+                            checked={variant.hasCondition}
+                            onCheckedChange={(c) =>
+                              setTextVariants((prev) =>
+                                prev.map((v) => v.id === variant.id ? { ...v, hasCondition: !!c } : v)
+                              )
+                            }
+                          />
+                          {t("Condition")}
+                        </label>
+                        {textVariants.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-destructive"
+                            onClick={() => setTextVariants((prev) => prev.filter((v) => v.id !== variant.id))}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    {variant.hasCondition && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">{t("Slot name")}</Label>
+                          <Input
+                            value={variant.conditionSlotName}
+                            onChange={(e) =>
+                              setTextVariants((prev) =>
+                                prev.map((v) => v.id === variant.id ? { ...v, conditionSlotName: e.target.value } : v)
+                              )
+                            }
+                            placeholder="city_slot"
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">{t("Slot value")}</Label>
+                          <Input
+                            value={variant.conditionValue}
+                            onChange={(e) =>
+                              setTextVariants((prev) =>
+                                prev.map((v) => v.id === variant.id ? { ...v, conditionValue: e.target.value } : v)
+                              )
+                            }
+                            placeholder="Hà Nội"
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                      </div>
                     )}
-                  </Button>
-                </div>
-                {showPreview && (
-                  <div className="bg-muted rounded-lg p-4">
-                    <pre className="text-xs font-mono whitespace-pre-wrap">
-                      {generateYAMLFromForm()}
-                    </pre>
+                    <Textarea
+                      value={variant.text}
+                      onChange={(e) =>
+                        setTextVariants((prev) =>
+                          prev.map((v) => v.id === variant.id ? { ...v, text: e.target.value } : v)
+                        )
+                      }
+                      placeholder={t("Response text for this variant")}
+                      rows={2}
+                    />
                   </div>
-                )}
+                ))}
               </div>
+              {variantErrors.length > 0 && (
+                <div className="space-y-1">
+                  {variantErrors.map((e, i) => (
+                    <p key={i} className="text-sm text-destructive">{e}</p>
+                  ))}
+                </div>
+              )}
+              {showPreview && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-muted-foreground">{t("YAML Preview")}</Label>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setShowPreview(!showPreview)}>
+                      <EyeOff className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="bg-muted rounded-lg p-4">
+                    <pre className="text-xs font-mono whitespace-pre-wrap">{generateYAMLFromForm()}</pre>
+                  </div>
+                </div>
+              )}
+              {!showPreview && (
+                <Button type="button" variant="ghost" size="sm" onClick={() => setShowPreview(true)}>
+                  <Eye className="h-4 w-4 mr-1" />{t("Show YAML Preview")}
+                </Button>
+              )}
             </div>
           )}
         </div>

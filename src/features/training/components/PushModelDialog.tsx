@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,9 @@ import { toast } from "sonner";
 import { myModelService } from "../api/service";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { useAuthStore } from "@/store/auth";
+import { useChatbotStore } from "@/store/chatbot";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface PushModelDialogProps {
   open: boolean;
@@ -50,6 +53,24 @@ export function PushModelDialog({
   const [progress, setProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
+
+  const user = useAuthStore((state) => state.user);
+  const isManager = user?.role === "manager";
+  const managerAssignedBotId = user?.chatbotId;
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const chatbots = useChatbotStore((state) => state.chatbots);
+
+  const [applicableBotIds, setApplicableBotIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (open) {
+      if (selectedBotId && selectedBotId !== "global") {
+        setApplicableBotIds([selectedBotId]);
+      } else {
+        setApplicableBotIds([]);
+      }
+    }
+  }, [open, selectedBotId]);
 
   const isValidFile = (f: File) => {
     const name = f.name.toLowerCase();
@@ -77,12 +98,25 @@ export function PushModelDialog({
 
   const handleUpload = async () => {
     if (!file) return;
+
+    const targetBotIds = isManager
+      ? managerAssignedBotId
+        ? [managerAssignedBotId]
+        : []
+      : applicableBotIds;
+
+    if (targetBotIds.length === 0) {
+      toast.error(t("Please select at least one target chatbot"));
+      return;
+    }
+
     setErrorMsg("");
 
     try {
       setStep("presigning");
       setProgress(10);
       const presignRes = await myModelService.generatePresignedUrl({
+        botIds: targetBotIds,
         originalFileName: file.name,
         fileSize: file.size,
       });
@@ -97,6 +131,7 @@ export function PushModelDialog({
       setStep("saving");
       await myModelService.pushModel(
         presignRes.data.objectName,
+        targetBotIds,
         description || undefined
       );
 
@@ -255,6 +290,45 @@ export function PushModelDialog({
               </div>
             )}
           </div>
+
+          {/* Bot Selection */}
+          {!isManager && (
+            <div className="bg-white border rounded-lg p-4 shadow-sm space-y-3">
+              <Label className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                {t("Target Chatbots")}
+                <span className="text-red-500">*</span>
+              </Label>
+              <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto pr-2">
+                {chatbots.map((bot) => (
+                  <div
+                    key={bot._id}
+                    className="flex items-center space-x-2 bg-slate-50 p-2 rounded border"
+                  >
+                    <Checkbox
+                      id={`push-bot-${bot._id}`}
+                      checked={applicableBotIds.includes(bot.botId)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setApplicableBotIds([...applicableBotIds, bot.botId]);
+                        } else {
+                          setApplicableBotIds(
+                            applicableBotIds.filter((id) => id !== bot.botId)
+                          );
+                        }
+                      }}
+                      disabled={isLoading}
+                    />
+                    <label
+                      htmlFor={`push-bot-${bot._id}`}
+                      className="text-sm font-medium leading-none cursor-pointer flex-1 truncate"
+                    >
+                      {bot.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Description */}
           <div className="bg-white border rounded-lg p-4 shadow-sm space-y-2">

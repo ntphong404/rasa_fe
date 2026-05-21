@@ -52,36 +52,36 @@ const buildSlotDefine = (
   categoricalValues: string,
 ) => {
   const slotName = toSnakeCase(name) || "slot_name";
-  const lines = [`  ${slotName}:`];
-  lines.push(`    type: ${slotType}`);
+  const lines = [`${slotName}:`];
+  lines.push(`  type: ${slotType}`);
 
   if (slotType === "categorical" && categoricalValues.trim()) {
     const vals = categoricalValues.split(",").map((v) => v.trim()).filter(Boolean);
     if (vals.length > 0) {
-      lines.push(`    values:`);
-      vals.forEach((v) => lines.push(`      - ${v}`));
+      lines.push(`  values:`);
+      vals.forEach((v) => lines.push(`  - ${v}`));
     }
   }
 
-  lines.push(`    influence_conversation: ${influenceConversation}`);
+  lines.push(`  influence_conversation: ${influenceConversation}`);
 
   const mappings: string[] = [];
   if (entityId) {
-    mappings.push(`      - type: from_entity\n        entity: [${entityId}]`);
+    mappings.push(`  - type: from_entity\n    entity: [${entityId}]`);
   }
   if (intentId) {
-    const valPart = intentValue.trim() ? `\n        value: "${intentValue.trim()}"` : "";
-    mappings.push(`      - type: from_intent\n        intent: [${intentId}]${valPart}`);
+    const valPart = intentValue.trim() ? `\n    value: "${intentValue.trim()}"` : "";
+    mappings.push(`  - type: from_intent\n    intent: [${intentId}]${valPart}`);
   }
   if (actionId) {
-    mappings.push(`      - type: custom`);
+    mappings.push(`  - type: custom`);
   }
 
   if (mappings.length > 0) {
-    lines.push(`    mappings:`);
+    lines.push(`  mappings:`);
     lines.push(mappings.join("\n"));
   } else {
-    lines.push(`    mappings: []`);
+    lines.push(`  mappings: []`);
   }
 
   return lines.join("\n");

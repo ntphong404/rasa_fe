@@ -16,7 +16,9 @@ import { intentService } from "@/features/intents/api/service";
 import { useChatbotStore } from "@/store/chatbot";
 import { useChatbots } from "@/hooks/useChatbots";
 import { useAuthStore } from "@/store/auth";
-import { parseFile, formatIntentName, type ParsedRow, parseYAML, parseResponseYAML, mergeNLUWithResponses, type ResponseMap } from "../utils/fileParser";
+import { parseFile, formatIntentName, type ParsedRow, parseYAML, parseResponseYAML, mergeNLUWithResponses, parseNLUEntityNames, extractIntentEntityNames, parseDomainSlots, buildSlotDefineFromParsed } from "../utils/fileParser";
+import { entityService } from "@/features/entity/api/service";
+import { slotService } from "@/features/slots/api/service";
 import { generateTemplate } from "../utils/templateGenerator";
 
 type Row = ParsedRow;
@@ -112,29 +114,117 @@ export function ImportIntentPage() {
         setDomainFile(domain);
         setIsParsing(true);
         try {
-            // Read and parse both files
             const nluText = await nlu.text();
             const domainText = await domain.text();
 
             const parsedNLU = await parseYAML(nluText);
             const parsedResponses = await parseResponseYAML(domainText);
 
-            // Merge NLU with responses
-            const merged = mergeNLUWithResponses(parsedNLU, parsedResponses);
+            // Resolve entity names to IDs (find existing or create new)
+            const nluEntityNames = parseNLUEntityNames(nluText);
+            const domainEntityNames = parsedResponses.entityNames || [];
+            const uniqueEntityNames = Array.from(new Set([...nluEntityNames, ...domainEntityNames]));
 
-            // Update response field from responseContent
-            const merged2 = merged.map(m => ({
-                ...m,
-                response: m.responseContent || (m.response || ""),
-            }));
+            const importBotIds = isManager
+                ? managerAssignedBotId ? [managerAssignedBotId] : []
+                : selectedImportBotIds.filter(Boolean);
+
+            const entityNameToId = new Map<string, string>();
+            const createdEntities: string[] = [];
+            const foundEntities: string[] = [];
+
+            for (const entityName of uniqueEntityNames) {
+                try {
+                    const result = await entityService.fetchEntities({ search: entityName, limit: 10 });
+                    const existing = result.data?.find(e => e.name === entityName);
+                    if (existing?._id) {
+                        entityNameToId.set(entityName, String(existing._id));
+                        foundEntities.push(entityName);
+                    } else if (importBotIds.length > 0) {
+                        const created = await entityService.createEntity({
+                            name: entityName,
+                            description: '',
+                            define: '',
+                            botIds: importBotIds,
+                        });
+                        if (created?._id) {
+                            entityNameToId.set(entityName, String(created._id));
+                            createdEntities.push(entityName);
+                        }
+                    }
+                } catch {
+                    // Skip — intent will be imported without this entity link
+                }
+            }
+
+            // Resolve slots — find existing or create new
+            const parsedSlots = parseDomainSlots(domainText);
+            let slotsCreated = 0;
+            let slotsSkipped = 0;
+
+            for (const slot of parsedSlots) {
+                try {
+                    const searchResult = await slotService.fetchSlots({ search: slot.name, limit: 10 });
+                    const existing = (searchResult as any)?.data?.find((s: any) => s.name === slot.name);
+                    if (existing) {
+                        slotsSkipped++;
+                        continue;
+                    }
+                    if (importBotIds.length > 0) {
+                        const define = buildSlotDefineFromParsed(slot, entityNameToId);
+                        // Find entity ID for the slot's from_entity mapping (first one)
+                        const entityMapping = slot.mappings.find(m => m.type === 'from_entity' && m.entity);
+                        const entityId = entityMapping?.entity ? entityNameToId.get(entityMapping.entity) ?? null : null;
+                        await slotService.createSlot({
+                            name: slot.name,
+                            description: '',
+                            define,
+                            botIds: importBotIds,
+                            entity: entityId,
+                            intent: null,
+                            action: null,
+                            roles: [],
+                        });
+                        slotsCreated++;
+                    }
+                } catch {
+                    // Skip on error — slot creation is best-effort
+                }
+            }
+
+            // Merge NLU with responses, attach entity IDs per intent
+            const merged = mergeNLUWithResponses(parsedNLU, parsedResponses);
+            const merged2 = merged.map(m => {
+                const intentEntityNames = extractIntentEntityNames(m.examples);
+                const entityIds = intentEntityNames
+                    .map(n => entityNameToId.get(n))
+                    .filter(Boolean) as string[];
+                return {
+                    ...m,
+                    response: m.responseContent || (m.response || ""),
+                    entityIds,
+                };
+            });
 
             setRows(merged2);
-            // mark all selected by default
             const sel: Record<number, boolean> = {};
             merged2.forEach((_, i) => (sel[i] = true));
             setSelected(sel);
             setHasImported(false);
+
             toast.success(t("Read intents successfully from files", { count: merged2.length, nluName: nlu.name, domainName: domain.name }));
+            if (createdEntities.length > 0) {
+                toast.info(`Created ${createdEntities.length} new entity record(s): ${createdEntities.join(', ')}`);
+            }
+            if (foundEntities.length > 0) {
+                toast.info(`Linked ${foundEntities.length} existing entity record(s): ${foundEntities.join(', ')}`);
+            }
+            if (slotsCreated > 0) {
+                toast.info(`Created ${slotsCreated} new slot(s) from domain file.`);
+            }
+            if (slotsSkipped > 0) {
+                toast.info(`Skipped ${slotsSkipped} slot(s) already in database.`);
+            }
         } catch (err) {
             console.error(err);
             const errorMessage = err instanceof Error ? err.message : t("Unable to read file");
@@ -619,14 +709,26 @@ export function ImportIntentPage() {
 
                 // Create using the new createFull API
                 // This API creates intent, response, rule, and examples all at once
+                const responseValue = row.response?.trim() || "";
+                // Detect which mode to use based on response content
+                const actionMatch = importMode === 'yaml'
+                    ? responseValue.match(/^action:\s+(.+)$/)
+                    : null;
+                const isYamlDefine = !actionMatch && importMode === 'yaml' && responseValue.startsWith('utter_');
+
                 const result = await intentService.createFull({
                     name: formattedName,
                     description: "",
                     examples: examplesArr,
-                    answer: row.response?.trim() || "",
+                    ...(actionMatch
+                        ? { actionName: actionMatch[1].trim(), answer: "" }
+                        : isYamlDefine
+                            ? { define: responseValue, answer: "" }
+                            : { answer: responseValue }
+                    ),
                     botIds: importBotIds,
                     label: resolvedLabel,
-                    entities: [],
+                    entities: row.entityIds || [],
                     source: importMode === 'excel' ? 'excel' : 'manual',
                 });
 
@@ -1177,9 +1279,15 @@ export function ImportIntentPage() {
                                                                 </div>
                                                             </td>
                                                             <td className="px-4 py-2 align-top">
-                                                                <div className="text-sm text-slate-600 line-clamp-2 break-words" title={r.response}>
-                                                                    {r.response}
-                                                                </div>
+                                                                {importMode === 'yaml' && r.response?.startsWith('utter_') ? (
+                                                                    <pre className="text-xs text-slate-600 font-mono bg-slate-100 dark:bg-slate-800 rounded p-1 max-h-20 overflow-auto whitespace-pre-wrap break-words">
+                                                                        {r.response}
+                                                                    </pre>
+                                                                ) : (
+                                                                    <div className="text-sm text-slate-600 line-clamp-2 break-words" title={r.response}>
+                                                                        {r.response}
+                                                                    </div>
+                                                                )}
                                                             </td>
                                                             <td className="px-4 py-2 align-top">
                                                                 <div className="flex gap-1 items-center">

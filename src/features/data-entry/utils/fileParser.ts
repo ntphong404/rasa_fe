@@ -5,10 +5,34 @@
 
 import { parseXlsxFromBuffer, ParsedRow as ExcelParsedRow } from './excel.utils';
 
-export type ParsedRow = ExcelParsedRow;
+export type ParsedRow = ExcelParsedRow & {
+    responseName?: string;
+    responseContent?: string;
+    entityIds?: string[];
+};
 
 export type ResponseMap = {
     [utteranceName: string]: string;
+};
+
+export type ParsedSlotMapping = {
+    type: string;
+    entity?: string;
+};
+
+export type ParsedSlot = {
+    name: string;
+    slotType: string;
+    influenceConversation: boolean;
+    initialValue?: string;
+    mappings: ParsedSlotMapping[];
+};
+
+export type ParsedDomain = {
+    responses: ResponseMap;
+    actions: string[];
+    entityNames: string[];
+    actionRefs: Record<string, string>; // utterName → actionName for utter_ that wrap custom actions
 };
 
 /**
@@ -75,148 +99,178 @@ export async function parseCSV(text: string): Promise<ParsedRow[]> {
 }
 
 /**
- * Parse response/utterances YAML file
- * Expects Rasa response format:
- * 
- * version: "3.1"
- * responses:
- *   utter_ask_program:
- *     - text: "KMA có các chương trình..."
- *   utter_ask_admission:
- *     - text: |
- *         Để đăng ký vào KMA...
- *         Dòng thứ 2
+ * Parse response/utterances YAML file (domain.yml)
+ * Builds proper YAML define strings for each utterance, supporting multi-text and conditions.
  */
-export async function parseResponseYAML(text: string): Promise<ResponseMap> {
+export async function parseResponseYAML(text: string): Promise<ParsedDomain> {
     const lines = text.split(/\r?\n/);
     const responseMap: ResponseMap = {};
+    const actionsList: string[] = [];
+    const entityNames: string[] = [];
+    const actionRefs: Record<string, string> = {};
+
+    type Variant = {
+        text: string;
+        conditionSlotName?: string;
+        conditionValue?: string;
+    };
 
     let currentUtter: string | null = null;
     let inResponsesSection = false;
+    let inActionsSection = false;
+    let inEntitiesSection = false;
+    let variants: Variant[] = [];
+    let pendingCondition: { slotName?: string; value?: string } | null = null;
+
+    const saveCurrentUtter = () => {
+        if (currentUtter && variants.length > 0) {
+            // Detect single-variant action proxy: text is "action: action_name"
+            if (variants.length === 1 && !variants[0].conditionSlotName) {
+                const actionMatch = variants[0].text.trim().match(/^action:\s+(\S+)$/);
+                if (actionMatch) {
+                    actionRefs[currentUtter] = actionMatch[1];
+                    variants = [];
+                    pendingCondition = null;
+                    currentUtter = null;
+                    return;
+                }
+            }
+
+            const yamlLines: string[] = [`${currentUtter}:`];
+            for (const v of variants) {
+                const escaped = v.text.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+                if (v.conditionSlotName) {
+                    yamlLines.push(`- condition:`);
+                    yamlLines.push(`  - type: slot`);
+                    yamlLines.push(`    name: ${v.conditionSlotName}`);
+                    if (v.conditionValue !== undefined) {
+                        yamlLines.push(`    value: "${v.conditionValue}"`);
+                    }
+                    yamlLines.push(`  text: "${escaped}"`);
+                } else {
+                    yamlLines.push(`- text: "${escaped}"`);
+                }
+            }
+            responseMap[currentUtter] = yamlLines.join('\n');
+        }
+        variants = [];
+        pendingCondition = null;
+        currentUtter = null;
+    };
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const trimmed = line.trim();
 
-        // Skip empty lines and comments
-        if (!trimmed || trimmed.startsWith('#')) {
+        if (!trimmed || trimmed.startsWith('#')) continue;
+
+        // Top-level section headers have no leading whitespace
+        if (!line.startsWith(' ') && !line.startsWith('\t') && trimmed.endsWith(':')) {
+            const sectionName = trimmed.slice(0, -1);
+            saveCurrentUtter();
+            inResponsesSection = sectionName === 'responses';
+            inActionsSection = sectionName === 'actions';
+            inEntitiesSection = sectionName === 'entities';
             continue;
         }
 
-        // Check if we're entering the responses section
-        if (trimmed === 'responses:') {
-            inResponsesSection = true;
+        if (inEntitiesSection) {
+            const m = trimmed.match(/^-\s+(.+)$/);
+            if (m) {
+                const val = m[1].trim().replace(/^["']|["']$/g, '');
+                if (val && !val.includes(':')) entityNames.push(val);
+            }
             continue;
         }
 
-        if (!inResponsesSection) continue;
-
-        // Match utterance names (e.g., utter_ask_program, utter-faq-1).
-        // Accept letters, digits, underscores and dashes.
-        if (trimmed.match(/^[A-Za-z0-9_-]+:$/) && trimmed.startsWith('utter_')) {
-            currentUtter = trimmed.slice(0, -1);
+        if (inActionsSection) {
+            const m = trimmed.match(/^-\s+(.+)$/);
+            if (m && !m[1].includes(':')) actionsList.push(m[1].trim());
             continue;
         }
 
-        // Match text content (e.g., "- text: "..." or "- text: |")
-        if (currentUtter && trimmed.startsWith('- text:')) {
-            // Check if this is a multi-line format with | or |-
-            if (trimmed.includes('|')) {
-                // Multi-line text format: collect the text from subsequent lines
-                const baseIndent = line.match(/^(\s*)/)?.[1].length ?? 0;
-                const textIndent = baseIndent + 4; // Text lines should be indented more than "- text:"
-                const textLines: string[] = [];
-                let lastWasEmpty = false;
-                
-                // Read subsequent lines until we hit a non-indented line or another response
-                for (let j = i + 1; j < lines.length; j++) {
-                    const nextLine = lines[j];
-                    const nextTrimmed = nextLine.trim();
-                    
-                    // Handle empty lines
-                    if (!nextTrimmed) {
-                        // Check if next non-empty line is a new section or utterance
-                        let isEndOfText = false;
-                        for (let k = j + 1; k < lines.length; k++) {
-                            const checkLine = lines[k].trim();
-                            if (checkLine && !checkLine.startsWith('#')) {
-                                const checkIndent = lines[k].match(/^(\s*)/)?.[1].length ?? 0;
-                                if (checkIndent <= baseIndent) {
-                                    isEndOfText = true;
-                                }
-                                break;
-                            }
-                        }
-                        if (isEndOfText) break;
-                        
-                        // Track empty lines to preserve paragraph breaks
-                        if (!lastWasEmpty) {
-                            textLines.push(''); // Add one empty line marker
-                            lastWasEmpty = true;
-                        }
-                        continue;
-                    }
-                    
-                    // Check indentation
-                    const nextIndent = nextLine.match(/^(\s*)/)?.[1].length ?? 0;
-                    if (nextIndent < textIndent && nextTrimmed) {
-                        // End of this text block
-                        break;
-                    }
-                    
-                    // Also stop if we hit another utterance or response marker
-                    if (nextTrimmed.match(/^[A-Za-z0-9_-]+:$/) || nextTrimmed.startsWith('- text:')) {
-                        break;
-                    }
-                    
-                    textLines.push(nextTrimmed);
-                    lastWasEmpty = false;
-                    i = j; // Update the main loop index
+        if (inResponsesSection) {
+            // New utter_ response name (e.g. "  utter_greet:")
+            if (trimmed.match(/^utter_[A-Za-z0-9_-]+:$/)) {
+                saveCurrentUtter();
+                currentUtter = trimmed.slice(0, -1);
+                continue;
+            }
+
+            if (!currentUtter) continue;
+
+            // Start of a conditional response item
+            if (trimmed === '- condition:') {
+                pendingCondition = {};
+                continue;
+            }
+
+            if (pendingCondition !== null) {
+                if (trimmed === '- type: slot' || trimmed.startsWith('- type:')) continue;
+                if (trimmed.startsWith('name:')) {
+                    pendingCondition.slotName = trimmed.slice(5).trim().replace(/^["']|["']$/g, '');
+                    continue;
                 }
-                
-                // Join and clean up the text
-                // Keep newlines as \n escape sequences for proper storage
-                const fullText = textLines
-                    .join('\n')
-                    .replace(/\n\n+/g, '\n')
-                    .trim()
-                    .replace(/\n/g, '\\n'); // Convert newlines to escaped \n for database storage
-                
-                if (fullText) {
-                    responseMap[currentUtter] = fullText;
+                if (trimmed.startsWith('value:')) {
+                    pendingCondition.value = trimmed.slice(6).trim().replace(/^["']|["']$/g, '');
+                    continue;
                 }
-            } else {
-                // Single-line text format
-                const textMatch = trimmed.match(/^-\s+text:\s*["']?(.+?)["']?\s*$/);
-                if (textMatch) {
-                    responseMap[currentUtter] = textMatch[1].trim();
+            }
+
+            // Plain text variant: "- text: ..."
+            // Conditional text (sibling of condition key): "  text: ..."
+            const isPlainText = trimmed.startsWith('- text:');
+            const isCondText = !trimmed.startsWith('- ') && trimmed.startsWith('text:');
+
+            if (isPlainText || isCondText) {
+                let textContent = '';
+
+                if (trimmed.includes(' |')) {
+                    // Block scalar — collect subsequent indented lines
+                    const baseIndent = (line.match(/^(\s*)/) || ['', ''])[1].length;
+                    const blockLines: string[] = [];
+                    let j = i + 1;
+                    for (; j < lines.length; j++) {
+                        const nl = lines[j];
+                        const nt = nl.trim();
+                        if (!nt) { blockLines.push(''); continue; }
+                        const ni = (nl.match(/^(\s*)/) || ['', ''])[1].length;
+                        if (ni <= baseIndent) break;
+                        blockLines.push(nt);
+                    }
+                    textContent = blockLines.filter(Boolean).join(' ').trim();
+                    i = j - 1;
                 } else {
-                    // Fallback: extract everything after "text:"
-                    const simpleText = trimmed.substring(7).trim().replace(/^["']|["']$/g, '');
-                    if (simpleText) {
-                        responseMap[currentUtter] = simpleText;
-                    }
+                    const m = trimmed.match(/(?:^-\s+)?text:\s*["']?([\s\S]+?)["']?\s*$/);
+                    textContent = m ? m[1].trim() : '';
                 }
+
+                if (textContent) {
+                    const variant: Variant = { text: textContent };
+                    if (pendingCondition?.slotName) {
+                        variant.conditionSlotName = pendingCondition.slotName;
+                        if (pendingCondition.value !== undefined) {
+                            variant.conditionValue = pendingCondition.value;
+                        }
+                    }
+                    variants.push(variant);
+                }
+                pendingCondition = null;
             }
         }
     }
 
-    if (Object.keys(responseMap).length === 0) {
-        throw new Error("Không tìm thấy response nào trong file. Vui lòng kiểm tra định dạng file responses.");
+    saveCurrentUtter();
+
+    if (Object.keys(responseMap).length === 0 && actionsList.length === 0) {
+        throw new Error("Không tìm thấy response hoặc action nào trong file. Vui lòng kiểm tra định dạng file domain/responses.");
     }
 
-    return responseMap;
+    return { responses: responseMap, actions: actionsList, entityNames, actionRefs };
 }
 
 /**
  * Parse NLU YAML file content
- * Expects Rasa NLU format:
- * version: "3.1"
- * nlu:
- *   - intent: intent_name
- *     examples: |
- *       - example 1
- *       - example 2
  */
 export async function parseYAML(text: string): Promise<ParsedRow[]> {
     const lines = text.split(/\r?\n/);
@@ -230,30 +284,24 @@ export async function parseYAML(text: string): Promise<ParsedRow[]> {
         const line = lines[i];
         const trimmed = line.trim();
 
-        // Skip empty lines and comments
         if (!trimmed || trimmed.startsWith('#')) {
             continue;
         }
 
-        // Check if we're entering the nlu section
-        if (trimmed === 'nlu:' || trimmed === 'nlu:' ) {
+        if (trimmed === 'nlu:' ) {
             inNluSection = true;
             continue;
         }
 
-        // Skip if not in nlu section and we haven't started yet
         if (!inNluSection && !trimmed.startsWith('version:')) {
             continue;
         }
 
-        // Match "- intent: intent_name" (can be indented)
         const intentMatch = trimmed.match(/^-\s+intent:\s*(.+)$/);
         if (intentMatch) {
-            // Save previous intent if exists
             if (currentIntent && currentExamples.length > 0) {
                 out.push({
                     rawName: currentIntent,
-                    // Keep exact intent name from YAML instead of auto-normalizing.
                     name: currentIntent,
                     examples: currentExamples,
                 });
@@ -263,13 +311,25 @@ export async function parseYAML(text: string): Promise<ParsedRow[]> {
             continue;
         }
 
-        // Match "examples: |" or "examples: |-"
-        if (trimmed.startsWith('examples:')) {
-            // Just mark that examples are coming, examples will be on next lines
+        // Handle regex, lookup, synonym — save entity name and skip their examples
+        const otherNluMatch = trimmed.match(/^-\s+(regex|synonym|lookup):\s*(.+)$/);
+        if (otherNluMatch) {
+            if (currentIntent && currentExamples.length > 0) {
+                out.push({
+                    rawName: currentIntent,
+                    name: currentIntent,
+                    examples: currentExamples,
+                });
+            }
+            currentIntent = null;
+            currentExamples = [];
             continue;
         }
 
-        // Match example lines "- example text" (can be indented)
+        if (trimmed.startsWith('examples:')) {
+            continue;
+        }
+
         if (currentIntent && trimmed.startsWith('- ') && !trimmed.startsWith('- intent:')) {
             const exampleText = trimmed.substring(2).trim();
             if (exampleText) {
@@ -278,7 +338,6 @@ export async function parseYAML(text: string): Promise<ParsedRow[]> {
             continue;
         }
 
-        // If we hit another intent or response section, save current
         if (trimmed.startsWith('- intent:') || trimmed.startsWith('responses:') || trimmed.startsWith('rules:') || trimmed.startsWith('stories:')) {
             if (currentIntent && currentExamples.length > 0) {
                 out.push({
@@ -292,7 +351,6 @@ export async function parseYAML(text: string): Promise<ParsedRow[]> {
         }
     }
 
-    // Save last intent
     if (currentIntent && currentExamples.length > 0) {
         out.push({
             rawName: currentIntent,
@@ -309,21 +367,220 @@ export async function parseYAML(text: string): Promise<ParsedRow[]> {
 }
 
 /**
- * Merge NLU data with Response data
- * Matches intent names with utter_<intent_name> in responses
+ * Parse slots section from a domain YAML file.
  */
-export function mergeNLUWithResponses(nlus: ParsedRow[], responses: ResponseMap): ParsedRow[] {
+export function parseDomainSlots(text: string): ParsedSlot[] {
+    const slots: ParsedSlot[] = [];
+    const lines = text.split(/\r?\n/);
+
+    let inSlotsSection = false;
+    let currentSlot: ParsedSlot | null = null;
+    let inMappings = false;
+    let currentMapping: ParsedSlotMapping | null = null;
+
+    const saveMapping = () => {
+        if (currentMapping && currentSlot) {
+            currentSlot.mappings.push(currentMapping);
+            currentMapping = null;
+        }
+    };
+
+    const saveSlot = () => {
+        saveMapping();
+        if (currentSlot) slots.push(currentSlot);
+        currentSlot = null;
+        inMappings = false;
+    };
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+
+        const indent = (line.match(/^(\s*)/) || ['', ''])[1].length;
+
+        // Top-level section headers
+        if (indent === 0 && trimmed.endsWith(':')) {
+            saveSlot();
+            inSlotsSection = trimmed === 'slots:';
+            continue;
+        }
+
+        if (!inSlotsSection) continue;
+
+        // Slot name at indent 2: e.g. "  nganh_hien_tai:"
+        if (indent === 2 && trimmed.endsWith(':') && !trimmed.startsWith('-')) {
+            saveSlot();
+            currentSlot = { name: trimmed.slice(0, -1), slotType: 'text', influenceConversation: false, mappings: [] };
+            inMappings = false;
+            continue;
+        }
+
+        if (!currentSlot) continue;
+
+        // Slot properties at indent 4
+        if (indent === 4) {
+            if (trimmed.startsWith('type:')) {
+                currentSlot.slotType = trimmed.slice(5).trim();
+            } else if (trimmed.startsWith('influence_conversation:')) {
+                currentSlot.influenceConversation = trimmed.includes('true');
+            } else if (trimmed.startsWith('initial_value:')) {
+                currentSlot.initialValue = trimmed.slice(14).trim();
+            } else if (trimmed === 'mappings:') {
+                inMappings = true;
+            }
+            continue;
+        }
+
+        if (!inMappings) continue;
+
+        // Mapping items at indent 6: "      - type: from_entity"
+        if (indent === 6 && trimmed.startsWith('- type:')) {
+            saveMapping();
+            currentMapping = { type: trimmed.replace(/^-\s*type:\s*/, '').trim() };
+            continue;
+        }
+
+        // Mapping property at indent 8: "        entity: nganh"
+        if (indent === 8 && currentMapping) {
+            if (trimmed.startsWith('entity:')) {
+                currentMapping.entity = trimmed.slice(7).trim().replace(/^["']|["']$/g, '');
+            }
+        }
+    }
+
+    saveSlot();
+    return slots;
+}
+
+/**
+ * Build a slot define string (DB format, no leading spaces) from parsed slot data.
+ * Entity names in from_entity mappings are replaced with [entityId] if found in the map.
+ */
+export function buildSlotDefineFromParsed(slot: ParsedSlot, entityNameToId: Map<string, string>): string {
+    const lines: string[] = [`${slot.name}:`];
+    lines.push(`  type: ${slot.slotType}`);
+    if (!slot.influenceConversation) {
+        lines.push(`  influence_conversation: false`);
+    }
+    if (slot.initialValue !== undefined && slot.initialValue !== '') {
+        lines.push(`  initial_value: ${slot.initialValue}`);
+    }
+    lines.push(`  mappings:`);
+
+    const mappings = slot.mappings.length > 0 ? slot.mappings : [{ type: 'custom' }];
+    for (const m of mappings) {
+        if (m.type === 'from_entity' && m.entity) {
+            const entityId = entityNameToId.get(m.entity);
+            lines.push(`  - type: from_entity`);
+            lines.push(`    entity: [${entityId || m.entity}]`);
+        } else {
+            lines.push(`  - type: ${m.type}`);
+        }
+    }
+
+    return lines.join('\n');
+}
+
+/**
+ * Parse all unique entity names from an NLU YAML file.
+ * Collects names from regex/lookup/synonym block headers AND inline (entity_name) annotations.
+ */
+export function parseNLUEntityNames(text: string): string[] {
+    const names = new Set<string>();
+    const lines = text.split(/\r?\n/);
+    let inNluSection = false;
+    let inIntentExamples = false;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+
+        if (trimmed === 'nlu:') { inNluSection = true; continue; }
+        if (!inNluSection) continue;
+
+        // regex/lookup/synonym blocks define entity names
+        const blockMatch = trimmed.match(/^-\s+(regex|lookup|synonym):\s*(.+)$/);
+        if (blockMatch) {
+            names.add(blockMatch[2].trim());
+            inIntentExamples = false;
+            continue;
+        }
+
+        if (trimmed.match(/^-\s+intent:/)) {
+            inIntentExamples = false;
+            continue;
+        }
+
+        if (trimmed.startsWith('examples:')) {
+            inIntentExamples = true;
+            continue;
+        }
+
+        // Extract (entity_name) from inline intent example annotations
+        if (inIntentExamples && trimmed.startsWith('- ')) {
+            for (const m of trimmed.substring(2).matchAll(/\(([a-z_][a-z0-9_]*)\)/g)) {
+                names.add(m[1]);
+            }
+        }
+    }
+
+    return Array.from(names);
+}
+
+/**
+ * Extract entity names referenced by inline annotations in a list of example strings.
+ * E.g. "ngành [CNTT](nganh) năm [2024](nam)" → ["nganh", "nam"]
+ */
+export function extractIntentEntityNames(examples: string[]): string[] {
+    const names = new Set<string>();
+    for (const ex of examples) {
+        for (const m of ex.matchAll(/\(([a-z_][a-z0-9_]*)\)/g)) {
+            names.add(m[1]);
+        }
+    }
+    return Array.from(names);
+}
+
+/**
+ * Merge NLU data with Response data
+ */
+export function mergeNLUWithResponses(nlus: ParsedRow[], domain: ParsedDomain): ParsedRow[] {
+    const { responses, actions, actionRefs } = domain;
     return nlus.map((intent) => {
         const directUtterName = `utter_${intent.name}`;
         const normalizedUtterName = `utter_${formatIntentName(intent.name)}`;
-        const matchedUtterName = responses[directUtterName]
-            ? directUtterName
-            : (responses[normalizedUtterName] ? normalizedUtterName : '');
-        const responseContent = matchedUtterName ? responses[matchedUtterName] : '';
-        
+        const directActionName = `action_${intent.name}`;
+        const normalizedActionName = `action_${formatIntentName(intent.name)}`;
+
+        let matchedName = "";
+        let responseContent = "";
+
+        // Check action refs first (utter_ that wraps a custom action)
+        if (actionRefs[directUtterName]) {
+            matchedName = directUtterName;
+            responseContent = `action: ${actionRefs[directUtterName]}`;
+        } else if (actionRefs[normalizedUtterName]) {
+            matchedName = normalizedUtterName;
+            responseContent = `action: ${actionRefs[normalizedUtterName]}`;
+        // Regular utter_ response
+        } else if (responses[directUtterName]) {
+            matchedName = directUtterName;
+            responseContent = responses[directUtterName];
+        } else if (responses[normalizedUtterName]) {
+            matchedName = normalizedUtterName;
+            responseContent = responses[normalizedUtterName];
+        // Custom action from actions: section
+        } else if (actions.includes(directActionName)) {
+            matchedName = directActionName;
+            responseContent = `action: ${directActionName}`;
+        } else if (actions.includes(normalizedActionName)) {
+            matchedName = normalizedActionName;
+            responseContent = `action: ${normalizedActionName}`;
+        }
+
         return {
             ...intent,
-            responseName: matchedUtterName || undefined,
+            responseName: matchedName || undefined,
             responseContent: responseContent,
         };
     });
@@ -331,8 +588,6 @@ export function mergeNLUWithResponses(nlus: ParsedRow[], responses: ResponseMap)
 
 /**
  * Parse XLSX/XLS file using ExcelJS
- * Skips first 2 rows (title and header)
- * Expects format: STT | Câu hỏi | Câu trả lời
  */
 export async function parseXLSX(file: File): Promise<ParsedRow[]> {
     const arrayBuffer = await file.arrayBuffer();
@@ -355,7 +610,6 @@ export async function parseFile(file: File): Promise<ParsedRow[]> {
         const text = await file.text();
         return await parseYAML(text);
     } else {
-        // Treat as CSV/TSV/TXT
         const text = await file.text();
         return await parseCSV(text);
     }

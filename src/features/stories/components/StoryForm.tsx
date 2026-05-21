@@ -29,10 +29,16 @@ import { IAction } from "@/interfaces/action.interface";
 import { IMyResponse } from "@/interfaces/response.interface";
 import { IStory } from "@/interfaces/story.interface";
 
+interface SlotWasSetData {
+  _id: string;
+  name: string;
+  slotValue: string | null;
+}
+
 interface StoryStep {
   id: string;
-  type: 'intent' | 'action' | 'response';
-  data: IIntent | IAction | IMyResponse;
+  type: 'intent' | 'action' | 'response' | 'slot_was_set';
+  data: IIntent | IAction | IMyResponse | SlotWasSetData;
 }
 
 interface StoryFormProps {
@@ -93,6 +99,11 @@ export function StoryForm({
 
   // Help dialog state
   const [showHelp, setShowHelp] = useState(false);
+
+  // Slot was set dialog state
+  const [slotDialogOpen, setSlotDialogOpen] = useState(false);
+  const [slotDialogName, setSlotDialogName] = useState("");
+  const [slotDialogValue, setSlotDialogValue] = useState("");
 
   // Selected items for expert mode
   const [selectedIntents, setSelectedIntents] = useState<IIntent[]>([]);
@@ -306,6 +317,12 @@ export function StoryForm({
         case 'response':
           yaml += `  - action: [${step.data._id}]\n`;
           break;
+        case 'slot_was_set': {
+          const sd = step.data as SlotWasSetData;
+          const val = sd.slotValue !== null ? `"${sd.slotValue}"` : 'null';
+          yaml += `  - slot_was_set:\n    - ${sd.name}: ${val}\n`;
+          break;
+        }
       }
     });
 
@@ -555,6 +572,28 @@ export function StoryForm({
     } else {
       toast.error(t("Error: ") + sequenceErrors[0]);
     }
+  };
+
+  const addSlotWasSetStep = () => {
+    if (!slotDialogName.trim()) {
+      toast.warning(t("Slot name is required"));
+      return;
+    }
+    const newStep: StoryStep = {
+      id: `slot_was_set_${Date.now()}`,
+      type: 'slot_was_set',
+      data: {
+        _id: `slot_was_set_${Date.now()}`,
+        name: slotDialogName.trim(),
+        slotValue: slotDialogValue.trim() || null,
+      } as SlotWasSetData,
+    };
+    const updatedSteps = [...storySteps, newStep];
+    setStorySteps(updatedSteps);
+    setSlotDialogOpen(false);
+    setSlotDialogName("");
+    setSlotDialogValue("");
+    toast.success(t("Slot condition added"));
   };
 
   // Remove step
@@ -1188,6 +1227,15 @@ export function StoryForm({
                 <Plus className="h-4 w-4 mr-1" />
                 {t("Action/Response")}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setSlotDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                {t("Slot Condition")}
+              </Button>
             </div>
           </div>
 
@@ -1253,11 +1301,16 @@ export function StoryForm({
                       <div className="flex-1 flex items-center gap-2">
                         <Badge variant={
                           step.type === 'intent' ? 'default' :
-                            step.type === 'action' ? 'secondary' : 'outline'
+                          step.type === 'action' ? 'secondary' :
+                          step.type === 'slot_was_set' ? 'destructive' : 'outline'
                         }>
-                          {step.type}
+                          {step.type === 'slot_was_set' ? 'slot' : step.type}
                         </Badge>
-                        <span className="font-medium">{step.data.name}</span>
+                        <span className="font-medium">
+                          {step.type === 'slot_was_set'
+                            ? `${(step.data as SlotWasSetData).name} = ${(step.data as SlotWasSetData).slotValue ?? 'null'}`
+                            : step.data.name}
+                        </span>
                         {hasError && (
                           <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
                         )}
@@ -1510,6 +1563,47 @@ export function StoryForm({
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Slot Was Set Dialog */}
+      <Dialog open={slotDialogOpen} onOpenChange={setSlotDialogOpen}>
+        <DialogContent className="app-dialog-content w-[95vw] md:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("Add Slot Condition")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              {t("Add a slot_was_set step to check or set a slot value in the conversation.")}
+            </p>
+            <div className="space-y-2">
+              <Label>{t("Slot Name")} *</Label>
+              <Input
+                value={slotDialogName}
+                onChange={(e) => setSlotDialogName(e.target.value)}
+                placeholder="city_slot"
+                onKeyDown={(e) => { if (e.key === 'Enter') addSlotWasSetStep(); }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("Slot Value")} ({t("optional")})</Label>
+              <Input
+                value={slotDialogValue}
+                onChange={(e) => setSlotDialogValue(e.target.value)}
+                placeholder={t("Leave empty for null")}
+                onKeyDown={(e) => { if (e.key === 'Enter') addSlotWasSetStep(); }}
+              />
+              <p className="text-xs text-muted-foreground">{t("Leave empty to set slot as null")}</p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setSlotDialogOpen(false); setSlotDialogName(""); setSlotDialogValue(""); }}>
+                {t("Cancel")}
+              </Button>
+              <Button onClick={addSlotWasSetStep}>
+                {t("Add Step")}
+              </Button>
             </div>
           </div>
         </DialogContent>

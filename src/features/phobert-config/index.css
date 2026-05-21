@@ -604,6 +604,16 @@
   border-radius: 8px;
 }
 
+.buttonDanger {
+  border-color: transparent;
+  background: rgba(244, 63, 94, 0.1);
+  color: rgba(244, 63, 94, 0.95);
+}
+
+.buttonDanger:hover {
+  background: rgba(244, 63, 94, 0.2);
+}
+
 /* ---------- Alerts ---------- */
 
 .alert {
