@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import axiosInstance from '@/api/axios'
+import { useChatbotStore } from '@/store/chatbot'
 import './index.css'
 
 type JsonPrimitive = string | number | boolean | null
@@ -130,6 +131,7 @@ function saveLocalStorage(key: string, value: string) {
 
 export function PhobertConfigPage() {
   const { t } = useTranslation()
+  const { chatbots, selectedBotId } = useChatbotStore()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | false>(false)
@@ -140,10 +142,11 @@ export function PhobertConfigPage() {
   const [autoTunerHelpOpen, setAutoTunerHelpOpen] = useState(false)
 
   const apiBaseUrl = useMemo(() => {
+    const bot = chatbots.find((b) => b.botId === selectedBotId)
+    if (bot?.ip && bot?.flaskPort) return `http://${bot.ip}:${bot.flaskPort}`
     const raw = (import.meta as ImportMeta).env?.VITE_FLASK_API_URL as string | undefined
-    const trimmed = (raw || '').trim()
-    return trimmed ? trimmed.replace(/\/$/, '') : ''
-  }, [])
+    return (raw || '').trim().replace(/\/$/, '')
+  }, [chatbots, selectedBotId])
 
   const apiUrl = useMemo(() => {
     const path = '/api/phobert-config'

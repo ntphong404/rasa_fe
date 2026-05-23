@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useConversationStatistics } from "@/hooks/useStatistics";
 import { StatsCard } from "../components/StatsCard";
-import { MessageSquare, TrendingUp, Users, MessageCircle } from "lucide-react";
+import { ExportReportDialog } from "../components/ExportReportDialog";
+import { MessageSquare, TrendingUp, Users, MessageCircle, FileDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,6 +35,7 @@ export const ConversationStatisticsPage = () => {
     startDate?: Date;
     endDate?: Date;
   }>({});
+  const [exportOpen, setExportOpen] = useState(false);
 
   const params = {
     startDate: dateRange.startDate ? format(dateRange.startDate, "yyyy-MM-dd") : undefined,
@@ -125,8 +127,21 @@ export const ConversationStatisticsPage = () => {
               {t("Clear filters")}
             </Button>
           )}
+          <Button
+            variant="outline"
+            onClick={() => setExportOpen(true)}
+            className="gap-2 border-green-600 text-green-700 hover:bg-green-50"
+          >
+            <FileDown className="h-4 w-4" />
+            Xuất Excel
+          </Button>
         </div>
       </div>
+      <ExportReportDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        defaultSections={['conversations']}
+      />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useDocumentStatistics } from "@/hooks/useStatistics";
 import { StatsCard } from "../components/StatsCard";
-import { FileText, File, Lock, Globe } from "lucide-react";
+import { ExportReportDialog } from "../components/ExportReportDialog";
+import { Button } from "@/components/ui/button";
+import { FileText, File, Lock, Globe, FileDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +27,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B9D'
 export const DocumentStatisticsPage = () => {
   const { t } = useTranslation();
   const documents = useDocumentStatistics();
+  const [exportOpen, setExportOpen] = useState(false);
 
   if (documents.isLoading) {
     return (
@@ -73,12 +77,27 @@ export const DocumentStatisticsPage = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">{t("Document Report")}</h1>
-        <p className="text-muted-foreground">
-          {t("Statistics on documents in the system")}
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold">{t("Document Report")}</h1>
+          <p className="text-muted-foreground">
+            {t("Statistics on documents in the system")}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => setExportOpen(true)}
+          className="gap-2 border-green-600 text-green-700 hover:bg-green-50 shrink-0"
+        >
+          <FileDown className="h-4 w-4" />
+          Xuất Excel
+        </Button>
       </div>
+      <ExportReportDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        defaultSections={['documents']}
+      />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

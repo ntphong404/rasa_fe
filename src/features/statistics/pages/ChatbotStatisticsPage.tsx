@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useChatbotStatistics } from "@/hooks/useStatistics";
 import { StatsCard } from "../components/StatsCard";
-import { Bot, Server, Wifi } from "lucide-react";
+import { ExportReportDialog } from "../components/ExportReportDialog";
+import { Button } from "@/components/ui/button";
+import { Bot, Server, Wifi, FileDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +13,7 @@ import { useTranslation } from "react-i18next";
 export const ChatbotStatisticsPage = () => {
   const { t } = useTranslation();
   const chatbots = useChatbotStatistics();
+  const [exportOpen, setExportOpen] = useState(false);
 
   const data = chatbots.data?.data;
 
@@ -40,12 +44,27 @@ export const ChatbotStatisticsPage = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">{t("Chatbot Report")}</h1>
-        <p className="text-muted-foreground">
-          {t("Information about chatbots in the system")}
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold">{t("Chatbot Report")}</h1>
+          <p className="text-muted-foreground">
+            {t("Information about chatbots in the system")}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => setExportOpen(true)}
+          className="gap-2 border-green-600 text-green-700 hover:bg-green-50 shrink-0"
+        >
+          <FileDown className="h-4 w-4" />
+          Xuất Excel
+        </Button>
       </div>
+      <ExportReportDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        defaultSections={['chatbots']}
+      />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">

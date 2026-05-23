@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useNLPStatistics } from "@/hooks/useStatistics";
 import { StatsCard } from "../components/StatsCard";
-import { Brain, MessageSquareText, Zap, BookOpen, MessageCircle } from "lucide-react";
+import { ExportReportDialog } from "../components/ExportReportDialog";
+import { Button } from "@/components/ui/button";
+import { Brain, MessageSquareText, Zap, BookOpen, MessageCircle, FileDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +27,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 export const NLPStatisticsPage = () => {
   const { t } = useTranslation();
   const nlp = useNLPStatistics();
+  const [exportOpen, setExportOpen] = useState(false);
 
   if (nlp.isLoading) {
     return (
@@ -64,12 +68,27 @@ export const NLPStatisticsPage = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">{t("NLP Report")}</h1>
-        <p className="text-muted-foreground">
-          {t("Statistics on natural language processing components")}
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold">{t("NLP Report")}</h1>
+          <p className="text-muted-foreground">
+            {t("Statistics on natural language processing components")}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => setExportOpen(true)}
+          className="gap-2 border-green-600 text-green-700 hover:bg-green-50 shrink-0"
+        >
+          <FileDown className="h-4 w-4" />
+          Xuất Excel
+        </Button>
       </div>
+      <ExportReportDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        defaultSections={['nlp']}
+      />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">

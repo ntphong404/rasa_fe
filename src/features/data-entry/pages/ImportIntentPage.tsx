@@ -730,6 +730,7 @@ export function ImportIntentPage() {
                     label: resolvedLabel,
                     entities: row.entityIds || [],
                     source: importMode === 'excel' ? 'excel' : 'manual',
+                    duplicateStrategy,
                 });
 
                 // Mark as success

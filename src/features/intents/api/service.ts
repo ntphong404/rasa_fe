@@ -20,6 +20,7 @@ export interface CreateFullRequest {
   label?: string
   entities?: string[]
   source?: 'gmail' | 'facebook' | 'excel' | 'manual'
+  duplicateStrategy?: 'overwrite' | 'skip' | 'fail'
 }
 
 export const intentService = {

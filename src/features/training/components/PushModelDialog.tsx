@@ -55,8 +55,8 @@ export function PushModelDialog({
   const [isDragOver, setIsDragOver] = useState(false);
 
   const user = useAuthStore((state) => state.user);
-  const isManager = user?.role === "manager";
-  const managerAssignedBotId = user?.chatbotId;
+  const isManager = user?.roles?.some((r: any) => (r.name || r)?.toLowerCase() === "manager") ?? false;
+  const managerAssignedBotId = user?.managedBotIds?.[0] ?? null;
   const selectedBotId = useChatbotStore((state) => state.selectedBotId);
   const chatbots = useChatbotStore((state) => state.chatbots);
 

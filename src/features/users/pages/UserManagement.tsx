@@ -486,16 +486,6 @@ export const UserManagement = () => {
               },
               { accessorKey: "gender", header: "Gender" },
               {
-                accessorKey: "isVerified",
-                header: "Verified",
-                cell: ({ row }) =>
-                  row.original.is2FAEnabled ? (
-                    <Badge className="bg-green-600">Yes</Badge>
-                  ) : (
-                    <Badge className="bg-red-600">No</Badge>
-                  ),
-              },
-              {
                 accessorKey: "status",
                 header: "Status",
                 cell: ({ row }) => {

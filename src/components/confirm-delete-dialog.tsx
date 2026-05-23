@@ -42,8 +42,9 @@ export function ConfirmDeleteDialog({
       await onConfirm();
       toast.success(successMessage || t("Deleted successfully"));
       onOpenChange(false);
-    } catch (error) {
-      toast.error(errorMessage || t("Delete failed. Please try again."));
+    } catch (error: any) {
+      const serverMessage = error?.response?.data?.message;
+      toast.error(serverMessage || errorMessage || t("Delete failed. Please try again."));
       console.error("Delete error:", error);
     }
   };
@@ -89,8 +90,9 @@ export function ConfirmSoftDeleteDialog({
       await onConfirm();
       toast.success(t("Moved to trash successfully"));
       onOpenChange(false);
-    } catch (error) {
-      toast.error(t("Move to trash failed. Please try again."));
+    } catch (error: any) {
+      const serverMessage = error?.response?.data?.message;
+      toast.error(serverMessage || t("Move to trash failed. Please try again."));
       console.error("Soft delete error:", error);
     }
   };
@@ -145,8 +147,9 @@ export function ConfirmHardDeleteDialog({
       await onConfirm();
       toast.success(t("Deleted permanently"));
       onOpenChange(false);
-    } catch (error) {
-      toast.error(t("Delete failed. Please try again."));
+    } catch (error: any) {
+      const serverMessage = error?.response?.data?.message;
+      toast.error(serverMessage || t("Delete failed. Please try again."));
       console.error("Hard delete error:", error);
     }
   };
