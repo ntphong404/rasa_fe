@@ -16,7 +16,7 @@ import { intentService } from "@/features/intents/api/service";
 import { useChatbotStore } from "@/store/chatbot";
 import { useChatbots } from "@/hooks/useChatbots";
 import { useAuthStore } from "@/store/auth";
-import { parseFile, formatIntentName, type ParsedRow, parseYAML, parseResponseYAML, mergeNLUWithResponses, parseNLUEntityNames, extractIntentEntityNames, parseDomainSlots, buildSlotDefineFromParsed } from "../utils/fileParser";
+import { parseFile, formatIntentName, type ParsedRow, parseYAML, parseResponseYAML, mergeNLUWithResponses, parseNLUEntityNames, extractIntentEntityNames, parseDomainSlots, buildSlotDefineFromParsed, parseNLUEntityDefinitions, parseDomainSlotDefinitions } from "../utils/fileParser";
 import { entityService } from "@/features/entity/api/service";
 import { slotService } from "@/features/slots/api/service";
 import { generateTemplate } from "../utils/templateGenerator";
@@ -124,6 +124,8 @@ export function ImportIntentPage() {
             const nluEntityNames = parseNLUEntityNames(nluText);
             const domainEntityNames = parsedResponses.entityNames || [];
             const uniqueEntityNames = Array.from(new Set([...nluEntityNames, ...domainEntityNames]));
+            const entityDefinitions = parseNLUEntityDefinitions(nluText);
+            const slotDefinitions = parseDomainSlotDefinitions(domainText);
 
             const importBotIds = isManager
                 ? managerAssignedBotId ? [managerAssignedBotId] : []
@@ -141,10 +143,11 @@ export function ImportIntentPage() {
                         entityNameToId.set(entityName, String(existing._id));
                         foundEntities.push(entityName);
                     } else if (importBotIds.length > 0) {
+                        const def = entityDefinitions[entityName] || `- entity: ${entityName}`;
                         const created = await entityService.createEntity({
                             name: entityName,
                             description: '',
-                            define: '',
+                            define: def,
                             botIds: importBotIds,
                         });
                         if (created?._id) {
@@ -171,7 +174,7 @@ export function ImportIntentPage() {
                         continue;
                     }
                     if (importBotIds.length > 0) {
-                        const define = buildSlotDefineFromParsed(slot, entityNameToId);
+                        const define = slotDefinitions[slot.name] || buildSlotDefineFromParsed(slot, entityNameToId);
                         // Find entity ID for the slot's from_entity mapping (first one)
                         const entityMapping = slot.mappings.find(m => m.type === 'from_entity' && m.entity);
                         const entityId = entityMapping?.entity ? entityNameToId.get(entityMapping.entity) ?? null : null;
@@ -194,14 +197,49 @@ export function ImportIntentPage() {
 
             // Merge NLU with responses, attach entity IDs per intent
             const merged = mergeNLUWithResponses(parsedNLU, parsedResponses);
-            const merged2 = merged.map(m => {
+
+            // Extract prefix from the first row
+            let extractedPrefix = "";
+            if (merged.length > 0) {
+                const firstIntentName = merged[0].name;
+                const match = firstIntentName.match(/^(.*?)_\d+$/);
+                extractedPrefix = match ? match[1] : firstIntentName;
+                setLabelPrefix(extractedPrefix);
+            }
+            const formattedPrefix = formatIntentName(extractedPrefix);
+
+            // Merge NLU with responses, attach entity IDs per intent
+            const merged2 = merged.map((m, index) => {
                 const intentEntityNames = extractIntentEntityNames(m.examples);
                 const entityIds = intentEntityNames
                     .map(n => entityNameToId.get(n))
                     .filter(Boolean) as string[];
+                    
+                const newName = formattedPrefix ? `${formattedPrefix}_${index + 1}` : m.name;
+                let responseContent = m.responseContent || m.response || "";
+                let newResponseName = m.responseName;
+                
+                if (formattedPrefix) {
+                    const oldUtterName = m.responseName || `utter_${m.name}`;
+                    const newUtterName = `utter_${newName}`;
+                    const oldActionName = m.responseName || `action_${m.name}`;
+                    const newActionName = `action_${newName}`;
+                    
+                    if (responseContent.startsWith(`${oldUtterName}:`)) {
+                        responseContent = responseContent.replace(new RegExp(`^${oldUtterName}:`), `${newUtterName}:`);
+                        newResponseName = newUtterName;
+                    } else if (responseContent.match(new RegExp(`^action:\\s+${oldActionName}$`))) {
+                        responseContent = responseContent.replace(new RegExp(`^action:\\s+${oldActionName}$`), `action: ${newActionName}`);
+                        newResponseName = newActionName;
+                    }
+                }
+                
                 return {
                     ...m,
-                    response: m.responseContent || (m.response || ""),
+                    name: formattedPrefix ? newName : m.name,
+                    label: extractedPrefix,
+                    response: responseContent,
+                    responseName: newResponseName,
                     entityIds,
                 };
             });
@@ -326,11 +364,34 @@ export function ImportIntentPage() {
         }
 
         setRows((prev) => {
-            const updated = prev.map((row, index) => ({
-                ...row,
-                name: `${formattedPrefix}_${index + 1}`,
-                label: prefix.trim(),
-            }));
+            const updated = prev.map((row, index) => {
+                const newName = `${formattedPrefix}_${index + 1}`;
+                let newResponse = row.response || "";
+                let newResponseName = row.responseName;
+                
+                if (importMode === 'yaml' && newResponse) {
+                    const oldUtterName = row.responseName || `utter_${row.name}`;
+                    const newUtterName = `utter_${newName}`;
+                    const oldActionName = row.responseName || `action_${row.name}`;
+                    const newActionName = `action_${newName}`;
+                    
+                    if (newResponse.startsWith(`${oldUtterName}:`)) {
+                        newResponse = newResponse.replace(new RegExp(`^${oldUtterName}:`), `${newUtterName}:`);
+                        newResponseName = newUtterName;
+                    } else if (newResponse.match(new RegExp(`^action:\\s+${oldActionName}$`))) {
+                        newResponse = newResponse.replace(new RegExp(`^action:\\s+${oldActionName}$`), `action: ${newActionName}`);
+                        newResponseName = newActionName;
+                    }
+                }
+                
+                return {
+                    ...row,
+                    name: newName,
+                    label: prefix.trim(),
+                    response: newResponse,
+                    responseName: newResponseName,
+                };
+            });
             return updated;
         });
 
@@ -357,11 +418,30 @@ export function ImportIntentPage() {
         }
         setRows((prev) => {
             const updated = [...prev];
+            let newResponse = editAnswer.trim();
+            let newResponseName = updated[index].responseName;
+            
+            if (importMode === 'yaml' && newResponse) {
+                const oldUtterName = updated[index].responseName || `utter_${updated[index].name}`;
+                const newUtterName = `utter_${newName}`;
+                const oldActionName = updated[index].responseName || `action_${updated[index].name}`;
+                const newActionName = `action_${newName}`;
+                
+                if (newResponse.startsWith(`${oldUtterName}:`)) {
+                    newResponse = newResponse.replace(new RegExp(`^${oldUtterName}:`), `${newUtterName}:`);
+                    newResponseName = newUtterName;
+                } else if (newResponse.match(new RegExp(`^action:\\s+${oldActionName}$`))) {
+                    newResponse = newResponse.replace(new RegExp(`^action:\\s+${oldActionName}$`), `action: ${newActionName}`);
+                    newResponseName = newActionName;
+                }
+            }
+            
             updated[index] = {
                 ...updated[index],
                 name: newName,
                 label: editLabel.trim(),
-                response: editAnswer.trim(),
+                response: newResponse,
+                responseName: newResponseName,
             };
             return updated;
         });
@@ -463,6 +543,7 @@ export function ImportIntentPage() {
 
             // Add new examples to this row
             setRows((prev) => {
+                if (prev.length === 0 || !prev[rowIdx]) return prev;
                 const updated = [...prev];
                 const newExamples = [...updated[rowIdx].examples, ...returnedExamples.map(ex => ex.trim())];
                 // Deduplicate
@@ -517,6 +598,7 @@ export function ImportIntentPage() {
 
                     if (returnedExamples && returnedExamples.length > 0) {
                         setRows(prev => {
+                            if (prev.length === 0 || !prev[i]) return prev;
                             const updated = [...prev];
                             const newExamples = [...updated[i].examples, ...returnedExamples.map(ex => ex.trim())];
                             const uniqueExamples = Array.from(new Set(newExamples));
@@ -702,7 +784,7 @@ export function ImportIntentPage() {
             try {
                 const formattedName = row.name;
                 const resolvedLabel = importMode === "yaml"
-                    ? (sharedLabel || undefined)
+                    ? (sharedLabel || row.label?.trim() || undefined)
                     : (row.label?.trim() || undefined);
                 // Use all examples from the row
                 const examplesArr: string[] = row.examples.filter(ex => ex.trim());
@@ -735,6 +817,7 @@ export function ImportIntentPage() {
 
                 // Mark as success
                 setRows((prev) => {
+                    if (prev.length === 0 || !prev[i]) return prev;
                     const updated = [...prev];
                     updated[i] = { ...updated[i], status: 'success', error: undefined };
                     return updated;
@@ -753,6 +836,7 @@ export function ImportIntentPage() {
                 const errorMsg = `${botPrefix}${formatImportError(rootErr, row)}`;
 
                 setRows((prev) => {
+                    if (prev.length === 0 || !prev[i]) return prev;
                     const updated = [...prev];
                     updated[i] = { ...updated[i], status: 'error', error: errorMsg };
                     return updated;

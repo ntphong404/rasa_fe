@@ -6,16 +6,23 @@ import { ArrowLeft } from "lucide-react";
 import { storyService } from "../api/service";
 import { StoryForm } from "../components/StoryForm";
 import { toast } from "sonner";
+import { useChatbotStore } from "@/store/chatbot";
 
 export function CreateStoryPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
 
   const handleSubmit = async (storyData: any) => {
     setIsSubmitting(true);
     try {
-      await storyService.createStory(storyData);
+      const payload = { ...storyData };
+      if (selectedBotId && selectedBotId !== "global") {
+        payload.botId = selectedBotId;
+      }
+      
+      await storyService.createStory(payload);
       toast.success(t("Story created successfully"));
       navigate("/stories");
     } catch (error) {

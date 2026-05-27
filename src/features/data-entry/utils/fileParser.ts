@@ -459,7 +459,9 @@ export function parseDomainSlots(text: string): ParsedSlot[] {
 export function buildSlotDefineFromParsed(slot: ParsedSlot, entityNameToId: Map<string, string>): string {
     const lines: string[] = [`${slot.name}:`];
     lines.push(`  type: ${slot.slotType}`);
-    if (!slot.influenceConversation) {
+    if (slot.influenceConversation) {
+        lines.push(`  influence_conversation: true`);
+    } else {
         lines.push(`  influence_conversation: false`);
     }
     if (slot.initialValue !== undefined && slot.initialValue !== '') {
@@ -472,7 +474,7 @@ export function buildSlotDefineFromParsed(slot: ParsedSlot, entityNameToId: Map<
         if (m.type === 'from_entity' && m.entity) {
             const entityId = entityNameToId.get(m.entity);
             lines.push(`  - type: from_entity`);
-            lines.push(`    entity: [${entityId || m.entity}]`);
+            lines.push(`    entity: ${entityId || m.entity}`);
         } else {
             lines.push(`  - type: ${m.type}`);
         }
@@ -613,4 +615,103 @@ export async function parseFile(file: File): Promise<ParsedRow[]> {
         const text = await file.text();
         return await parseCSV(text);
     }
+}
+
+/**
+ * Extract raw YAML blocks for entities from NLU file
+ */
+export function parseNLUEntityDefinitions(text: string): Record<string, string> {
+    const entityBlocks: Record<string, string[]> = {};
+    const lines = text.split(/\r?\n/);
+    
+    let currentEntityName: string | null = null;
+    let currentBlockLines: string[] = [];
+    
+    const saveBlock = () => {
+        if (currentEntityName && currentBlockLines.length > 0) {
+            if (!entityBlocks[currentEntityName]) {
+                entityBlocks[currentEntityName] = [];
+            }
+            entityBlocks[currentEntityName].push(currentBlockLines.join('\n'));
+        }
+    };
+    
+    for (const line of lines) {
+        const trimmed = line.trim();
+        const blockMatch = trimmed.match(/^-\s+(regex|lookup|synonym):\s*(.+)$/);
+        
+        if (blockMatch) {
+            saveBlock();
+            currentEntityName = blockMatch[2].trim();
+            currentBlockLines = [line];
+            continue;
+        }
+        
+        if (trimmed.match(/^-\s+intent:/)) {
+            saveBlock();
+            currentEntityName = null;
+            currentBlockLines = [];
+            continue;
+        }
+        
+        if (currentEntityName) {
+            currentBlockLines.push(line);
+        }
+    }
+    saveBlock();
+    
+    const result: Record<string, string> = {};
+    for (const [name, blocks] of Object.entries(entityBlocks)) {
+        result[name] = blocks.join('\n');
+    }
+    return result;
+}
+
+/**
+ * Extract raw YAML blocks for slots from Domain file
+ */
+export function parseDomainSlotDefinitions(text: string): Record<string, string> {
+    const slots: Record<string, string> = {};
+    const lines = text.split(/\r?\n/);
+    
+    let inSlotsSection = false;
+    let currentSlotName: string | null = null;
+    let currentSlotLines: string[] = [];
+    
+    const saveSlot = () => {
+        if (currentSlotName && currentSlotLines.length > 0) {
+            slots[currentSlotName] = currentSlotLines.join('\n');
+        }
+    };
+    
+    for (const line of lines) {
+        const trimmed = line.trim();
+        const indent = (line.match(/^(\s*)/) || ['', ''])[1].length;
+        
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        
+        if (indent === 0 && trimmed.endsWith(':')) {
+            saveSlot();
+            inSlotsSection = trimmed === 'slots:';
+            currentSlotName = null;
+            currentSlotLines = [];
+            continue;
+        }
+        
+        if (!inSlotsSection) continue;
+        
+        if (indent === 2 && trimmed.endsWith(':') && !trimmed.startsWith('-')) {
+            saveSlot();
+            currentSlotName = trimmed.slice(0, -1);
+            currentSlotLines = [`${currentSlotName}:`];
+            continue;
+        }
+        
+        if (currentSlotName) {
+            currentSlotLines.push(line.length >= 2 ? line.substring(2) : line);
+        }
+    }
+    
+    saveSlot();
+    return slots;
 }

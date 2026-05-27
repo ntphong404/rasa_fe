@@ -7,11 +7,13 @@ import { storyService } from "../api/service";
 import { StoryForm } from "../components/StoryForm";
 import { IStory } from "@/interfaces/story.interface";
 import { toast } from "sonner";
+import { useChatbotStore } from "@/store/chatbot";
 
 export function EditStoryPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
 
   // States
   const [story, setStory] = useState<IStory | null>(null);
@@ -51,7 +53,16 @@ export function EditStoryPage() {
 
     setIsSubmitting(true);
     try {
-      await storyService.updateStory(story._id, { ...storyData, _id: story._id });
+      const payload = { ...storyData, _id: story._id };
+      
+      // Preserve botIds if exists, otherwise fallback to current selectedBotId
+      if (story.botIds && story.botIds.length > 0) {
+        payload.botIds = story.botIds;
+      } else if (selectedBotId && selectedBotId !== "global") {
+        payload.botId = selectedBotId;
+      }
+
+      await storyService.updateStory(story._id, payload);
       toast.success(t("Story updated successfully"));
       navigate("/stories");
     } catch (error) {

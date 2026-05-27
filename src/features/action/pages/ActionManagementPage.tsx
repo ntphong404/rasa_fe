@@ -109,7 +109,7 @@ export function ActionManagement() {
   const fetchActionsData = async (filters?: z.infer<typeof filterSchema>) => {
     try {
       setIsDataLoading(true);
-      const queryParams = filters || { ...pagination, ...form.getValues() };
+      const queryParams = filters || { ...form.getValues(), ...pagination };
       const response: ListActionResponse = await actionService.fetchActions(
         queryParams
       );

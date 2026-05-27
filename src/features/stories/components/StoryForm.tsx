@@ -18,7 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Plus, X, Settings, GripVertical, AlertCircle, SlidersHorizontal, FileCode, HelpCircle } from "lucide-react";
+import { Plus, X, Settings, GripVertical, AlertCircle, SlidersHorizontal, FileCode, HelpCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { storyService } from "../api/service";
 import { intentService } from "@/features/intents/api/service";
@@ -401,6 +401,92 @@ export function StoryForm({
           cursorPos + pattern.length
         );
       }, 0);
+    }
+  };
+
+  const [isAutoFilling, setIsAutoFilling] = useState(false);
+
+  const handleAutoFillIds = async () => {
+    if (!yamlDefine.trim()) return;
+    setIsAutoFilling(true);
+    let newYaml = yamlDefine;
+    const errors: string[] = [];
+    let updatedCount = 0;
+
+    try {
+      // Find all intents: - intent: name
+      const intentMatches = Array.from(newYaml.matchAll(/- intent:\s+([^\[\n\r]+)/g));
+      for (const match of intentMatches) {
+        const fullMatch = match[0];
+        const rawName = match[1].split('#')[0].trim();
+        const name = rawName.replace(/^["']|["']$/g, '');
+        
+        if (!name) continue;
+
+        const results = await storyService.searchIntentForStory(name);
+        const exactMatch = results.find(r => r.name === name);
+        if (exactMatch) {
+          newYaml = newYaml.replace(fullMatch, `- intent: [${exactMatch._id}]`);
+          updatedCount++;
+        } else {
+          errors.push(`Intent: ${name}`);
+        }
+      }
+
+      // Find all actions: - action: name
+      const actionMatches = Array.from(newYaml.matchAll(/- action:\s+([^\[\n\r]+)/g));
+      for (const match of actionMatches) {
+        const fullMatch = match[0];
+        const rawName = match[1].split('#')[0].trim();
+        const name = rawName.replace(/^["']|["']$/g, '');
+        
+        if (!name) continue;
+
+        // Try action first
+        let results = await storyService.searchActionForStory(name);
+        let exactMatch: any = results.find(r => r.name === name);
+        let isResponse = false;
+
+        if (!exactMatch) {
+          // Try response
+          const resResults = await storyService.searchResponseForStory(name);
+          exactMatch = resResults.find(r => r.name === name);
+          isResponse = !!exactMatch;
+        }
+
+        if (exactMatch) {
+          newYaml = newYaml.replace(fullMatch, `- action: [${exactMatch._id}]`);
+          if (isResponse) {
+            setSelectedResponses(prev => prev.some(p => p._id === exactMatch?._id) ? prev : [...prev, exactMatch as unknown as IMyResponse]);
+          } else {
+            setSelectedActions(prev => prev.some(p => p._id === exactMatch?._id) ? prev : [...prev, exactMatch as unknown as IAction]);
+          }
+          updatedCount++;
+        } else {
+          errors.push(`Action/Response: ${name}`);
+        }
+      }
+
+      setYamlDefine(newYaml);
+
+      if (updatedCount > 0) {
+        toast.success(t(`Auto-filled ${updatedCount} IDs successfully`));
+      } else if (errors.length === 0) {
+        toast.info(t("No names found to auto-fill"));
+      }
+
+      if (errors.length > 0) {
+        // Show up to 5 errors to avoid huge toasts
+        const displayErrors = errors.slice(0, 5);
+        const more = errors.length > 5 ? ` +${errors.length - 5} more` : '';
+        toast.error(t("Could not find IDs for:") + " " + displayErrors.join(", ") + more);
+      }
+
+    } catch (error) {
+      console.error("Error auto-filling IDs:", error);
+      toast.error(t("Error occurred during auto-fill"));
+    } finally {
+      setIsAutoFilling(false);
     }
   };
 
@@ -858,8 +944,13 @@ export function StoryForm({
             if (line.includes('- intent:')) {
               intentIds.push(id);
             } else if (line.includes('- action:')) {
-              // For expert mode, we'll put all actions in actionIds
-              actionIds.push(id);
+              // Check if it's a response
+              const isResponse = selectedResponses.some(r => r._id === id);
+              if (isResponse) {
+                responseIds.push(id);
+              } else {
+                actionIds.push(id);
+              }
             }
           }
         });
@@ -884,9 +975,9 @@ export function StoryForm({
         name: name.trim(),
         description: description.trim(),
         define: finalYaml,
-        intents: intentIds,
-        action: actionIds, // Note: interface uses 'action' not 'actions'
-        responses: responseIds,
+        intents: Array.from(new Set(intentIds)),
+        action: Array.from(new Set(actionIds)), // Note: interface uses 'action' not 'actions'
+        responses: Array.from(new Set(responseIds)),
         entities: [], // Pass empty array as user specified
         slots: [], // Pass empty array as user specified
         roles: []
@@ -972,6 +1063,26 @@ export function StoryForm({
               onClick={generateTemplate}
             >
               {t("Generate Template")}
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={handleAutoFillIds}
+              disabled={isAutoFilling}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {isAutoFilling ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t("Auto-filling...")}
+                </>
+              ) : (
+                <>
+                  <FileCode className="mr-2 h-4 w-4" />
+                  {t("Auto-fill IDs")}
+                </>
+              )}
             </Button>
             <Popover>
               <PopoverTrigger asChild>

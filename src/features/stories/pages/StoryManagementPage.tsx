@@ -421,7 +421,7 @@ export function StoryManagementPage() {
             className="bg-green-600 hover:bg-green-700"
           >
             <Plus className="mr-2 h-4 w-4" />
-            {t("Tạo Luật")}
+            {t("Tạo Story")}
           </Button>
         </form>
       </Form>

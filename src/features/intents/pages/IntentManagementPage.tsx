@@ -146,7 +146,7 @@ export function IntentManagementPage() {
   const fetchIntentsData = async (filters?: IntentQuery) => {
     try {
       setIsDataLoading(true);
-      
+
       const queryParams: IntentQuery = filters || {
         page: pagination.page,
         limit: pagination.limit,
@@ -179,8 +179,7 @@ export function IntentManagementPage() {
       }
     } catch (err) {
       setError(
-        `Failed to fetch intents: ${
-          err instanceof Error ? err.message : String(err)
+        `Failed to fetch intents: ${err instanceof Error ? err.message : String(err)
         }`
       );
       console.error("Error fetching intents:", err);
@@ -191,7 +190,7 @@ export function IntentManagementPage() {
 
   useEffect(() => {
     fetchIntentsData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, pagination.limit, refreshTrigger, selectedBotId]);
 
   const onSubmit = (data: z.infer<typeof filterSchema>) => {
@@ -383,8 +382,8 @@ export function IntentManagementPage() {
                                   {field.value === "true"
                                     ? t("Trained")
                                     : field.value === "false"
-                                    ? t("Not trained")
-                                    : t("All training statuses")}
+                                      ? t("Not trained")
+                                      : t("All training statuses")}
                                   <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                                 </Button>
                               </PopoverTrigger>
@@ -516,7 +515,7 @@ export function IntentManagementPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="sort"
@@ -538,8 +537,8 @@ export function IntentManagementPage() {
                                     field.value === "DESC"
                                       ? t("Newest first")
                                       : field.value === "ASC"
-                                      ? t("Oldest first")
-                                      : t("Select sort")
+                                        ? t("Oldest first")
+                                        : t("Select sort")
                                   }
                                   <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                                 </Button>
@@ -799,8 +798,8 @@ export function IntentManagementPage() {
 
                 if (trainedModels.length === 0) {
                   return (
-                    <Badge variant="secondary" className="bg-slate-100 text-slate-700">
-                      {t("Not trained")}
+                    <Badge className="bg-green-600">
+                      {t("Trained")}
                     </Badge>
                   );
                 }
@@ -845,7 +844,7 @@ export function IntentManagementPage() {
               cell: ({ row }) => {
                 const intent = row.original;
                 const isDeleted = intent.deleted;
-                
+
                 return (
                   <div className="flex gap-2">
                     <Button
