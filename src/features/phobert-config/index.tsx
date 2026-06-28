@@ -143,7 +143,7 @@ export function PhobertConfigPage() {
 
   const apiBaseUrl = useMemo(() => {
     const bot = chatbots.find((b) => b.botId === selectedBotId)
-    if (bot?.ip && bot?.flaskPort) return `http://${bot.ip}:${bot.flaskPort}`
+    if (bot?.flaskUrl) return bot.flaskUrl
     const raw = (import.meta as ImportMeta).env?.VITE_FLASK_API_URL as string | undefined
     return (raw || '').trim().replace(/\/$/, '')
   }, [chatbots, selectedBotId])

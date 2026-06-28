@@ -13,6 +13,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { vi, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
+import { useChatbotStore } from "@/store/chatbot";
 import {
   BarChart,
   Bar,
@@ -37,9 +38,13 @@ export const ConversationStatisticsPage = () => {
   }>({});
   const [exportOpen, setExportOpen] = useState(false);
 
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const scopedBotId = selectedBotId && selectedBotId !== 'global' ? selectedBotId : undefined;
+
   const params = {
     startDate: dateRange.startDate ? format(dateRange.startDate, "yyyy-MM-dd") : undefined,
     endDate: dateRange.endDate ? format(dateRange.endDate, "yyyy-MM-dd") : undefined,
+    botId: scopedBotId,
   };
 
   const { data, isLoading, isError } = useConversationStatistics(params);

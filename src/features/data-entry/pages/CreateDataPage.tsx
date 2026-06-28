@@ -253,7 +253,6 @@ export function CreateDataPage() {
             // Use createFull API to create intent, response, and rule in one call
             const result = await intentService.createFull({
                 name: formattedIntent || formatIntentName(intentName.trim()),
-                description: "",
                 examples: examples,
                 answer: responseText.trim() || "",
                 label: label.trim() || undefined,

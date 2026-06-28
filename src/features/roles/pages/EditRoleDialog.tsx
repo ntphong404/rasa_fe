@@ -160,8 +160,6 @@ export default function EditRoleDialog({
   ) => {
     if (!role) return;
     try {
-      console.log("check role", role);
-
       // Đảm bảo _id được bao gồm trong payload
       const payload = {
         ...data,

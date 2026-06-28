@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useChatbotStore } from "@/store/chatbot";
+import { useChatbots } from "@/hooks/useChatbots";
+import { useAuthStore } from "@/store/auth";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +54,37 @@ export function RuleForm({
   isSubmitting
 }: RuleFormProps) {
   const { t } = useTranslation();
+
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const user = useAuthStore((state) => state.user);
+  const { chatbots } = useChatbots();
+  const isManager = useMemo(
+    () => Boolean(user?.roles?.some((role) => role.name?.toUpperCase() === "MANAGER")),
+    [user?.roles]
+  );
+  const managerAssignedBotId = useMemo(() => user?.managedBotIds?.[0] || null, [user?.managedBotIds]);
+
+  const [applicableBotIds, setApplicableBotIds] = useState<string[]>(
+    initialRule?.botIds || []
+  );
+
+  useEffect(() => {
+    if (initialRule?.botIds?.length) return;
+    if (isManager) {
+      setApplicableBotIds(managerAssignedBotId ? [managerAssignedBotId] : []);
+      return;
+    }
+    if (!selectedBotId || selectedBotId === "global") return;
+    setApplicableBotIds((prev) =>
+      prev.includes(selectedBotId) ? prev : [...prev, selectedBotId]
+    );
+  }, [isManager, managerAssignedBotId, selectedBotId]);
+
+  const handleToggleApplicableBot = (botId: string) => {
+    setApplicableBotIds((prev) =>
+      prev.includes(botId) ? prev.filter((id) => id !== botId) : [...prev, botId]
+    );
+  };
 
   // Form fields
   const [name, setName] = useState(initialRule?.name || "");
@@ -856,6 +890,12 @@ export function RuleForm({
     try {
       let ruleData;
 
+      const targetBotIds = isManager
+        ? managerAssignedBotId ? [managerAssignedBotId] : []
+        : selectedBotId && selectedBotId !== "global"
+          ? [selectedBotId]
+          : applicableBotIds;
+
       if (isExpertMode) {
         // In expert mode, use selected items from Expert Mode
         const yamlLines = yamlDefine.split('\n');
@@ -871,6 +911,7 @@ export function RuleForm({
           action: selectedActions.map(action => action._id),
           responses: selectedResponses.map(response => response._id),
           roles: [],
+          botIds: targetBotIds,
         };
       } else {
         // Visual mode - extract from ruleSteps
@@ -893,6 +934,7 @@ export function RuleForm({
           action: [...new Set(usedActions)],
           responses: [...new Set(usedResponses)],
           roles: [],
+          botIds: targetBotIds,
         };
       }
 
@@ -942,6 +984,30 @@ export function RuleForm({
             rows={3}
           />
         </div>
+        {!isManager && chatbots.length > 0 && (
+          <div className="space-y-3 rounded-lg border p-4">
+            <div className="space-y-1">
+              <Label>{t("Applicable Chatbots")}</Label>
+              <p className="text-xs text-muted-foreground">
+                {t("Select one or more chatbots this rule belongs to")}
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {chatbots.filter((bot) => bot.botId !== "global").map((bot) => (
+                <label
+                  key={bot._id}
+                  className="flex items-center gap-2 rounded-md border p-2 text-sm"
+                >
+                  <Checkbox
+                    checked={applicableBotIds.includes(bot.botId)}
+                    onCheckedChange={() => handleToggleApplicableBot(bot.botId)}
+                  />
+                  <span>{bot.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Steps - Visual Mode */}

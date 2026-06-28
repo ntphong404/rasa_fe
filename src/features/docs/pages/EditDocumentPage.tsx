@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -6,10 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Upload, X, FileText } from "lucide-react";
 import { docService } from "../api/service";
 import { toast } from "sonner";
 import { IDoc } from "@/interfaces/doc.interface";
+import { useChatbotStore } from "@/store/chatbot";
+import { useChatbots } from "@/hooks/useChatbots";
+import { useAuthStore } from "@/store/auth";
 
 export function EditDocumentPage() {
   const { t } = useTranslation();
@@ -17,6 +21,16 @@ export function EditDocumentPage() {
   const location = useLocation();
   const doc = location.state?.doc as IDoc;
 
+  const user = useAuthStore((state) => state.user);
+  const { chatbots } = useChatbots();
+
+  const isManager = useMemo(
+    () => Boolean(user?.roles?.some((role) => role.name?.toUpperCase() === "MANAGER")),
+    [user?.roles]
+  );
+  const managerAssignedBotId = useMemo(() => user?.managedBotIds?.[0] || null, [user?.managedBotIds]);
+
+  const [botId, setBotId] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -70,6 +84,7 @@ export function EditDocumentPage() {
 
   useEffect(() => {
     if (doc) {
+      setBotId(doc.botId || "");
       setName(doc.name);
       setDescription(doc.description || "");
       setSelectedTags(doc.tags || []);
@@ -134,6 +149,11 @@ export function EditDocumentPage() {
   };
 
   const handleSubmit = async () => {
+    if (!botId) {
+      toast.error(t("Please select a chatbot"));
+      return;
+    }
+
     if (!name.trim()) {
       toast.error(t("Please enter document name"));
       return;
@@ -144,6 +164,7 @@ export function EditDocumentPage() {
 
       await docService.updateDocument({
         _id: doc._id,
+        botId,
         name: name.trim(),
         description: description.trim(),
         tags: selectedTags,
@@ -264,6 +285,45 @@ export function EditDocumentPage() {
             )}
           </div>
         </div>
+
+        {/* Chatbot Selector */}
+        {isManager ? (
+          <div className="space-y-2">
+            <Label>{t("Chatbot")} *</Label>
+            <div className="rounded-md border bg-muted/50 p-3 text-sm">
+              {managerAssignedBotId ? (
+                chatbots.find((bot) => bot.botId === managerAssignedBotId)?.name || managerAssignedBotId
+              ) : (
+                t("No chatbot assigned")
+              )}
+            </div>
+          </div>
+        ) : (
+          chatbots.length > 0 && (
+            <div className="space-y-3 rounded-lg border p-4">
+              <div className="space-y-1">
+                <Label>{t("Applicable Chatbot")} *</Label>
+                <p className="text-xs text-muted-foreground">
+                  {t("Select the chatbot this document belongs to")}
+                </p>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {chatbots.filter((bot) => bot.botId !== "global").map((bot) => (
+                  <label
+                    key={bot._id}
+                    className="flex items-center gap-2 rounded-md border p-2 text-sm cursor-pointer hover:bg-accent/50 transition-colors"
+                  >
+                    <Checkbox
+                      checked={botId === bot.botId}
+                      onCheckedChange={() => setBotId(bot.botId)}
+                    />
+                    <span>{bot.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )
+        )}
 
         {/* Name */}
         <div className="space-y-2">

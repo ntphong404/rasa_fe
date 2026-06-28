@@ -22,8 +22,14 @@ export function MainLayout() {
   const isAdmin = Boolean(
     user?.roles?.some((role) => role.name?.toUpperCase() === "ADMIN")
   );
-  // Ẩn bộ chọn chatbot ở trang chat vì trang chat dùng system chatbot được cấu hình trong Settings
-  const isChatPage = location.pathname === "/" || location.pathname === "/home_chat" || location.pathname === "/home_chat_demo";
+  // Ẩn bộ chọn chatbot ở trang chat và các trang thống kê chung (users, conversations, chatbots)
+  const hideChatbotSelector = 
+    location.pathname === "/" || 
+    location.pathname === "/home_chat" || 
+    location.pathname === "/home_chat_demo" ||
+    location.pathname === "/statistics/users" ||
+    location.pathname === "/statistics/conversations" ||
+    location.pathname === "/statistics/chatbots";
 
   // Yêu cầu quyền hiển thị Notification khi load lần đầu
   useEffect(() => {
@@ -46,7 +52,7 @@ export function MainLayout() {
           <div className="min-w-0 flex-1">
             <AppChatHeaderInfo />
           </div>
-          {isAuthenticated && isAdmin && !isChatPage && <ChatbotSelector />}
+          {isAuthenticated && isAdmin && !hideChatbotSelector && <ChatbotSelector />}
           <GlobalHelpPopover />
           <ThemeModeToggle />
           {/* <LanguageSwicher />

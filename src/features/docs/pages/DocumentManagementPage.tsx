@@ -53,6 +53,7 @@ import {
 import { ConfirmRestoreDialog } from "@/components/confirm-restore-dialog";
 import { Command } from "@/components/ui/command";
 import DocumentDetailsDialog from "@/features/docs/components/DocumentDetailsDialog";
+import { useChatbotStore } from "@/store/chatbot";
 
 const filterSchema = z.object({
   search: z.string().optional(),
@@ -68,6 +69,10 @@ const filterSchema = z.object({
 export function DocumentManagementPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
+  const effectiveBotId = selectedBotId && selectedBotId !== "global" ? selectedBotId : undefined;
+
   const [rowSelection, setRowSelection] = useState({});
   const [documentsData, setDocumentsData] = useState<IDoc[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -102,7 +107,7 @@ export function DocumentManagementPage() {
   });
 
   const fetchDocumentsData = async (
-    filters?: z.infer<typeof filterSchema>
+    filters?: z.infer<typeof filterSchema> & { botId?: string }
   ) => {
     try {
       setIsDataLoading(true);
@@ -116,6 +121,7 @@ export function DocumentManagementPage() {
         startDate: form.getValues("startDate"),
         endDate: form.getValues("endDate"),
         tags: form.getValues("tags"),
+        botId: effectiveBotId,
       };
 
       const response: ListDocResponse = await docService.fetchDocuments(
@@ -148,7 +154,7 @@ export function DocumentManagementPage() {
   useEffect(() => {
     fetchDocumentsData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.limit]);
+  }, [pagination.page, pagination.limit, refreshTrigger, selectedBotId]);
 
   const onSubmit = (data: z.infer<typeof filterSchema>) => {
     setPagination((prev) => ({ ...prev, page: 1 }));
@@ -161,6 +167,7 @@ export function DocumentManagementPage() {
       startDate: data.startDate,
       endDate: data.endDate,
       tags: data.tags,
+      botId: effectiveBotId,
     });
   };
 

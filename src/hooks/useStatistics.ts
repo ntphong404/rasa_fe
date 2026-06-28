@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { statisticService } from "@/features/statistics/api/service";
 
-export const useUserStatistics = () => {
+export const useUserStatistics = (params?: { botId?: string }) => {
   return useQuery({
-    queryKey: ["statistics", "users"],
-    queryFn: () => statisticService.getUserStatistics(),
+    queryKey: ["statistics", "users", params],
+    queryFn: () => statisticService.getUserStatistics(params),
     staleTime: 60000,
   });
 };
@@ -12,6 +12,7 @@ export const useUserStatistics = () => {
 export const useConversationStatistics = (params?: {
   startDate?: string;
   endDate?: string;
+  botId?: string;
 }) => {
   return useQuery({
     queryKey: ["statistics", "conversations", params],
@@ -20,26 +21,26 @@ export const useConversationStatistics = (params?: {
   });
 };
 
-export const useChatbotStatistics = () => {
+export const useChatbotStatistics = (params?: { botId?: string }) => {
   return useQuery({
-    queryKey: ["statistics", "chatbots"],
-    queryFn: () => statisticService.getChatbotStatistics(),
+    queryKey: ["statistics", "chatbots", params],
+    queryFn: () => statisticService.getChatbotStatistics(params),
     staleTime: 60000,
   });
 };
 
-export const useNLPStatistics = () => {
+export const useNLPStatistics = (params?: { botId?: string }) => {
   return useQuery({
-    queryKey: ["statistics", "nlp"],
-    queryFn: () => statisticService.getNLPStatistics(),
+    queryKey: ["statistics", "nlp", params],
+    queryFn: () => statisticService.getNLPStatistics(params),
     staleTime: 60000,
   });
 };
 
-export const useDocumentStatistics = () => {
+export const useDocumentStatistics = (params?: { botId?: string }) => {
   return useQuery({
-    queryKey: ["statistics", "documents"],
-    queryFn: () => statisticService.getDocumentStatistics(),
+    queryKey: ["statistics", "documents", params],
+    queryFn: () => statisticService.getDocumentStatistics(params),
     staleTime: 60000,
   });
 };
@@ -55,10 +56,18 @@ export const useResponseFeedbackStatistics = (params?: {
   });
 };
 
-export const useOverallStatistics = () => {
+export const useOverallStatistics = (params?: { botId?: string }) => {
   return useQuery({
-    queryKey: ["statistics", "overall"],
-    queryFn: () => statisticService.getOverallStatistics(),
+    queryKey: ["statistics", "overall", params],
+    queryFn: () => statisticService.getOverallStatistics(params),
+    staleTime: 60000,
+  });
+};
+
+export const useSystemStatistics = (params?: { botId?: string }) => {
+  return useQuery({
+    queryKey: ["statistics", "system", params],
+    queryFn: () => statisticService.getSystemStatistics(params),
     staleTime: 60000,
   });
 };

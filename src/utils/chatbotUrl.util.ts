@@ -21,6 +21,6 @@ export function getRasaUrl(): string {
 
 export function getFlaskUrl(): string {
   const bot = getSelectedChatbot()
-  if (bot?.ip && bot?.flaskPort) return `http://${bot.ip}:${bot.flaskPort}`
+  if (bot?.flaskUrl) return bot.flaskUrl
   return import.meta.env.VITE_FLASK_API_URL || 'http://localhost:5000'
 }

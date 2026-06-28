@@ -9,6 +9,7 @@ export interface DocQuery {
   startDate?: string;
   endDate?: string;
   tags?: string;
+  botId?: string;
 }
 
 function createDocQuery(query: DocQuery): string {
@@ -36,6 +37,9 @@ function createDocQuery(query: DocQuery): string {
   }
   if (query.tags) {
     queryString += `&tags=${query.tags}`;
+  }
+  if (query.botId) {
+    queryString += `&botId=${query.botId}`;
   }
   return queryString;
 }

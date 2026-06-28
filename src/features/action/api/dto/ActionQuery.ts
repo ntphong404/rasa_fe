@@ -2,6 +2,7 @@ export interface ActionQuery {
     page?: number;
     limit?: number;
     search?: string;
+    botId?: string;
     deleted?: boolean;
     sort?: string;
     createdBy?: string;
@@ -14,6 +15,9 @@ function createActionQuery(query: ActionQuery): string {
     let queryString = `page=${query.page || 1}&limit=${query.limit || 10}`;
     if (query.search) {
         queryString += `&search=${query.search}`;
+    }
+    if (query.botId) {
+        queryString += `&botId=${query.botId}`;
     }
     if (query.deleted  !== undefined) {
         queryString += `&deleted=${query.deleted}`;

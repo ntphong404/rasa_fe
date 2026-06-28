@@ -6,8 +6,8 @@ export interface IChatbot {
   name: string;
   ip: string;
   rasaPort: number;
-  flaskPort: number;
-  ragPort?: number;
+  flaskUrl: string;
+  ragUrl?: string;
   roles: IRole[] | string[];
   
   createdAt: Date;

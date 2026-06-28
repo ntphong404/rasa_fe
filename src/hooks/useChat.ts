@@ -318,7 +318,6 @@ export const useChat = (): UseChatReturn => {
 
         const eventId = event.messageId || event.id || event.message_id;
         if (eventId) {
-          console.log("[useChat] Received messageId from stream:", eventId);
           eventMessageId = eventId;
         }
 

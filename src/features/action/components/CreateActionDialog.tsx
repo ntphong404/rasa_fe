@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 // import "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js";
 import {
   Dialog,
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "react-i18next";
 import { Plus, Code, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
@@ -20,6 +21,9 @@ import { actionService } from "../api/service";
 import { usePyodideSyntaxCheck } from "@/hooks/usePyodideSyntaxCheck";
 import { PythonCodeEditor } from "@/components/code-editor";
 import { ModuleHelpPopover } from "@/components/module-help-popover";
+import { useChatbotStore } from "@/store/chatbot";
+import { useChatbots } from "@/hooks/useChatbots";
+import { useAuthStore } from "@/store/auth";
 
 // export interface CreateActionRequest {
 //   name: string;
@@ -39,6 +43,33 @@ export default function CreateActionDialog({
   onActionCreated,
 }: CreateActionDialogProps) {
   const { t } = useTranslation();
+
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const user = useAuthStore((state) => state.user);
+  const { chatbots } = useChatbots();
+  const isManager = useMemo(
+    () => Boolean(user?.roles?.some((role) => role.name?.toUpperCase() === "MANAGER")),
+    [user?.roles]
+  );
+  const managerAssignedBotId = useMemo(() => user?.managedBotIds?.[0] || null, [user?.managedBotIds]);
+  const [applicableBotIds, setApplicableBotIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (isManager) {
+      setApplicableBotIds(managerAssignedBotId ? [managerAssignedBotId] : []);
+      return;
+    }
+    if (!selectedBotId || selectedBotId === "global") return;
+    setApplicableBotIds((prev) =>
+      prev.includes(selectedBotId) ? prev : [...prev, selectedBotId]
+    );
+  }, [isManager, managerAssignedBotId, selectedBotId]);
+
+  const handleToggleApplicableBot = (botId: string) => {
+    setApplicableBotIds((prev) =>
+      prev.includes(botId) ? prev.filter((id) => id !== botId) : [...prev, botId]
+    );
+  };
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -92,6 +123,7 @@ class ${className}(Action):
     setDescription("");
     setDefine("");
     setSyntaxError(null);
+    setApplicableBotIds([]);
   };
 
   const handleSubmit = async (emptyDefine: boolean = false) => {
@@ -111,12 +143,19 @@ class ${className}(Action):
       }
     }
 
+    const targetBotIds = isManager
+      ? managerAssignedBotId ? [managerAssignedBotId] : []
+      : selectedBotId && selectedBotId !== "global"
+        ? [selectedBotId]
+        : applicableBotIds;
+
     try {
       setIsSubmitting(true);
       await actionService.createAction({
         name: sanitizedName,
         description: description.trim(),
         define: finalDefine,
+        botId: targetBotIds[0],
       });
 
       resetForm();
@@ -172,6 +211,31 @@ class ${className}(Action):
                     className="max-h-[22rem] min-h-[96px]"
                   />
                 </div>
+
+                {!isManager && chatbots.length > 0 && (
+                  <div className="space-y-3 rounded-lg border p-3">
+                    <div className="space-y-1">
+                      <Label>{t("Applicable Chatbots")}</Label>
+                      <p className="text-xs text-muted-foreground">
+                        {t("Select one or more chatbots this action belongs to")}
+                      </p>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {chatbots.filter((bot) => bot.botId !== "global").map((bot) => (
+                        <label
+                          key={bot._id}
+                          className="flex items-center gap-2 rounded-md border p-2 text-sm"
+                        >
+                          <Checkbox
+                            checked={applicableBotIds.includes(bot.botId)}
+                            onCheckedChange={() => handleToggleApplicableBot(bot.botId)}
+                          />
+                          <span>{bot.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

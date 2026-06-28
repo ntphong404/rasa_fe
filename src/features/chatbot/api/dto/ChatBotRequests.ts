@@ -11,10 +11,8 @@ export interface ChatBotQuery {
 export interface CreateChatBotRequest {
   botId: string;
   name: string;
-  ip: string;
-  rasaPort: number;
-  flaskPort: number;
-  ragPort?: number;
+  flaskUrl: string;
+  ragUrl?: string;
   roles?: string[];
 }
 
@@ -22,10 +20,8 @@ export interface UpdateChatBotRequest {
   _id: string;
   botId: string;
   name: string;
-  ip: string;
-  rasaPort: number;
-  flaskPort: number;
-  ragPort?: number;
+  flaskUrl: string;
+  ragUrl?: string;
   roles?: string[];
 }
 

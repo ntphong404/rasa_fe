@@ -13,19 +13,30 @@ import {
 } from "@/interfaces/statistic.interface";
 
 export const statisticService = {
-  getOverallStatistics: async (): Promise<StatisticsResponse<OverallStatistics>> => {
-    const response = await axiosInstance.get(ENDPOINTS.STATISTIC_ENDPOINTS.OVERALL);
+  getOverallStatistics: async (params?: {
+    botId?: string;
+  }): Promise<StatisticsResponse<OverallStatistics>> => {
+    const response = await axiosInstance.get(
+      ENDPOINTS.STATISTIC_ENDPOINTS.OVERALL,
+      { params }
+    );
     return response.data;
   },
 
-  getUserStatistics: async (): Promise<StatisticsResponse<UserStatistics>> => {
-    const response = await axiosInstance.get(ENDPOINTS.STATISTIC_ENDPOINTS.USERS);
+  getUserStatistics: async (params?: {
+    botId?: string;
+  }): Promise<StatisticsResponse<UserStatistics>> => {
+    const response = await axiosInstance.get(
+      ENDPOINTS.STATISTIC_ENDPOINTS.USERS,
+      { params }
+    );
     return response.data;
   },
 
   getConversationStatistics: async (params?: {
     startDate?: string;
     endDate?: string;
+    botId?: string;
   }): Promise<StatisticsResponse<ConversationStatistics>> => {
     const response = await axiosInstance.get(
       ENDPOINTS.STATISTIC_ENDPOINTS.CONVERSATIONS,
@@ -34,18 +45,33 @@ export const statisticService = {
     return response.data;
   },
 
-  getChatbotStatistics: async (): Promise<StatisticsResponse<ChatbotStatistics>> => {
-    const response = await axiosInstance.get(ENDPOINTS.STATISTIC_ENDPOINTS.CHATBOTS);
+  getChatbotStatistics: async (params?: {
+    botId?: string;
+  }): Promise<StatisticsResponse<ChatbotStatistics>> => {
+    const response = await axiosInstance.get(
+      ENDPOINTS.STATISTIC_ENDPOINTS.CHATBOTS,
+      { params }
+    );
     return response.data;
   },
 
-  getNLPStatistics: async (): Promise<StatisticsResponse<NLPStatistics>> => {
-    const response = await axiosInstance.get(ENDPOINTS.STATISTIC_ENDPOINTS.NLP);
+  getNLPStatistics: async (params?: {
+    botId?: string;
+  }): Promise<StatisticsResponse<NLPStatistics>> => {
+    const response = await axiosInstance.get(
+      ENDPOINTS.STATISTIC_ENDPOINTS.NLP,
+      { params }
+    );
     return response.data;
   },
 
-  getDocumentStatistics: async (): Promise<StatisticsResponse<DocumentStatistics>> => {
-    const response = await axiosInstance.get(ENDPOINTS.STATISTIC_ENDPOINTS.DOCUMENTS);
+  getDocumentStatistics: async (params?: {
+    botId?: string;
+  }): Promise<StatisticsResponse<DocumentStatistics>> => {
+    const response = await axiosInstance.get(
+      ENDPOINTS.STATISTIC_ENDPOINTS.DOCUMENTS,
+      { params }
+    );
     return response.data;
   },
 
@@ -60,8 +86,13 @@ export const statisticService = {
     return response.data;
   },
 
-  getSystemStatistics: async (): Promise<StatisticsResponse<SystemStatistics>> => {
-    const response = await axiosInstance.get(ENDPOINTS.STATISTIC_ENDPOINTS.SYSTEM);
+  getSystemStatistics: async (params?: {
+    botId?: string;
+  }): Promise<StatisticsResponse<SystemStatistics>> => {
+    const response = await axiosInstance.get(
+      ENDPOINTS.STATISTIC_ENDPOINTS.SYSTEM,
+      { params }
+    );
     return response.data;
   },
 };

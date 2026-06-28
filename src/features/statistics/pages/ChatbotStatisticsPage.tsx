@@ -9,10 +9,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
+import { useChatbotStore } from "@/store/chatbot";
 
 export const ChatbotStatisticsPage = () => {
   const { t } = useTranslation();
-  const chatbots = useChatbotStatistics();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const scopedBotId = selectedBotId && selectedBotId !== 'global' ? selectedBotId : undefined;
+  const chatbots = useChatbotStatistics({ botId: scopedBotId });
   const [exportOpen, setExportOpen] = useState(false);
 
   const data = chatbots.data?.data;
@@ -82,7 +85,7 @@ export const ChatbotStatisticsPage = () => {
         />
         <StatsCard
           title="Action Servers"
-          value={data?.chatbots?.filter(cb => cb.flaskPort).length || 0}
+          value={data?.chatbots?.filter(cb => cb.flaskUrl).length || 0}
           icon={Wifi}
           description={t("Running Action servers")}
         />
@@ -116,7 +119,7 @@ export const ChatbotStatisticsPage = () => {
                         </div>
                         <div>
                           <p className="text-muted-foreground">Flask Port</p>
-                          <p className="font-medium">{chatbot.flaskPort}</p>
+                          <p className="font-medium">{chatbot.flaskUrl}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Roles</p>

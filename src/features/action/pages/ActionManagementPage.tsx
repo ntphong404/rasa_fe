@@ -69,7 +69,9 @@ const filterSchema = z.object({
 
 export function ActionManagement() {
   const { t } = useTranslation();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
   const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
+  const effectiveBotId = selectedBotId && selectedBotId !== "global" ? selectedBotId : undefined;
   const [rowSelection, setRowSelection] = useState({});
   const [actionsData, setActionsData] = useState<IAction[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -110,9 +112,10 @@ export function ActionManagement() {
     try {
       setIsDataLoading(true);
       const queryParams = filters || { ...form.getValues(), ...pagination };
-      const response: ListActionResponse = await actionService.fetchActions(
-        queryParams
-      );
+      const response: ListActionResponse = await actionService.fetchActions({
+        ...queryParams,
+        botId: effectiveBotId,
+      });
 
       if (response.success && Array.isArray(response.data)) {
         setActionsData(response.data);
@@ -140,7 +143,7 @@ export function ActionManagement() {
   useEffect(() => {
     fetchActionsData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.limit, refreshTrigger]);
+  }, [pagination.page, pagination.limit, refreshTrigger, selectedBotId]);
 
   const onSubmit = (data: z.infer<typeof filterSchema>) => {
     setPagination((prev) => ({ ...prev, page: 1 }));

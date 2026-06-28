@@ -250,7 +250,7 @@ export function buildChatbotSheet(wb: ExcelJS.Workbook, data: ChatbotStatistics)
   styleHeader(h)
   data.chatbots.forEach((bot, i) => {
     const roles = bot.roles?.map((r: any) => r.name || r).join(', ') || ''
-    const r = sheet.addRow([i + 1, bot.name, bot.ip, bot.rasaPort, bot.flaskPort, roles])
+    const r = sheet.addRow([i + 1, bot.name, bot.ip, bot.rasaPort, bot.flaskUrl, roles])
     styleDataRow(r, i % 2 === 0)
     r.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' }
     r.getCell(5).alignment = { horizontal: 'center', vertical: 'middle' }

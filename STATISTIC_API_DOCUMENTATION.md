@@ -170,7 +170,7 @@ Lấy thống kê về các chatbot trong hệ thống.
         "name": "Support Bot",
         "ip": "192.168.1.100",
         "rasaPort": 5005,
-        "flaskPort": 5000,
+        "flaskUrl": "http://localhost:5000",
         "roles": [
           {
             "_id": "role_1",

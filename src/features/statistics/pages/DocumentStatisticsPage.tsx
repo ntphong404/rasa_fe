@@ -21,12 +21,15 @@ import {
   Legend,
 } from "recharts";
 import { useTranslation } from "react-i18next";
+import { useChatbotStore } from "@/store/chatbot";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B9D'];
 
 export const DocumentStatisticsPage = () => {
   const { t } = useTranslation();
-  const documents = useDocumentStatistics();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const scopedBotId = selectedBotId && selectedBotId !== 'global' ? selectedBotId : undefined;
+  const documents = useDocumentStatistics({ botId: scopedBotId });
   const [exportOpen, setExportOpen] = useState(false);
 
   if (documents.isLoading) {

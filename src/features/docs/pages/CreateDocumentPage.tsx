@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -6,14 +6,29 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import { docService } from "../api/service";
 import { toast } from "sonner";
+import { useChatbotStore } from "@/store/chatbot";
+import { useChatbots } from "@/hooks/useChatbots";
+import { useAuthStore } from "@/store/auth";
 
 export function CreateDocumentPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const user = useAuthStore((state) => state.user);
+  const { chatbots } = useChatbots();
+
+  const isManager = useMemo(
+    () => Boolean(user?.roles?.some((role) => role.name?.toUpperCase() === "MANAGER")),
+    [user?.roles]
+  );
+  const managerAssignedBotId = useMemo(() => user?.managedBotIds?.[0] || null, [user?.managedBotIds]);
+
+  const [botId, setBotId] = useState<string>("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -22,6 +37,25 @@ export function CreateDocumentPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    if (isManager) {
+      setBotId(managerAssignedBotId || "");
+      return;
+    }
+
+    if (selectedBotId && selectedBotId !== "global") {
+      setBotId(selectedBotId);
+      return;
+    }
+
+    if (chatbots.length > 0 && !botId) {
+      const nonGlobalBot = chatbots.find((bot) => bot.botId !== "global");
+      if (nonGlobalBot) {
+        setBotId(nonGlobalBot.botId);
+      }
+    }
+  }, [chatbots, isManager, managerAssignedBotId, selectedBotId]);
 
   // Allowed file extensions according to backend
   const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx'];
@@ -118,6 +152,11 @@ export function CreateDocumentPage() {
   };
 
   const handleSubmit = async () => {
+    if (!botId) {
+      toast.error(t("Please select a chatbot"));
+      return;
+    }
+
     if (!name.trim()) {
       toast.error(t("Please enter document name"));
       return;
@@ -132,6 +171,7 @@ export function CreateDocumentPage() {
       setIsSubmitting(true);
 
       await docService.createDocument({
+        botId,
         name: name.trim(),
         description: description.trim(),
         tags: selectedTags,
@@ -223,6 +263,45 @@ export function CreateDocumentPage() {
             )}
           </div>
         </div>
+
+        {/* Chatbot Selector */}
+        {isManager ? (
+          <div className="space-y-2">
+            <Label>{t("Chatbot")} *</Label>
+            <div className="rounded-md border bg-muted/50 p-3 text-sm">
+              {managerAssignedBotId ? (
+                chatbots.find((bot) => bot.botId === managerAssignedBotId)?.name || managerAssignedBotId
+              ) : (
+                t("No chatbot assigned")
+              )}
+            </div>
+          </div>
+        ) : (
+          chatbots.length > 0 && (
+            <div className="space-y-3 rounded-lg border p-4">
+              <div className="space-y-1">
+                <Label>{t("Applicable Chatbot")} *</Label>
+                <p className="text-xs text-muted-foreground">
+                  {t("Select the chatbot this document belongs to")}
+                </p>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {chatbots.filter((bot) => bot.botId !== "global").map((bot) => (
+                  <label
+                    key={bot._id}
+                    className="flex items-center gap-2 rounded-md border p-2 text-sm cursor-pointer hover:bg-accent/50 transition-colors"
+                  >
+                    <Checkbox
+                      checked={botId === bot.botId}
+                      onCheckedChange={() => setBotId(bot.botId)}
+                    />
+                    <span>{bot.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )
+        )}
 
         {/* Name */}
         <div className="space-y-2">

@@ -29,10 +29,8 @@ import { ChatBot } from "../api/dto/ChatBotResponse";
 const editChatBotSchema = z.object({
   botId: z.string().min(1, { message: "Bot ID is required" }),
   name: z.string().min(1, { message: "Name is required" }),
-  ip: z.string().min(1, { message: "IP address is required" }),
-  rasaPort: z.number().min(1, { message: "Rasa port is required" }),
-  flaskPort: z.number().min(1, { message: "Flask port is required" }),
-  ragPort: z.number().optional(),
+  flaskUrl: z.string().min(1, { message: "Flask URL is required" }),
+  ragUrl: z.string().optional(),
   roles: z.array(z.string()).default([]),
 });
 
@@ -56,10 +54,8 @@ export function EditChatBotDialog({
     defaultValues: {
       botId: "",
       name: "",
-      ip: "",
-      rasaPort: 5005,
-      flaskPort: 5000,
-      ragPort: undefined,
+      flaskUrl: "http://localhost:5000",
+      ragUrl: "",
       roles: [],
     },
   });
@@ -69,11 +65,9 @@ export function EditChatBotDialog({
       form.reset({
         botId: chatBot.botId || "",
         name: chatBot.name || "",
-        ip: chatBot.ip || "",
-        rasaPort: chatBot.rasaPort || 5005,
-        flaskPort: chatBot.flaskPort || 5000,
-        ragPort: chatBot.ragPort,
-        roles: chatBot.roles?.map((role: string | { _id: string; name?: string }) => 
+        flaskUrl: chatBot.flaskUrl || "http://localhost:5000",
+        ragUrl: chatBot.ragUrl || "",
+        roles: chatBot.roles?.map((role: string | { _id: string; name?: string }) =>
           typeof role === 'string' ? role : role._id
         ) || [],
       });
@@ -163,13 +157,14 @@ export function EditChatBotDialog({
                 <div className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="ip"
+                    name="flaskUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("IP Address")}</FormLabel>
+                        <FormLabel>{t("Flask URL")}</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder={t("Enter IP address (e.g., 192.168.1.100)")}
+                            type="text"
+                            placeholder={t("Enter Flask URL (e.g., http://103.170.123.35:5000)")}
                             {...field}
                             className="w-full"
                           />
@@ -178,58 +173,17 @@ export function EditChatBotDialog({
                       </FormItem>
                     )}
                   />
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="rasaPort"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("Rasa Port")}</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="5005"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              className="w-full"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="flaskPort"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t("Flask Port")}</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="5000"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              className="w-full"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
                   <FormField
                     control={form.control}
-                    name="ragPort"
+                    name="ragUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("RAG Port")} (Optional)</FormLabel>
+                        <FormLabel>{t("RAG URL")}</FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
-                            placeholder={t("Enter RAG port (e.g., 8000)")}
+                            type="text"
+                            placeholder={t("Enter RAG URL (e.g., http://103.170.123.35:9621)")}
                             {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                             className="w-full"
                           />
                         </FormControl>

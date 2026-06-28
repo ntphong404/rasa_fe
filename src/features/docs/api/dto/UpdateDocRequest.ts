@@ -1,5 +1,6 @@
 export interface UpdateDocRequest {
   _id: string;
+  botId?: string;
   name?: string;
   description?: string;
   tags?: string[];

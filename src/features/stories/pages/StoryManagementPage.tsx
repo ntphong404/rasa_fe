@@ -68,7 +68,9 @@ const filterSchema = z.object({
 export function StoryManagementPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
   const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
+  const effectiveBotId = selectedBotId && selectedBotId !== "global" ? selectedBotId : undefined;
   const [rowSelection, setRowSelection] = useState({});
   const [storiesData, setStoriesData] = useState<IStory[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -107,7 +109,10 @@ export function StoryManagementPage() {
       try {
         setIsDataLoading(true);
         setError(null);
-        const response: ListStoryResponse = await storyService.fetchStories(query);
+        const response: ListStoryResponse = await storyService.fetchStories({
+          ...query,
+          botId: effectiveBotId,
+        });
         setStoriesData(response.data || []);
         setPagination(response.meta || { total: 0, page: 1, limit: 10, totalPages: 1 });
       } catch (error) {
@@ -118,7 +123,7 @@ export function StoryManagementPage() {
         setIsDataLoading(false);
       }
     },
-    []
+    [effectiveBotId]
   );
 
   // Watch form changes and auto-submit

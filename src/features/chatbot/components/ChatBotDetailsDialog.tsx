@@ -65,22 +65,15 @@ export function ChatBotDetailsDialog({
                   {t("Network Configuration")}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
+
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">{t("IP Address")}</p>
-                    <p className="text-sm font-medium text-gray-900">{chatBot.ip}</p>
+                    <p className="text-xs text-gray-500 mb-1">{t("Flask URL")}</p>
+                    <p className="text-sm font-medium text-gray-900">{chatBot.flaskUrl}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">{t("Rasa Port")}</p>
-                    <p className="text-sm font-medium text-gray-900">{chatBot.rasaPort}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">{t("Flask Port")}</p>
-                    <p className="text-sm font-medium text-gray-900">{chatBot.flaskPort}</p>
-                  </div>
-                  {chatBot.ragPort && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">{t("RAG Port")}</p>
-                      <p className="text-sm font-medium text-gray-900">{chatBot.ragPort}</p>
+                  {chatBot.ragUrl && (
+                    <div className="col-span-2">
+                      <p className="text-xs text-gray-500 mb-1">{t("RAG URL")}</p>
+                      <p className="text-sm font-medium text-gray-900 break-all">{chatBot.ragUrl}</p>
                     </div>
                   )}
                 </div>

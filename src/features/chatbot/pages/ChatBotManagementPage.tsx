@@ -549,39 +549,22 @@ export function ChatBotManagement() {
                 </div>
               ),
             },
+
             {
-              accessorKey: "ip",
-              header: t("IP Address"),
+              accessorKey: "flaskUrl",
+              header: t("Flask URL"),
               cell: ({ row }) => (
-                <div className="text-sm font-mono">
-                  {row.getValue("ip")}
+                <div className="text-sm">
+                  {row.getValue("flaskUrl")}
                 </div>
               ),
             },
             {
-              accessorKey: "rasaPort",
-              header: t("Rasa Port"),
+              accessorKey: "ragUrl",
+              header: t("RAG URL"),
               cell: ({ row }) => (
-                <div className="text-sm">
-                  {row.getValue("rasaPort")}
-                </div>
-              ),
-            },
-            {
-              accessorKey: "flaskPort",
-              header: t("Flask Port"),
-              cell: ({ row }) => (
-                <div className="text-sm">
-                  {row.getValue("flaskPort")}
-                </div>
-              ),
-            },
-            {
-              accessorKey: "ragPort",
-              header: t("RAG Port"),
-              cell: ({ row }) => (
-                <div className="text-sm">
-                  {row.getValue("ragPort") ? row.getValue("ragPort") : "-"}
+                <div className="text-sm break-all max-w-[200px]">
+                  {row.getValue("ragUrl") ? row.getValue("ragUrl") : "-"}
                 </div>
               ),
             },

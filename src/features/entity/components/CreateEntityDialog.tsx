@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -23,6 +24,9 @@ import { entityService } from "../api/service";
 import { Badge } from "@/components/ui/badge";
 import { ModuleHelpPopover } from "@/components/module-help-popover";
 import { toast } from "sonner";
+import { useChatbotStore } from "@/store/chatbot";
+import { useChatbots } from "@/hooks/useChatbots";
+import { useAuthStore } from "@/store/auth";
 
 interface CreateEntityDialogProps {
   open: boolean;
@@ -38,7 +42,34 @@ export default function CreateEntityDialog({
   onEntityCreated,
 }: CreateEntityDialogProps) {
   const { t } = useTranslation();
-  
+
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
+  const user = useAuthStore((state) => state.user);
+  const { chatbots } = useChatbots();
+  const isManager = useMemo(
+    () => Boolean(user?.roles?.some((role) => role.name?.toUpperCase() === "MANAGER")),
+    [user?.roles]
+  );
+  const managerAssignedBotId = useMemo(() => user?.managedBotIds?.[0] || null, [user?.managedBotIds]);
+  const [applicableBotIds, setApplicableBotIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (isManager) {
+      setApplicableBotIds(managerAssignedBotId ? [managerAssignedBotId] : []);
+      return;
+    }
+    if (!selectedBotId || selectedBotId === "global") return;
+    setApplicableBotIds((prev) =>
+      prev.includes(selectedBotId) ? prev : [...prev, selectedBotId]
+    );
+  }, [isManager, managerAssignedBotId, selectedBotId]);
+
+  const handleToggleApplicableBot = (botId: string) => {
+    setApplicableBotIds((prev) =>
+      prev.includes(botId) ? prev.filter((id) => id !== botId) : [...prev, botId]
+    );
+  };
+
   // Common fields
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -168,12 +199,19 @@ ${examplesList || "      - example1"}`;
       }
     }
 
+    const targetBotIds = isManager
+      ? managerAssignedBotId ? [managerAssignedBotId] : []
+      : selectedBotId && selectedBotId !== "global"
+        ? [selectedBotId]
+        : applicableBotIds;
+
     try {
       setIsSubmitting(true);
       await entityService.createEntity({
         name: sanitizedName,
         description: description.trim(),
         define: finalDefine,
+        botIds: targetBotIds,
       });
       
       // Reset form
@@ -183,6 +221,7 @@ ${examplesList || "      - example1"}`;
       setExamples([""]);
       setEntityType("regex");
       setExpertMode(false);
+      setApplicableBotIds([]);
       
       onEntityCreated();
       onOpenChange(false);
@@ -244,6 +283,31 @@ ${examplesList || "      - example1"}`;
                     rows={2}
                   />
                 </div>
+
+                {!isManager && chatbots.length > 0 && (
+                  <div className="space-y-3 rounded-lg border p-3">
+                    <div className="space-y-1">
+                      <Label>{t("Applicable Chatbots")}</Label>
+                      <p className="text-xs text-muted-foreground">
+                        {t("Select one or more chatbots this entity belongs to")}
+                      </p>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {chatbots.filter((bot) => bot.botId !== "global").map((bot) => (
+                        <label
+                          key={bot._id}
+                          className="flex items-center gap-2 rounded-md border p-2 text-sm"
+                        >
+                          <Checkbox
+                            checked={applicableBotIds.includes(bot.botId)}
+                            onCheckedChange={() => handleToggleApplicableBot(bot.botId)}
+                          />
+                          <span>{bot.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

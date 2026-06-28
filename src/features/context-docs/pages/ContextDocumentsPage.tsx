@@ -30,7 +30,6 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { ragService } from "@/features/chat/api/ragService";
 import { createRagServiceInstance } from "@/features/chat/api/ragService";
 import { useChatbotStore } from "@/store/chatbot";
 import {
@@ -87,13 +86,13 @@ export function ContextDocumentsPage() {
     }
   }, [selectedManagementBotId, chatbots, setSelectedManagementBotId]);
   
-  // Find selected chatbot and get ragPort
+  // Find selected chatbot and get ragUrl
   const selectedChatbot = useMemo(() => {
     if (!selectedManagementBotId || selectedManagementBotId === "global") return null;
     return chatbots.find((bot) => bot.botId === selectedManagementBotId);
   }, [selectedManagementBotId, chatbots]);
   
-  const ragPort = selectedChatbot?.ragPort;
+  const ragUrl = selectedChatbot?.ragUrl;
   const isVi = (i18n.resolvedLanguage || i18n.language || "vi").toLowerCase().startsWith("vi");
   const dateLocale = isVi ? "vi-VN" : "en-US";
   const text = useMemo(
@@ -293,10 +292,10 @@ export function ContextDocumentsPage() {
   }, []);
 
   useEffect(() => {
-    if (ragPort) {
+    if (ragUrl) {
       fetchDocuments();
     }
-  }, [ragPort]);
+  }, [ragUrl]);
 
   useEffect(() => {
     const availableIds = new Set(
@@ -318,9 +317,9 @@ export function ContextDocumentsPage() {
     }
 
     const loadPipelineStatus = async () => {
-      if (!ragPort) return;
+      if (!ragUrl) return;
       try {
-        const ragServiceInstance = createRagServiceInstance(ragPort);
+        const ragServiceInstance = createRagServiceInstance(ragUrl);
         const status = await ragServiceInstance.getPipelineStatus();
         setPipelineStatus(status);
       } catch (error) {
@@ -388,31 +387,36 @@ export function ContextDocumentsPage() {
   }, [allDocuments]);
 
   const fetchDocuments = async () => {
-    if (!ragPort) {
-      toast.error(t("Please select a chatbot with RAG port"));
+    if (!ragUrl) {
+      toast.error(t("Please select a chatbot with RAG URL"));
       return;
     }
     try {
       setIsLoading(true);
-      const ragServiceInstance = createRagServiceInstance(ragPort);
+      const ragServiceInstance = createRagServiceInstance(ragUrl);
       const response = await ragServiceInstance.listDocumentsStatuses();
       setDocumentsByStatus(response.statuses || {});
     } catch (error) {
       console.error("Error fetching documents:", error);
-      toast.error(text.loadDocumentsFail);
+      const msg = error instanceof Error ? error.message : "";
+      if (msg.startsWith("Invalid RAG URL")) {
+        toast.error(`RAG URL không hợp lệ: ${ragUrl}`);
+      } else {
+        toast.error(text.loadDocumentsFail);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleScanDocuments = async () => {
-    if (!ragPort) {
-      toast.error(t("Please select a chatbot with RAG port"));
+    if (!ragUrl) {
+      toast.error(t("Please select a chatbot with RAG URL"));
       return;
     }
     try {
       setIsActionLoading(true);
-      const ragServiceInstance = createRagServiceInstance(ragPort);
+      const ragServiceInstance = createRagServiceInstance(ragUrl);
       const result = await ragServiceInstance.scanDocuments();
       toast.success(result.message || text.scanSuccess);
       await fetchDocuments();
@@ -425,13 +429,13 @@ export function ContextDocumentsPage() {
   };
 
   const handleRetryPipeline = async () => {
-    if (!ragPort) {
-      toast.error(t("Please select a chatbot with RAG port"));
+    if (!ragUrl) {
+      toast.error(t("Please select a chatbot with RAG URL"));
       return;
     }
     try {
       setIsActionLoading(true);
-      const ragServiceInstance = createRagServiceInstance(ragPort);
+      const ragServiceInstance = createRagServiceInstance(ragUrl);
       const result = await ragServiceInstance.reprocessFailedDocuments();
       toast.success(result.message || text.retrySuccess);
       await fetchDocuments();
@@ -444,12 +448,12 @@ export function ContextDocumentsPage() {
   };
 
   const handleCancelPipeline = async () => {
-    if (!ragPort) {
-      toast.error(t("Please select a chatbot with RAG port"));
+    if (!ragUrl) {
+      toast.error(t("Please select a chatbot with RAG URL"));
       return;
     }
     try {
-      const ragServiceInstance = createRagServiceInstance(ragPort);
+      const ragServiceInstance = createRagServiceInstance(ragUrl);
       const result = await ragServiceInstance.cancelPipeline();
       toast.success(result.message || text.cancelPipelineSuccess);
     } catch (error) {
@@ -459,13 +463,13 @@ export function ContextDocumentsPage() {
   };
 
   const handleFileUpload = async (file: File) => {
-    if (!ragPort) {
-      toast.error(t("Please select a chatbot with RAG port"));
+    if (!ragUrl) {
+      toast.error(t("Please select a chatbot with RAG URL"));
       return;
     }
     try {
       setIsUploading(true);
-      const ragServiceInstance = createRagServiceInstance(ragPort);
+      const ragServiceInstance = createRagServiceInstance(ragUrl);
       await ragServiceInstance.ingestFile(file);
       toast.success(t(text.uploadSuccess, { fileName: file.name }));
       await fetchDocuments();
@@ -491,13 +495,13 @@ export function ContextDocumentsPage() {
 
   const confirmDelete = async () => {
     if (!documentToDelete) return;
-    if (!ragPort) {
-      toast.error(t("Please select a chatbot with RAG port"));
+    if (!ragUrl) {
+      toast.error(t("Please select a chatbot with RAG URL"));
       return;
     }
 
     try {
-      const ragServiceInstance = createRagServiceInstance(ragPort);
+      const ragServiceInstance = createRagServiceInstance(ragUrl);
       await ragServiceInstance.deleteDocument(documentToDelete.id);
       toast.success(t(text.deleteSuccess, { fileName: documentToDelete.name }));
       // Remove from selected if it was selected
@@ -515,12 +519,12 @@ export function ContextDocumentsPage() {
 
   const handleDeleteSelected = async () => {
     if (selectedDocIds.length === 0) return;
-    if (!ragPort) {
-      toast.error(t("Please select a chatbot with RAG port"));
+    if (!ragUrl) {
+      toast.error(t("Please select a chatbot with RAG URL"));
       return;
     }
     try {
-      const ragServiceInstance = createRagServiceInstance(ragPort);
+      const ragServiceInstance = createRagServiceInstance(ragUrl);
       await ragServiceInstance.deleteDocuments(selectedDocIds, false, false);
       toast.success(t(text.deleteSelectedSuccess, { count: selectedDocIds.length }));
       setSelectedDocIds([]);
@@ -534,12 +538,12 @@ export function ContextDocumentsPage() {
   };
 
   const handleClearDocuments = async () => {
-    if (!ragPort) {
-      toast.error(t("Please select a chatbot with RAG port"));
+    if (!ragUrl) {
+      toast.error(t("Please select a chatbot with RAG URL"));
       return;
     }
     try {
-      const ragServiceInstance = createRagServiceInstance(ragPort);
+      const ragServiceInstance = createRagServiceInstance(ragUrl);
       const result = await ragServiceInstance.clearDocuments();
       toast.success(result.message || text.clearSuccess);
       setSelectedDocIds([]);

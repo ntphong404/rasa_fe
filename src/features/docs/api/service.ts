@@ -23,6 +23,9 @@ export const docService = {
     formData.append("tags", JSON.stringify(data.tags));
     formData.append("isPublic", String(data.isPublic));
     formData.append("document", data.file); // Backend expects 'document' field
+    if (data.botId) {
+      formData.append("botId", data.botId);
+    }
 
     const response = await axiosInstance.post<DocDetailResponse>(
       ENDPOINTS.DOC_ENDPOINTS.CREATE,
@@ -52,6 +55,9 @@ export const docService = {
     formData.append("description", data.description || "");
     formData.append("tags", JSON.stringify(data.tags || []));
     formData.append("isPublic", String(data.isPublic ?? true));
+    if (data.botId) {
+      formData.append("botId", data.botId);
+    }
 
     if (data.file) {
       formData.append("document", data.file); // Backend expects 'document' field

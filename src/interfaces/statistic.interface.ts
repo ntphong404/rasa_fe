@@ -53,7 +53,7 @@ export interface ChatbotStatistics {
     name: string;
     ip: string;
     rasaPort: number;
-    flaskPort: number;
+    flaskUrl: string;
     roles: Array<{
       _id: string;
       name: string;

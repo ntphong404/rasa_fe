@@ -66,7 +66,9 @@ const filterSchema = z.object({
 
 export function EntityManagement() {
   const { t } = useTranslation();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
   const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
+  const effectiveBotId = selectedBotId && selectedBotId !== "global" ? selectedBotId : undefined;
   const [rowSelection, setRowSelection] = useState({});
   const [entitiesData, setEntitiesData] = useState<IEntity[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -115,7 +117,10 @@ export function EntityManagement() {
         endDate: form.getValues("endDate"),
       };
 
-      const response: ListEnityResponse = await entityService.fetchEntities(queryParams);
+      const response: ListEnityResponse = await entityService.fetchEntities({
+        ...queryParams,
+        botId: effectiveBotId,
+      });
 
       if (response.success && Array.isArray(response.data)) {
         setEntitiesData(response.data);
@@ -143,7 +148,7 @@ export function EntityManagement() {
   useEffect(() => {
     fetchEntitiesData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.limit, refreshTrigger]);
+  }, [pagination.page, pagination.limit, refreshTrigger, selectedBotId]);
 
   const onSubmit = (data: z.infer<typeof filterSchema>) => {
     setPagination((prev) => ({ ...prev, page: 1 }));

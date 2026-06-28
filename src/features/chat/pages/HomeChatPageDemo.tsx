@@ -33,7 +33,7 @@ import ENDPOINTS from "@/api/endpoints";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const FEEDBACK_DELAY_MS = 3 * 60 * 1000;//5000;
+const FEEDBACK_DELAY_MS = 1 * 60 * 1000;
 const FEEDBACK_QUEUE_KEY = "chat_message_feedback_queue_v2";
 
 type MessageFeedback = "like" | "dislike";
@@ -250,7 +250,6 @@ export function HomeChatDemo() {
         }
 
         if (item.action === "upsert") {
-          console.log(`[Feedback] Sending ${item.vote} for message ${item.messageId}...`);
           await chatService.submitMessageFeedback(item.chatbotId, {
             messageId: item.messageId,
             userId: item.userId,
@@ -259,10 +258,8 @@ export function HomeChatDemo() {
             answerText: item.answerText,
             vote: voteToNumber(item.vote),
           });
-          console.log(`[Feedback] Successfully sent feedback for ${item.messageId}`);
           syncedFeedbackRef.current[item.messageId] = item.vote;
         } else {
-          console.log(`[Feedback] Removing feedback for message ${item.messageId}`);
           delete syncedFeedbackRef.current[item.messageId];
         }
       } catch {
@@ -279,10 +276,8 @@ export function HomeChatDemo() {
     }
 
     feedbackFlushTimerRef.current = window.setTimeout(() => {
-      console.log("[Feedback] 3-minute delay reached. Flushing feedback queue...");
       void flushPendingFeedback(false);
     }, FEEDBACK_DELAY_MS);
-    console.log(`[Feedback] Scheduled flush in ${FEEDBACK_DELAY_MS / 1000}s`);
   };
 
   useEffect(() => {
@@ -1019,7 +1014,6 @@ export function HomeChatDemo() {
     }
 
     persistFeedbackQueue();
-    console.log(`[Feedback] ${nextVote || "remove"} queued for message ${message.messageId}. Waiting 3 minutes...`);
     scheduleFeedbackFlush();
   };
 
@@ -1087,14 +1081,6 @@ export function HomeChatDemo() {
                           <div className={`flex min-w-[120px] flex-col ${isUser ? "max-w-[78%]" : "max-w-[90%]"}`}>
                             <div className={`mb-0.5 flex items-baseline gap-2 text-[11px] font-medium uppercase tracking-wide ${isUser ? "text-right text-slate-500 dark:text-slate-400" : "text-slate-600 dark:text-slate-300"}`}>
                               {isUser ? "Bạn" : "Trợ lý"}
-                              {/* Show intent confidence */}
-                              {!isUser && message.intent && (
-                                <span className="ml-1 opacity-50 font-normal lowercase">
-                                  ({message.intent}
-                                  {message.confidence && ` - ${Math.round(message.confidence * 100)}%`}
-                                  )
-                                </span>
-                              )}
                               {!isUser && isLastMessage && frozenElapsedLabel && !message.isStreaming && message.text && (
                                 <span className="normal-case tracking-normal font-mono text-xs text-slate-400 dark:text-slate-500">
                                   {frozenElapsedLabel}

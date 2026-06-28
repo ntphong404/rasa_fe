@@ -2,6 +2,7 @@ export interface StoryQuery {
   page?: number;
   limit?: number;
   search?: string;
+  botId?: string;
   deleted?: boolean;
   sort?: string;
   createdBy?: string;
@@ -16,6 +17,7 @@ export default function createStoryQuery(query: StoryQuery): string {
   if (query.page !== undefined) params.append("page", query.page.toString());
   if (query.limit !== undefined) params.append("limit", query.limit.toString());
   if (query.search) params.append("search", query.search);
+  if (query.botId) params.append("botId", query.botId);
   if (query.deleted !== undefined) params.append("deleted", query.deleted.toString());
   if (query.sort) params.append("sort", query.sort);
   if (query.createdBy) params.append("createdBy", query.createdBy);

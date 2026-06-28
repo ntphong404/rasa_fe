@@ -33,9 +33,7 @@ export function VerifyPage({
       setHasResendOnMount(true);
       const autoResend = async () => {
         try {
-          console.log("📧 Auto-resending OTP for login...");
           await authService.resendVerifyEmail();
-          console.log("✅ Auto-resend successful");
           setCountdown(300);
           toast.success("Mã xác thực mới đã được gửi!");
         } catch (error) {
@@ -114,9 +112,7 @@ export function VerifyPage({
   const handleResendCode = async () => {
     try {
       setLoading(true);
-      console.log("🔄 Gửi lại mã xác thực...");
       const result = await authService.resendVerifyEmail();
-      console.log("✅ Resend response:", result);
       if (result?.success === false) {
         toast.error(result?.message || "Gửi lại mã xác thực thất bại!");
         return;

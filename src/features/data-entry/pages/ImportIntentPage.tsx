@@ -800,7 +800,6 @@ export function ImportIntentPage() {
 
                 const result = await intentService.createFull({
                     name: formattedName,
-                    description: "",
                     examples: examplesArr,
                     ...(actionMatch
                         ? { actionName: actionMatch[1].trim(), answer: "" }

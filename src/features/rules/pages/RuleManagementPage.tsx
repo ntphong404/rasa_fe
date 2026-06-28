@@ -68,7 +68,9 @@ const filterSchema = z.object({
 export function RuleManagementPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId);
   const refreshTrigger = useChatbotStore((state) => state.refreshTrigger);
+  const effectiveBotId = selectedBotId && selectedBotId !== "global" ? selectedBotId : undefined;
   const [rowSelection, setRowSelection] = useState({});
   const [rulesData, setRulesData] = useState<IRule[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
@@ -132,9 +134,10 @@ export function RuleManagementPage() {
         endDate: form.getValues("endDate"),
       };
 
-      const response: ListRuleResponse = await ruleService.fetchRules(
-        queryParams
-      );
+      const response: ListRuleResponse = await ruleService.fetchRules({
+        ...queryParams,
+        botId: effectiveBotId,
+      });
 
       if (response.success && Array.isArray(response.data)) {
         setRulesData(response.data);
@@ -168,7 +171,7 @@ export function RuleManagementPage() {
       fetchRulesData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.limit, refreshTrigger]);
+  }, [pagination.page, pagination.limit, refreshTrigger, selectedBotId]);
 
   // Auto-filter when non-search form values change (immediate)
   useEffect(() => {

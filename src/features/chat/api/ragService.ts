@@ -1,5 +1,9 @@
 import axios from "axios";
-import { RAG_BASE_URL, RAG_ENDPOINTS, buildRagPortUrl, createRagEndpoints } from "@/api/rag.endpoints";
+import { getRagUrl, createRagEndpoints } from "@/api/rag.endpoints";
+
+// No default RAG URL — chatbot must provide ragUrl via createRagServiceInstance
+const RAG_BASE_URL = "";
+const RAG_ENDPOINTS = createRagEndpoints("");
 import {
   ChatCompletionRequest,
   ChatCompletionResponse,
@@ -21,8 +25,8 @@ const ragAxios = axios.create({
  * Create a custom RAG axios instance with specific port
  * Used for /context-docs page which needs chatbot-specific RAG endpoint
  */
-export const createRagAxiosInstance = (ragPort?: number) => {
-  const baseURL = ragPort ? buildRagPortUrl(ragPort) : RAG_BASE_URL;
+export const createRagAxiosInstance = (ragUrl: string) => {
+  const baseURL = getRagUrl(ragUrl);
   return axios.create({
     baseURL,
     timeout: 60000,
@@ -342,10 +346,10 @@ export const ragService = {
 };
 
 /**
- * Factory function to create RAG service with custom ragPort
+ * Factory function to create RAG service with chatbot-specific ragUrl
  */
-export const createRagServiceInstance = (ragPort?: number) => {
-  const baseURL = ragPort ? buildRagPortUrl(ragPort) : RAG_BASE_URL;
+export const createRagServiceInstance = (ragUrl: string) => {
+  const baseURL = getRagUrl(ragUrl);
   const customRagAxios = axios.create({
     baseURL,
     timeout: 60000,
@@ -396,7 +400,7 @@ export const createRagServiceInstance = (ragPort?: number) => {
           throw new Error(response.data.message || "Upload failed");
         }
 
-        return await createRagServiceInstance(ragPort).listIngestedDocuments();
+        return await createRagServiceInstance(ragUrl).listIngestedDocuments();
       } catch (error) {
         if (!shouldFallbackToLegacyIngestApi(error)) {
           throw error;

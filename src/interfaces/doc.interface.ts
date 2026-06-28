@@ -1,5 +1,6 @@
 export interface IDoc {
   _id: string;
+  botId?: string;
   name: string;
   description: string;
   tags: string[];

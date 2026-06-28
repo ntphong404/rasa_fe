@@ -173,7 +173,7 @@ Dropdown chatbot trên trang không login không hiển thị danh sách, select
   - Validator: Joi validation cho `botId`
   - Interface: `IChatbot`, `ICreateChatbot`
 - Cập nhật `ChatbotService.getPublic()` trả về đầy đủ fields:
-  - `_id`, `botId`, `name`, `ip`, `rasaPort`, `flaskPort`
+  - `_id`, `botId`, `name`, `ip`, `rasaPort`, `flaskUrl`
 - Đảm bảo endpoint `/api/v1/chatbot/public/list` use middleware `authOptional` thay vì `auth`
 
 #### 4.2 Frontend Hook

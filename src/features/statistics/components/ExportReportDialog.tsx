@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -11,8 +11,17 @@ import {
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { FileDown, Loader2, CheckSquare, Square } from 'lucide-react'
 import { statisticService } from '../api/service'
+import { useChatbotStore } from '@/store/chatbot'
+import { useChatbots } from '@/hooks/useChatbots'
 import { exportReportToExcel, type ExportSection, type ExportData } from '@/utils/exportReportExcel'
 
 interface SectionOption {
@@ -39,6 +48,19 @@ interface Props {
 
 export function ExportReportDialog({ open, onOpenChange, defaultSections }: Props) {
   const { t } = useTranslation()
+  const { chatbots } = useChatbots()
+  const selectedBotId = useChatbotStore((state) => state.selectedBotId)
+  const [exportBotId, setExportBotId] = useState<string>("")
+
+  useEffect(() => {
+    const validBots = chatbots.filter((bot) => bot.botId !== 'global')
+    if (selectedBotId && selectedBotId !== 'global') {
+      setExportBotId(selectedBotId)
+    } else if (validBots.length > 0) {
+      setExportBotId(validBots[0].botId)
+    }
+  }, [selectedBotId, chatbots])
+
   const [selected, setSelected] = useState<Set<ExportSection>>(
     new Set(defaultSections ?? SECTIONS.map((s) => s.id))
   )
@@ -61,23 +83,25 @@ export function ExportReportDialog({ open, onOpenChange, defaultSections }: Prop
     }
     setLoading(true)
     try {
+      const scopedBotId = exportBotId && exportBotId !== 'global' ? exportBotId : undefined
+      const params = { botId: scopedBotId }
       const sections = [...selected] as ExportSection[]
       const data: ExportData = {}
 
       await Promise.all([
-        sections.includes('overall') && statisticService.getOverallStatistics()
+        sections.includes('overall') && statisticService.getOverallStatistics(params)
           .then((r) => { data.overall = r.data }),
-        sections.includes('users') && statisticService.getUserStatistics()
+        sections.includes('users') && statisticService.getUserStatistics(params)
           .then((r) => { data.users = r.data }),
-        sections.includes('conversations') && statisticService.getConversationStatistics()
+        sections.includes('conversations') && statisticService.getConversationStatistics(params)
           .then((r) => { data.conversations = r.data }),
-        sections.includes('chatbots') && statisticService.getChatbotStatistics()
+        sections.includes('chatbots') && statisticService.getChatbotStatistics(params)
           .then((r) => { data.chatbots = r.data }),
-        sections.includes('nlp') && statisticService.getNLPStatistics()
+        sections.includes('nlp') && statisticService.getNLPStatistics(params)
           .then((r) => { data.nlp = r.data }),
-        sections.includes('documents') && statisticService.getDocumentStatistics()
+        sections.includes('documents') && statisticService.getDocumentStatistics(params)
           .then((r) => { data.documents = r.data }),
-        sections.includes('feedback') && statisticService.getResponseFeedbackStatistics()
+        sections.includes('feedback') && statisticService.getResponseFeedbackStatistics(params)
           .then((r) => { data.feedback = r.data }),
       ].filter(Boolean))
 
@@ -102,7 +126,25 @@ export function ExportReportDialog({ open, onOpenChange, defaultSections }: Prop
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-1">
+        <div className="space-y-4">
+          {/* Chatbot Selector */}
+          <div className="space-y-1.5">
+            <Label htmlFor="export-chatbot">Chọn Chatbot báo cáo</Label>
+            <Select value={exportBotId} onValueChange={setExportBotId}>
+              <SelectTrigger id="export-chatbot">
+                <SelectValue placeholder="Chọn chatbot" />
+              </SelectTrigger>
+              <SelectContent>
+                {chatbots.filter((bot) => bot.botId !== 'global').map((bot) => (
+                  <SelectItem key={bot._id} value={bot.botId}>
+                    {bot.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm text-muted-foreground">
               Chọn các mục cần xuất. Mỗi mục sẽ là một sheet riêng.
@@ -152,8 +194,9 @@ export function ExportReportDialog({ open, onOpenChange, defaultSections }: Prop
             </p>
           )}
         </div>
+      </div>
 
-        <DialogFooter className="gap-2">
+      <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Hủy
           </Button>
