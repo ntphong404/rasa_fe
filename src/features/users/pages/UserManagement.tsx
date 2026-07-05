@@ -634,7 +634,7 @@ export const UserManagement = () => {
       {/* Delete Confirmation Dialog */}
       {confirmDeleteOpen && (
         <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[440px]">
             <DialogHeader>
               <DialogTitle>{t("Delete User")}</DialogTitle>
               <DialogDescription>

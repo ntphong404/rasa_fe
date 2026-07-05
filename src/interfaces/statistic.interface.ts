@@ -8,6 +8,7 @@ export interface OverallStatistics {
   totalStories: number;
   totalResponses: number;
   totalRoles: number;
+  totalRules: number;
 }
 
 export interface UserStatistics {
@@ -68,6 +69,7 @@ export interface NLPStatistics {
   totalStories: number;
   totalResponses: number;
   totalExamples: number;
+  totalRules: number;
   nlpComponents: {
     intents: {
       total: number;
@@ -92,6 +94,9 @@ export interface NLPStatistics {
         intentsCount: number;
         intents: any[];
       }>;
+    };
+    rules: {
+      total: number;
     };
     responses: {
       total: number;

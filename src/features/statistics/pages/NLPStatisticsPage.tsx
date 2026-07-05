@@ -3,7 +3,7 @@ import { useNLPStatistics } from "@/hooks/useStatistics";
 import { StatsCard } from "../components/StatsCard";
 import { ExportReportDialog } from "../components/ExportReportDialog";
 import { Button } from "@/components/ui/button";
-import { Brain, MessageSquareText, Zap, BookOpen, MessageCircle, FileDown } from "lucide-react";
+import { Brain, MessageSquareText, Zap, BookOpen, MessageCircle, FileDown, Scroll } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,8 +36,8 @@ export const NLPStatisticsPage = () => {
     return (
       <div className="p-6 space-y-6">
         <h1 className="text-3xl font-bold">{t("NLP Report")}</h1>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          {[1, 2, 3, 4, 5].map((i) => (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <Skeleton key={i} className="h-32" />
           ))}
         </div>
@@ -64,6 +64,7 @@ export const NLPStatisticsPage = () => {
     { name: "Examples", value: data?.totalExamples ?? 0 },
     { name: "Actions", value: data?.totalActions ?? 0 },
     { name: "Stories", value: data?.totalStories ?? 0 },
+    { name: "Rules", value: data?.totalRules ?? 0 },
     { name: "Responses", value: data?.totalResponses ?? 0 },
   ];
 
@@ -94,7 +95,7 @@ export const NLPStatisticsPage = () => {
       />
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <StatsCard
           title="Intents"
           value={data?.totalIntents || 0}
@@ -118,6 +119,12 @@ export const NLPStatisticsPage = () => {
           value={data?.totalStories || 0}
           icon={BookOpen}
           description={t("Total stories")}
+        />
+        <StatsCard
+          title="Rules"
+          value={data?.totalRules || 0}
+          icon={Scroll}
+          description={t("Total rules")}
         />
         <StatsCard
           title="Responses"

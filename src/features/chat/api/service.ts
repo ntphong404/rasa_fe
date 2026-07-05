@@ -32,8 +32,21 @@ export const chatService = {
   sendMessage: async (
     data: ISendMessageRequest
   ): Promise<ISendMessageResponse> => {
-    const response = await axiosInstance.post(
+    const selectedChatBotId = useChatbotStore.getState().selectedChatBotId;
+    const scopedBotId =
+      selectedChatBotId && selectedChatBotId !== "global" ? selectedChatBotId : null;
+
+    const url = new URL(
       ENDPOINTS.CHAT_ENDPOINTS.SEND_MESSAGE_SYSTEM,
+      BASE_URL
+    );
+
+    if (scopedBotId) {
+      url.searchParams.set("botId", scopedBotId);
+    }
+
+    const response = await axiosInstance.post(
+      url.toString(),
       data
     );
     return response.data;

@@ -29,7 +29,7 @@ export const ConfirmBanUserDialog: React.FC<ConfirmBanUserDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
           <DialogTitle>Confirm Ban User</DialogTitle>
           <DialogDescription>

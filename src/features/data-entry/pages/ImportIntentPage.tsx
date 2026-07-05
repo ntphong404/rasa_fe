@@ -143,7 +143,13 @@ export function ImportIntentPage() {
                         entityNameToId.set(entityName, String(existing._id));
                         foundEntities.push(entityName);
                     } else if (importBotIds.length > 0) {
-                        const def = entityDefinitions[entityName] || `- entity: ${entityName}`;
+                        let def = "";
+                        const rawBlock = entityDefinitions[entityName];
+                        if (rawBlock) {
+                            const blockLines = rawBlock.split('\n');
+                            const indented = blockLines.map(line => '  ' + line).join('\n');
+                            def = `nlu:\n${indented}`;
+                        }
                         const created = await entityService.createEntity({
                             name: entityName,
                             description: '',

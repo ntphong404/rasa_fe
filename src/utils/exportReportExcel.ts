@@ -120,6 +120,7 @@ export function buildOverallSheet(wb: ExcelJS.Workbook, data: OverallStatistics)
     ['Tổng số entity', data.totalEntities],
     ['Tổng số action', data.totalActions],
     ['Tổng số story', data.totalStories],
+    ['Tổng số rule', data.totalRules],
     ['Tổng số response', data.totalResponses],
     ['Tổng số vai trò', data.totalRoles],
   ]
@@ -274,6 +275,7 @@ export function buildNLPSheet(wb: ExcelJS.Workbook, data: NLPStatistics) {
     ['Entity', data.totalEntities],
     ['Action', data.totalActions],
     ['Story', data.totalStories],
+    ['Rule', data.totalRules],
     ['Response', data.totalResponses],
     ['Example', data.totalExamples],
   ].forEach(([l, v], i) => {

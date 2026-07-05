@@ -246,7 +246,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <img
             src={import.meta.env.VITE_APP_LOGO}
             alt="@logo"
-            className="h-10 w-10 rounded-full shadow-lg"
+            className="h-10 w-10 object-contain"
           />
           <span
             className="font-semibold text-xl"

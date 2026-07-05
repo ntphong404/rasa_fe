@@ -1,5 +1,12 @@
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   MessageSquare,
   Mic,
   MicOff,
@@ -134,7 +141,7 @@ export function HomeChatDemo() {
   const prevConversationIdRef = useRef<string | null>(null);
   const userId = useCurrentUserId();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const { selectedChatBotId, chatbots } = useChatbotStore();
+  const { selectedChatBotId, chatbots, setSelectedChatBotId } = useChatbotStore();
 
   // Chat conversation always uses the system chatbot (selectedChatBotId), set from Settings page.
   const chatScopeBotId = selectedChatBotId;
@@ -197,6 +204,11 @@ export function HomeChatDemo() {
 
   // Reset visible window and auto-scroll whenever the active conversation changes
   useEffect(() => { setVisibleCount(PAGE_SIZE); setShouldAutoScroll(true); }, [currentConversationId]);
+
+  // Start new conversation when selected chatbot changes
+  useEffect(() => {
+    startNewConversation();
+  }, [selectedChatBotId]);
 
   // Fetch uploaded documents on mount
   useEffect(() => {
